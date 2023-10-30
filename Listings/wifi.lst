@@ -1,0 +1,1279 @@
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 1   
+
+
+C51 COMPILER V9.57.0.0, COMPILATION OF MODULE WIFI
+OBJECT MODULE PLACED IN .\Objects\wifi.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\keil\C51\BIN\C51.EXE source\wifi.c LARGE OPTIMIZE(8,SPEED) BROWSE DEBUG OBJE
+                    -CTEXTEND PRINT(.\Listings\wifi.lst) TABS(2) OBJECT(.\Objects\wifi.obj)
+
+line level    source
+
+   1          #include "wifi.h"
+   2          #include "page.h"
+   3          #include "key.h"
+   4          
+   5          code u8 MachineMsg[]={
+   6          0,0,                                     //flag
+   7          '0','0','0','0','0','0','0','4',         //通用串口协议版本号
+   8          '0','0','0','0','0','0','0','2',         //业务协议版本号
+   9          '0','0','0','0','0','0','0','0',         //硬件版本号
+  10          '0','0','0','0','0','0','0','0',         //软件版本号
+  11          '1','1','2','e','1','6','f','4',         //产品标识码
+  12          '6','d','1','a','4','d','b','4',         //产品标识码
+  13          '8','1','9','4','1','c','a','8',         //产品标识码
+  14          '7','c','1','c','0','6','f','5',         //产品标识码
+  15          0,0,                                     //可绑定失效时间
+  16          0,0,0,0,0,0,0,0,                         //设备属性
+  17          '2','a','9','6','c','c','8','4',         //产品秘钥
+  18          'e','b','a','0','4','8','7','0',         //产品秘钥
+  19          '8','a','5','a','5','4','d','3',         //产品秘钥
+  20          '2','f','d','7','7','d','e','f',         //产品秘钥
+  21          's','e','r','v','e','r','=','t','-',     //server
+  22          'i','o','t','a','p','i','.','s',         //server
+  23          'u','p','o','r','.','c','o','m','&',     //server
+  24          'a','p','N','a','m','e','=',             //apName
+  25          's','u','p','o','r','_','e','p',         //apName
+  26          'c','_','&',                             //apName
+  27          'a','p','P','w','d','=','1','2',         //apPwd
+  28          '3','4','5','6','7','8',                 //apPwd
+  29          };
+  30          code u8 UploadFlag[6]={0x03,0xff,0xf1,0xff,0xf7,0xfb};
+  31          WIFIDATABUFF UartWifi;
+  32          MACHINESTATUSBUF RealStatus,UploadStatus;
+  33          MACHINERECIPE MachineMenu;
+  34          u8 WifiConnectState,WifiError,WifiRSSI,EnConfigCnt,EnConfigFlag;
+  35          u8 WifiTx[720];
+  36          u8 WifiAutoTx,WifiAutoTxCnt,WifiAutoTxNum;
+  37          u8 TxNum;
+  38          static u16 CommuCnt,StatusNotChangeCnt;
+  39          static WIFIDATATREAT WifiDataProtol;
+  40          static u8 MacIPCnt,EnGetMacIP,OlineTimeCnt;
+  41          static u8 ReportStatusFlag,ReportNum,StatusCmpCnt;
+  42          
+  43          void WifiInit(void)
+  44          {
+  45   1        u8 i,num;
+  46   1        
+  47   1        StrClear((u8*)&RealStatus,sizeof(MACHINESTATUSBUF));
+  48   1        StrClear((u8*)&UploadStatus,sizeof(MACHINESTATUSBUF));
+  49   1        Nor_Flash.Mode = 0x5a;
+  50   1        Nor_Flash.FLAddr = 0x4000;
+  51   1        Nor_Flash.VPAddr = 0x1800;
+  52   1        Nor_Flash.Len = 0xb0;
+  53   1        Nor_Flash.Buf = NULL;//(u8*)&MachineMenu;
+  54   1        NorFlash_Action();//读取网络菜谱数据
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 2   
+
+  55   1        read_dgus_vp(0x1800,(u8*)&MachineMenu,0x20);//读取配置文件头
+  56   1        num = 0; 
+  57   1        for(i=0;i<6;i++)
+  58   1        {
+  59   2          RealStatus.MachSavedRecipeID[i] = MachineMenu.RecpieID[i];
+  60   2          if(RealStatus.MachSavedRecipeID[i])
+  61   2            num++;
+  62   2        }
+  63   1        RealStatus.DailyRecipesCnt = num;
+  64   1        UartWifi.tx_head = 0;
+  65   1        UartWifi.tx_tail = 0;
+  66   1        UartWifi.tx_flag = 0;
+  67   1        UartWifi.rx_head = 0;
+  68   1        UartWifi.rx_tail = 0;
+  69   1        UartWifi.rxtmp_head = 0;
+  70   1        UartWifi.rxtmp_tail = 0;
+  71   1        TxNum = 0;//帧序号从0开始
+  72   1        WifiAutoTx = 0;
+  73   1        WifiConnectState = 0;
+  74   1        WifiError = 0;
+  75   1        WifiRSSI = 0;
+  76   1        CommuCnt = 0;
+  77   1        EnConfigCnt = 0;
+  78   1        EnConfigFlag = 0;
+  79   1        MacIPCnt = 0;
+  80   1        EnGetMacIP = 1;
+  81   1        OlineTimeCnt = 0;
+  82   1        RealStatus.ProductType[0] = 'E';
+  83   1        RealStatus.ProductType[1] = 'P';
+  84   1        RealStatus.ProductType[2] = 'C';
+  85   1        RealStatus.ProductModel[0] = '2';
+  86   1        RealStatus.ProductModel[1] = 'C';
+  87   1        RealStatus.ProductModel[2] = '0';
+  88   1        RealStatus.ProductModel[3] = '6';
+  89   1        RealStatus.Record2[0] = 'c';
+  90   1        RealStatus.Record2[1] = 'o';
+  91   1        RealStatus.Record2[2] = 'm';
+  92   1        RealStatus.Record2[3] = '.';
+  93   1        RealStatus.Record2[4] = 's';
+  94   1        RealStatus.Record2[5] = 'u';
+  95   1        RealStatus.Record2[6] = 'p';
+  96   1        RealStatus.Record2[7] = 'o';
+  97   1        RealStatus.Record2[8] = 'r';
+  98   1        RealStatus.Record2[9] = '.';
+  99   1        RealStatus.Record2[10] = 'a';
+ 100   1        RealStatus.Record2[11] = 'i';
+ 101   1        RealStatus.Record2[12] = 'o';
+ 102   1        RealStatus.Record2[13] = 't';
+ 103   1        StatusNotChangeCnt = 0;
+ 104   1        ReportStatusFlag = 0;
+ 105   1        StatusCmpCnt = 0;
+ 106   1      }
+ 107          
+ 108          //累加和校验
+ 109          u8 CheckSum(u8 *buf, u16 len) //buf为数组，len为数组长度
+ 110          { 
+ 111   1        u8 ret = 0;
+ 112   1        u16 i=0;
+ 113   1      
+ 114   1        for(i=0; i<len; i++)
+ 115   1        {
+ 116   2          ret += buf[i];
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 3   
+
+ 117   2        }
+ 118   1        return ret;
+ 119   1      }
+ 120          
+ 121          void WifiIconDisplay(void)
+ 122          {
+ 123   1        u8 tmp[4];
+ 124   1        u8 pagenext,pageid;
+ 125   1        u8 k_data[4];
+ 126   1        
+ 127   1        tmp[0] = 0;
+ 128   1        pageid = GetPageID();
+ 129   1        pagenext = 0;
+ 130   1        if(WifiError)
+ 131   1        {
+ 132   2          tmp[1] = 0;//WiFi通讯故障
+ 133   2          if((pageid>=173)&&(pageid<=177))
+ 134   2            pagenext = 173;
+ 135   2        }
+ 136   1        else
+ 137   1        {
+ 138   2          if(WifiConnectState==0)
+ 139   2          {
+ 140   3            tmp[1] = 1;//未连接网络
+ 141   3            if((pageid>=173)&&(pageid<=177))
+ 142   3            {
+ 143   4              if(pageid != 175)
+ 144   4                pagenext = 174;
+ 145   4            }
+ 146   3          }
+ 147   2          else if(WifiConnectState==1)
+ 148   2          {
+ 149   3            tmp[1] = 2;//网络拒绝访问
+ 150   3            if((pageid>=173)&&(pageid<=177))
+ 151   3            {
+ 152   4              pagenext = 176;
+ 153   4            }
+ 154   3          }
+ 155   2          else
+ 156   2          {
+ 157   3            if(WifiRSSI<=1)
+ 158   3              tmp[1] = 3;//网络信号差
+ 159   3            else if(WifiRSSI<=3)
+ 160   3              tmp[1] = 4;//网络信号中
+ 161   3            else if(WifiRSSI<=5)
+ 162   3              tmp[1] = 5;//网络信号良
+ 163   3            else
+ 164   3              tmp[1] = 6;//网络信号良
+ 165   3            if((pageid>=173)&&(pageid<=177))
+ 166   3            {
+ 167   4              pagenext = 177;
+ 168   4            }
+ 169   3          }
+ 170   2        }
+ 171   1        if((pagenext!=0)&&(pagenext!=pageid))
+ 172   1          Page_Change(pagenext);
+ 173   1        read_dgus_vp(0x159e,k_data,2);
+ 174   1        write_dgus_vp(0x159e,tmp,2);//网络信号
+ 175   1        if(k_data[1] != tmp[1])
+ 176   1        {
+ 177   2          if(tmp[1] == 1)//成功连接路由器
+ 178   2          {
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 4   
+
+ 179   3            EnGetMacIP = 1;//获取新的IP
+ 180   3          }
+ 181   2        }
+ 182   1      }
+ 183          
+ 184          void WifiErrorCnt(void)
+ 185          {
+ 186   1        CommuCnt++;
+ 187   1        if(CommuCnt>= MAXCOMMTIME)
+ 188   1        {
+ 189   2          CommuCnt = MAXCOMMTIME;
+ 190   2          WifiError = 1;
+ 191   2          WifiConnectState = 0;
+ 192   2        }
+ 193   1        StatusNotChangeCnt++;
+ 194   1        if(StatusNotChangeCnt >=250)
+ 195   1        {
+ 196   2          StatusNotChangeCnt = 0;
+ 197   2          if(WifiConnectState>1)
+ 198   2          {
+ 199   3            ReportStatusFlag = 0x14;
+ 200   3            ReportNum = TxNum;
+ 201   3          }
+ 202   2        } 
+ 203   1      }
+ 204          
+ 205          void WifiDataTreat(void)
+ 206          {
+ 207   1        u16 tmp16,head;
+ 208   1        u8 tmp8;
+ 209   1        
+ 210   1        EA = 0;
+ 211   1        head = UartWifi.rxtmp_head;
+ 212   1        EA = 1;
+ 213   1        while(UartWifi.rxtmp_tail != head)
+ 214   1        {
+ 215   2          tmp8 = UartWifi.rx_tmp[UartWifi.rxtmp_tail];
+ 216   2          if(tmp8 == 0xff)
+ 217   2          {
+ 218   3            tmp16 = (UartWifi.rxtmp_tail+1)&WIFIBUFSIZECNT;
+ 219   3            if(tmp16 != head)
+ 220   3            {
+ 221   4              UartWifi.rx_buf[UartWifi.rx_head] = 0xff;
+ 222   4              UartWifi.rx_head++;
+ 223   4              if(UartWifi.rx_head>=WIFIBUFSIZEMI)
+ 224   4                UartWifi.rx_head = WIFIBUFSIZECNTMI;
+ 225   4              UartWifi.rxtmp_tail++;
+ 226   4              UartWifi.rxtmp_tail &= WIFIBUFSIZECNT;
+ 227   4              tmp8 = UartWifi.rx_tmp[tmp16];
+ 228   4              if(tmp8 != 0x55)
+ 229   4              {
+ 230   5                UartWifi.rx_buf[UartWifi.rx_head] = tmp8;
+ 231   5                UartWifi.rx_head++;
+ 232   5                if(UartWifi.rx_head>=WIFIBUFSIZEMI)
+ 233   5                  UartWifi.rx_head = WIFIBUFSIZECNTMI;
+ 234   5              }
+ 235   4              UartWifi.rxtmp_tail++;
+ 236   4              UartWifi.rxtmp_tail &= WIFIBUFSIZECNT;
+ 237   4            }
+ 238   3            else
+ 239   3              break;
+ 240   3          }
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 5   
+
+ 241   2          else
+ 242   2          {
+ 243   3            UartWifi.rx_buf[UartWifi.rx_head] = tmp8;
+ 244   3            UartWifi.rx_head++;
+ 245   3            if(UartWifi.rx_head>=WIFIBUFSIZEMI)
+ 246   3              UartWifi.rx_head = WIFIBUFSIZECNTMI;
+ 247   3            UartWifi.rxtmp_tail++;
+ 248   3            UartWifi.rxtmp_tail &= WIFIBUFSIZECNT;
+ 249   3          }
+ 250   2        }
+ 251   1      }
+ 252          
+ 253          void ResponseTowifi(u8 Cmd, u8 SerialNum)
+ 254          {
+ 255   1        u8 tmp[9];
+ 256   1        
+ 257   1        tmp[0] = 0xff;
+ 258   1        tmp[1] = 0xff;
+ 259   1        tmp[2] = 0;
+ 260   1        tmp[3] = 5;
+ 261   1        tmp[4] = Cmd;
+ 262   1        tmp[5] = SerialNum;
+ 263   1        tmp[6] = 0;
+ 264   1        tmp[7] = 0;
+ 265   1        SendToWifi(tmp);
+ 266   1      }
+ 267          
+ 268          void GetOlineTime(void)
+ 269          {
+ 270   1        OlineTimeCnt++;
+ 271   1        if(OlineTimeCnt>= 125)
+ 272   1        {
+ 273   2          OlineTimeCnt = 0;
+ 274   2          if((WifiAutoTx==0)&&(WifiConnectState>1))
+ 275   2          {
+ 276   3            WifiTx[0] = 0xff;
+ 277   3            WifiTx[1] = 0xff;//帧头
+ 278   3            WifiTx[2] = 0;
+ 279   3            WifiTx[3] = 5;//帧长度
+ 280   3            WifiTx[4] = 0x17;//帧类型
+ 281   3            WifiTx[5] = TxNum;//帧序号
+ 282   3            WifiTx[6] = 0;
+ 283   3            WifiTx[7] = 0;
+ 284   3            WifiAutoTxNum = 2;
+ 285   3            WifiAutoTxCnt = 0;
+ 286   3            WifiAutoTx = 1;
+ 287   3          }
+ 288   2        }
+ 289   1      }
+ 290          
+ 291          void GetModuleMacIp(void)
+ 292          {
+ 293   1        if(EnGetMacIP)
+ 294   1        {
+ 295   2          MacIPCnt++;
+ 296   2          if(MacIPCnt==125)
+ 297   2          {
+ 298   3            MacIPCnt = 0;
+ 299   3            if((WifiAutoTx==0)&&(WifiError==0))
+ 300   3            {
+ 301   4              WifiTx[0] = 0xff;
+ 302   4              WifiTx[1] = 0xff;//帧头
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 6   
+
+ 303   4              WifiTx[2] = 0;
+ 304   4              WifiTx[3] = 5;//帧长度
+ 305   4              WifiTx[4] = 0x21;//帧类型
+ 306   4              WifiTx[5] = TxNum;//帧序号
+ 307   4              WifiTx[6] = 0;
+ 308   4              WifiTx[7] = 0;
+ 309   4              WifiAutoTxNum = 2;
+ 310   4              WifiAutoTxCnt = 0;
+ 311   4              WifiAutoTx = 1;
+ 312   4            }
+ 313   3          }
+ 314   2        }
+ 315   1      }
+ 316          
+ 317          void GetReccord(u8 rtype)
+ 318          {
+ 319   1        WifiTx[0] = 0xff;
+ 320   1        WifiTx[1] = 0xff;//帧头
+ 321   1        WifiTx[2] = 0;
+ 322   1        WifiTx[3] = 5;//帧长度
+ 323   1        WifiTx[4] = rtype;//帧类型
+ 324   1        WifiTx[5] = TxNum;//帧序号
+ 325   1        WifiTx[6] = 0;
+ 326   1        WifiTx[7] = 0;
+ 327   1        WifiAutoTxNum = 2;
+ 328   1        WifiAutoTxCnt = 0;
+ 329   1        WifiAutoTx = 1;
+ 330   1      }
+ 331          
+ 332          void EnModuleConfig(void)
+ 333          {
+ 334   1        u8 tmp[10];
+ 335   1        
+ 336   1        if(EnConfigFlag)
+ 337   1        {
+ 338   2          EnConfigCnt++;
+ 339   2          if(EnConfigCnt>=75)
+ 340   2          {
+ 341   3            EnConfigFlag = 0;
+ 342   3            tmp[0] = 0xff;
+ 343   3            tmp[1] = 0xff;
+ 344   3            tmp[2] = 0;
+ 345   3            tmp[3] = 6;
+ 346   3            tmp[4] = 9;
+ 347   3            tmp[5] = TxNum;
+ 348   3            tmp[6] = 0;
+ 349   3            tmp[7] = 0;
+ 350   3            tmp[8] = CONFIGMODE;
+ 351   3            SendToWifi(tmp);
+ 352   3          }
+ 353   2        }
+ 354   1      }
+ 355          
+ 356          void ResetWifiModule(void)
+ 357          {
+ 358   1        u8 tmp[10];
+ 359   1        
+ 360   1        tmp[0] = 0xff;
+ 361   1        tmp[1] = 0xff;
+ 362   1        tmp[2] = 0;
+ 363   1        tmp[3] = 5;
+ 364   1        tmp[4] = 0x0b;
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 7   
+
+ 365   1        tmp[5] = TxNum;
+ 366   1        tmp[6] = 0;
+ 367   1        tmp[7] = 0;
+ 368   1        SendToWifi(tmp);
+ 369   1      }
+ 370          
+ 371          void ReportMachineMsg(u8 SerialNum)
+ 372          {
+ 373   1        u8 i;
+ 374   1        
+ 375   1        if(WifiAutoTx==0)
+ 376   1        {
+ 377   2          WifiTx[0] = 0xff;
+ 378   2          WifiTx[1] = 0xff;//帧头
+ 379   2          *(u16*)&WifiTx[2] = sizeof(MachineMsg)+3;//帧长度
+ 380   2          WifiTx[4] = 0x02;//帧类型
+ 381   2          WifiTx[5] = SerialNum;//帧序号
+ 382   2          for(i=0;i<sizeof(MachineMsg);i++)
+ 383   2          {
+ 384   3            WifiTx[6+i] = MachineMsg[i];
+ 385   3          }
+ 386   2          WifiAutoTxNum = 2;
+ 387   2          WifiAutoTxCnt = MAXTXTOWIFINUM;//立即上报
+ 388   2          WifiAutoTx = 1;
+ 389   2        }
+ 390   1      }
+ 391          
+ 392          void GetNetMsg(u8 *WifiDownload)
+ 393          {
+ 394   1        u8 tmp[48];
+ 395   1        u8 i,j,k;
+ 396   1        u8 stepnum;
+ 397   1        u16 srartbyte;
+ 398   1        u8 kdata[16];
+ 399   1        
+ 400   1        stepnum = 0;
+ 401   1        WifiDataProtol.StartBit=0;
+ 402   1        WifiDataProtol.StartByte=7;
+ 403   1        //开关机状态
+ 404   1        if(WifiDownload[5]&0x01)
+ 405   1        {
+ 406   2          WifiDataProtol.StartBit++;
+ 407   2        }
+ 408   1        //高低配版本
+ 409   1        if(WifiDownload[5]&0x02)
+ 410   1        {
+ 411   2          WifiDataProtol.StartBit++;
+ 412   2        }
+ 413   1        //云菜谱类型
+ 414   1        if(WifiDownload[5]&0x04)
+ 415   1        {
+ 416   2          tmp[0] = 0;
+ 417   2          if(WifiDownload[6]&(0x01<<WifiDataProtol.StartBit))
+ 418   2            tmp[1] = 1;
+ 419   2          else
+ 420   2            tmp[1] = 0;
+ 421   2          write_dgus_vp(0x5011,tmp,1);
+ 422   2          WifiDataProtol.StartBit++;
+ 423   2        }
+ 424   1        //配网类型
+ 425   1        if(WifiDownload[4]&0x10)
+ 426   1        {
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 8   
+
+ 427   2          RealStatus.WifiType = WifiDownload[WifiDataProtol.StartByte];
+ 428   2          WifiDataProtol.StartByte++;
+ 429   2        }
+ 430   1        //云菜谱图标
+ 431   1        if(WifiDownload[2]&0x02)
+ 432   1        {
+ 433   2          tmp[0] = 0;
+ 434   2          tmp[1] = WifiDownload[WifiDataProtol.StartByte];
+ 435   2          write_dgus_vp(0x5012,tmp,1);
+ 436   2          WifiDataProtol.StartByte++;
+ 437   2        }
+ 438   1        //云菜谱坑位号
+ 439   1        if(WifiDownload[2]&0x04)
+ 440   1        {
+ 441   2          tmp[0] = 0;
+ 442   2          tmp[1] = WifiDownload[WifiDataProtol.StartByte];
+ 443   2      //    OnlineMenuNum = WifiDownload[WifiDataProtol.StartByte];
+ 444   2          write_dgus_vp(0x5013,tmp,1);
+ 445   2          WifiDataProtol.StartByte++;
+ 446   2        }
+ 447   1        //云菜谱总步骤数
+ 448   1        if(WifiDownload[2]&0x08)
+ 449   1        {
+ 450   2          tmp[0] = 0;
+ 451   2          tmp[1] = WifiDownload[WifiDataProtol.StartByte];
+ 452   2          stepnum = tmp[1];
+ 453   2          write_dgus_vp(0x5010,tmp,1);
+ 454   2          WifiDataProtol.StartByte++;
+ 455   2        }
+ 456   1        //R1
+ 457   1        if(WifiDownload[1]&0x08)
+ 458   1        {
+ 459   2          for(i=0;i<80;i++)
+ 460   2          {
+ 461   3            RealStatus.Record1[i] = WifiDownload[WifiDataProtol.StartByte];
+ 462   3            WifiDataProtol.StartByte++;
+ 463   3          }
+ 464   2        }
+ 465   1        //R2
+ 466   1        if(WifiDownload[1]&0x10)
+ 467   1        {
+ 468   2          for(i=0;i<20;i++)
+ 469   2          {
+ 470   3            RealStatus.Record2[i] = WifiDownload[WifiDataProtol.StartByte];
+ 471   3            WifiDataProtol.StartByte++;
+ 472   3          }
+ 473   2        }
+ 474   1        //R3
+ 475   1        if(WifiDownload[1]&0x20)
+ 476   1        {
+ 477   2          for(i=0;i<50;i++)
+ 478   2          {
+ 479   3            RealStatus.Record3[i] = WifiDownload[WifiDataProtol.StartByte];
+ 480   3            WifiDataProtol.StartByte++;
+ 481   3          }
+ 482   2        }
+ 483   1        //R4
+ 484   1      //  if(WifiDownload[1]&0x40)
+ 485   1      //  {
+ 486   1      //    for(i=0;i<80;i++)
+ 487   1      //    {
+ 488   1      //      RealStatus.Record4[i] = WifiDownload[WifiDataProtol.StartByte];
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 9   
+
+ 489   1      //      WifiDataProtol.StartByte++;
+ 490   1      //    }
+ 491   1      //  }
+ 492   1        //云菜谱名称
+ 493   1        if(WifiDownload[0]&0x04)
+ 494   1        {
+ 495   2          write_dgus_vp(0x5000,&WifiDownload[WifiDataProtol.StartByte],15);
+ 496   2          WifiDataProtol.StartByte += 30;
+ 497   2        }
+ 498   1        //云菜谱ID
+ 499   1        if(WifiDownload[0]&0x08)
+ 500   1        {
+ 501   2          write_dgus_vp(0x5014,&WifiDownload[WifiDataProtol.StartByte],2);
+ 502   2          WifiDataProtol.StartByte += 4;
+ 503   2        }
+ 504   1        //云菜谱数据1
+ 505   1        i=0;
+ 506   1        if(stepnum>30)
+ 507   1          stepnum = 30;
+ 508   1        if(WifiDownload[0]&0x10)
+ 509   1        {
+ 510   2          for(i=0;i<stepnum;i++)
+ 511   2          {
+ 512   3            srartbyte = WifiDataProtol.StartByte;
+ 513   3            for(j=0;j<13;j++)
+ 514   3            {
+ 515   4              kdata[i] = WifiDownload[srartbyte];
+ 516   4              srartbyte++;
+ 517   4            }
+ 518   3            for(j=0;j<6;j++)
+ 519   3            {
+ 520   4              if(WifiDownload[srartbyte] != '<')//数据错误
+ 521   4                break;
+ 522   4              else
+ 523   4                srartbyte++;
+ 524   4              for(k=0;k<6;k++)
+ 525   4              {
+ 526   5                tmp[k] = WifiDownload[srartbyte];
+ 527   5                srartbyte++;
+ 528   5              }
+ 529   4              write_dgus_vp(0x5028+i*0xB0+j*4,tmp,4);//写入描述数据
+ 530   4              for(k=0;k<47;k++)
+ 531   4              {
+ 532   5                if(WifiDownload[srartbyte] != '>')
+ 533   5                {
+ 534   6                  tmp[k] = WifiDownload[srartbyte];
+ 535   6                  srartbyte++;
+ 536   6                }
+ 537   5                else
+ 538   5                {
+ 539   6                  tmp[k] = '\0';
+ 540   6                  srartbyte++;
+ 541   6                  break;
+ 542   6                }
+ 543   5              }
+ 544   4              tmp[47] = '\0';
+ 545   4              write_dgus_vp(0x5040+i*0xB0+j*18,tmp,24);//写入文本数据
+ 546   4              if(WifiDownload[srartbyte]=='$')
+ 547   4              {
+ 548   5                srartbyte++;
+ 549   5                if(WifiDownload[srartbyte]=='^')
+ 550   5                {
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 10  
+
+ 551   6                  srartbyte++;
+ 552   6                  if(WifiDownload[srartbyte]=='$')
+ 553   6                    break;
+ 554   6                }
+ 555   5              }
+ 556   4            }
+ 557   3            kdata[13] = j;
+ 558   3            write_dgus_vp(0x5020+i*0xB0,kdata,7);//写入描述性数据
+ 559   3            WifiDataProtol.StartByte += 156;
+ 560   3          }
+ 561   2        }
+ 562   1        //云菜谱数据2
+ 563   1        if(WifiDownload[0]&0x20)
+ 564   1        {
+ 565   2          for(;i<stepnum;i++)
+ 566   2          {
+ 567   3            srartbyte = WifiDataProtol.StartByte;
+ 568   3            for(j=0;j<13;j++)
+ 569   3            {
+ 570   4              kdata[i] = WifiDownload[srartbyte];
+ 571   4              srartbyte++;
+ 572   4            }
+ 573   3            for(j=0;j<6;j++)
+ 574   3            {
+ 575   4              if(WifiDownload[srartbyte] != '<')//数据错误
+ 576   4                break;
+ 577   4              else
+ 578   4                srartbyte++;
+ 579   4              for(k=0;k<6;k++)
+ 580   4              {
+ 581   5                tmp[k] = WifiDownload[srartbyte];
+ 582   5                srartbyte++;
+ 583   5              }
+ 584   4              write_dgus_vp(0x5028+i*0xB0+j*4,tmp,4);//写入描述数据
+ 585   4              for(k=0;k<47;k++)
+ 586   4              {
+ 587   5                if(WifiDownload[srartbyte] != '>')
+ 588   5                {
+ 589   6                  tmp[k] = WifiDownload[srartbyte];
+ 590   6                  srartbyte++;
+ 591   6                }
+ 592   5                else
+ 593   5                {
+ 594   6                  tmp[k] = '\0';
+ 595   6                  srartbyte++;
+ 596   6                  break;
+ 597   6                }
+ 598   5              }
+ 599   4              tmp[47] = '\0';
+ 600   4              write_dgus_vp(0x5040+i*0xB0+j*18,tmp,24);//写入文本数据
+ 601   4              if(WifiDownload[srartbyte]=='$')
+ 602   4              {
+ 603   5                srartbyte++;
+ 604   5                if(WifiDownload[srartbyte]=='^')
+ 605   5                {
+ 606   6                  srartbyte++;
+ 607   6                  if(WifiDownload[srartbyte]=='$')
+ 608   6                    break;
+ 609   6                }
+ 610   5              }
+ 611   4            }
+ 612   3            kdata[13] = j;
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 11  
+
+ 613   3            write_dgus_vp(0x5020+i*0xB0,kdata,7);//写入描述性数据
+ 614   3            WifiDataProtol.StartByte += 156;
+ 615   3          }
+ 616   2        }
+ 617   1        //云菜谱数据3
+ 618   1        if(WifiDownload[0]&0x40)
+ 619   1        {
+ 620   2          for(;i<stepnum;i++)
+ 621   2          {
+ 622   3            srartbyte = WifiDataProtol.StartByte;
+ 623   3            for(j=0;j<13;j++)
+ 624   3            {
+ 625   4              kdata[i] = WifiDownload[srartbyte];
+ 626   4              srartbyte++;
+ 627   4            }
+ 628   3            for(j=0;j<6;j++)
+ 629   3            {
+ 630   4              if(WifiDownload[srartbyte] != '<')//数据错误
+ 631   4                break;
+ 632   4              else
+ 633   4                srartbyte++;
+ 634   4              for(k=0;k<6;k++)
+ 635   4              {
+ 636   5                tmp[k] = WifiDownload[srartbyte];
+ 637   5                srartbyte++;
+ 638   5              }
+ 639   4              write_dgus_vp(0x5028+i*0xB0+j*4,tmp,4);//写入描述数据
+ 640   4              for(k=0;k<47;k++)
+ 641   4              {
+ 642   5                if(WifiDownload[srartbyte] != '>')
+ 643   5                {
+ 644   6                  tmp[k] = WifiDownload[srartbyte];
+ 645   6                  srartbyte++;
+ 646   6                }
+ 647   5                else
+ 648   5                {
+ 649   6                  tmp[k] = '\0';
+ 650   6                  srartbyte++;
+ 651   6                  break;
+ 652   6                }
+ 653   5              }
+ 654   4              tmp[47] = '\0';
+ 655   4              write_dgus_vp(0x5040+i*0xB0+j*18,tmp,24);//写入文本数据
+ 656   4              if(WifiDownload[srartbyte]=='$')
+ 657   4              {
+ 658   5                srartbyte++;
+ 659   5                if(WifiDownload[srartbyte]=='^')
+ 660   5                {
+ 661   6                  srartbyte++;
+ 662   6                  if(WifiDownload[srartbyte]=='$')
+ 663   6                    break;
+ 664   6                }
+ 665   5              }
+ 666   4            }
+ 667   3            kdata[13] = j;
+ 668   3            write_dgus_vp(0x5020+i*0xB0,kdata,7);//写入描述性数据
+ 669   3            WifiDataProtol.StartByte += 156;
+ 670   3          }
+ 671   2        }
+ 672   1        //云菜操作，直接操作或保存到库
+ 673   1        if(WifiDownload[4]&0x08)
+ 674   1        {
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 12  
+
+ 675   2          if(WifiDownload[6]&(0x01<<WifiDataProtol.StartBit))//保存到本机
+ 676   2          {
+ 677   3            read_dgus_vp(0x5012,tmp,2);
+ 678   3            if(tmp[3]<=5)//坑位号小于等于5
+ 679   3            {
+ 680   4              read_dgus_vp(0x5014,kdata,2);
+ 681   4              if(*(u32*)kdata < 300)//删除某个坑位的菜谱
+ 682   4              {
+ 683   5                if(MachineMenu.RecpieID[tmp[3]]>=300)//已保存网络菜谱
+ 684   5                {
+ 685   6                  MachineMenu.BlockFlag[MachineMenu.RecpieSavedBlock[tmp[3]]-1] = 0;//block标记清零
+ 686   6                  for(i=tmp[3];i<5;i++)
+ 687   6                  {
+ 688   7                    MachineMenu.RecpieID[i] = MachineMenu.RecpieID[i+1];
+ 689   7                    MachineMenu.RecpieIconID[i] = MachineMenu.RecpieIconID[i+1];
+ 690   7                    MachineMenu.RecpieSavedBlock[i] = MachineMenu.RecpieSavedBlock[i+1];
+ 691   7                    read_dgus_vp(0x1820+0x18*(i+1),tmp,16);
+ 692   7                    write_dgus_vp(0x1820+0x18*i,tmp,16);
+ 693   7                  }
+ 694   6                  write_dgus_vp(0x1800,(u8*)&MachineMenu,0x20);//写入文件头
+ 695   6                  j=0;
+ 696   6                  for(i=0;i<6;i++)
+ 697   6                  {
+ 698   7                    RealStatus.MachSavedRecipeID[i] = MachineMenu.RecpieID[i];
+ 699   7                    if(RealStatus.MachSavedRecipeID[i])
+ 700   7                      j++;
+ 701   7                  }
+ 702   6                  RealStatus.DailyRecipesCnt = j;
+ 703   6                  Nor_Flash.Mode = 0xa5;
+ 704   6                  Nor_Flash.FLAddr = 0x4000;
+ 705   6                  Nor_Flash.VPAddr = 0x1800;
+ 706   6                  Nor_Flash.Len = 0x80;
+ 707   6                  Nor_Flash.Buf = NULL;//(u8*)&MachineMenu;
+ 708   6                  NorFlash_Action();//读取网络菜谱数据
+ 709   6                }
+ 710   5              }
+ 711   4              else//保存菜谱
+ 712   4              {
+ 713   5                j= tmp[3];
+ 714   5                if(MachineMenu.RecpieSavedBlock[j])//表示已经保存了菜谱，要替换
+ 715   5                {
+ 716   6                  i= MachineMenu.RecpieSavedBlock[j];
+ 717   6                }
+ 718   5                else
+ 719   5                {
+ 720   6                  for(i=0;i<6;i++)
+ 721   6                  {
+ 722   7                    if(MachineMenu.BlockFlag[i]==0)//表示找到block号
+ 723   7                      break;
+ 724   7                  }
+ 725   6                  if(i<6)
+ 726   6                    i += 1;
+ 727   6                }
+ 728   5                read_dgus_vp(0x5000,tmp,16);
+ 729   5                write_dgus_vp(0x1820+j*16,tmp,16);//更新菜谱名字
+ 730   5                read_dgus_vp(0x5010,tmp,6);
+ 731   5                MachineMenu.RecpieID[j] = *(u32*)&tmp[8];
+ 732   5                MachineMenu.RecpieIconID[j] = tmp[5];
+ 733   5                MachineMenu.RecpieSavedBlock[j] = i;
+ 734   5                MachineMenu.RecpieSavedBlock[i-1] = 1;
+ 735   5                write_dgus_vp(0x1800,(u8*)&MachineMenu,0x20);//写入文件头
+ 736   5                Nor_Flash.Mode = 0xa5;
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 13  
+
+ 737   5                Nor_Flash.FLAddr = 0x4000;
+ 738   5                Nor_Flash.VPAddr = 0x1800;
+ 739   5                Nor_Flash.Len = 0x80;
+ 740   5                Nor_Flash.Buf = NULL;//(u8*)&MachineMenu;
+ 741   5                NorFlash_Action();//读取网络菜谱数据
+ 742   5                delay_ms(100);
+ 743   5                j=0;
+ 744   5                for(i=0;i<6;i++)
+ 745   5                {
+ 746   6                  RealStatus.MachSavedRecipeID[i] = MachineMenu.RecpieID[i];
+ 747   6                  if(RealStatus.MachSavedRecipeID[i])
+ 748   6                    j++;
+ 749   6                }
+ 750   5                RealStatus.DailyRecipesCnt = j;
+ 751   5                Nor_Flash.Mode = 0xa5;
+ 752   5                Nor_Flash.FLAddr = 0x4100;
+ 753   5                Nor_Flash.FLAddr += (i-1)*0x14c0;
+ 754   5                Nor_Flash.VPAddr = 0x5000;
+ 755   5                Nor_Flash.Len = 0x14c0;
+ 756   5                Nor_Flash.Buf = NULL;//(u8*)&MachineMenu;
+ 757   5                NorFlash_Action();//存储网络菜谱
+ 758   5                delay_ms(100);
+ 759   5              }
+ 760   4            }
+ 761   3          }
+ 762   2          else//开始制作
+ 763   2          {
+ 764   3            read_dgus_vp(0x5014,(u8*)RealStatus.RecipeID,2);
+ 765   3            StepData(1);
+ 766   3          }
+ 767   2        }
+ 768   1      }
+ 769          
+ 770          void RecFromWifi(void)
+ 771          {
+ 772   1        u16 len,len1,i;
+ 773   1        u8 tmp8;
+ 774   1        u8 WifiRx[MAXLTNGTH];
+ 775   1        u16 tail;
+ 776   1        
+ 777   1        WifiDataTreat();
+ 778   1        if(UartWifi.rx_tail != UartWifi.rx_head)
+ 779   1        { 
+ 780   2          if(UartWifi.rx_head < UartWifi.rx_tail)
+ 781   2          {
+ 782   3            len = (UartWifi.rx_head+5000) - UartWifi.rx_tail;
+ 783   3          }
+ 784   2          else
+ 785   2          {
+ 786   3            len = UartWifi.rx_head - UartWifi.rx_tail;
+ 787   3          }
+ 788   2          if(len>=8)
+ 789   2          {
+ 790   3            tail = UartWifi.rx_tail+1;
+ 791   3            if(tail >= WIFIBUFSIZEMI)
+ 792   3              tail = WIFIBUFSIZECNTMI;
+ 793   3            if((UartWifi.rx_buf[UartWifi.rx_tail]==0xff)&&(UartWifi.rx_buf[tail]==0xff))
+ 794   3            {
+ 795   4              tail = UartWifi.rx_tail+2;
+ 796   4              if(tail >= WIFIBUFSIZEMI)
+ 797   4                tail = WIFIBUFSIZECNTMI;
+ 798   4              len1 = UartWifi.rx_buf[tail];
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 14  
+
+ 799   4              len1 <<= 8;
+ 800   4              tail++;
+ 801   4              if(tail >= WIFIBUFSIZEMI)
+ 802   4                tail = WIFIBUFSIZECNTMI;
+ 803   4              len1 |= UartWifi.rx_buf[tail];
+ 804   4              if(len1 <= MAXLTNGTH)
+ 805   4              {
+ 806   5                if(len >= len1+4)
+ 807   5                {
+ 808   6                  for(i=0;i<len1+4;i++)
+ 809   6                  {
+ 810   7                    WifiRx[i] = UartWifi.rx_buf[UartWifi.rx_tail];
+ 811   7                    UartWifi.rx_tail += 1;
+ 812   7                    if(UartWifi.rx_tail >= WIFIBUFSIZEMI)
+ 813   7                      UartWifi.rx_tail = WIFIBUFSIZECNTMI;
+ 814   7                  }
+ 815   6                  tmp8 = CheckSum(WifiRx+2,*(u16*)&WifiRx[2]+1);
+ 816   6                  if(WifiRx[*(u16*)&WifiRx[2]+3]==tmp8)
+ 817   6                  {
+ 818   7                    switch(WifiRx[4])
+ 819   7                    {
+ 820   8                      case 0x01:
+ 821   8                        ReportMachineMsg(WifiRx[5]);//上报本机的固定信息，命令0x01,0x02
+ 822   8                        break;
+ 823   8                      case 0x03:
+ 824   8                        if(WifiRx[8]==0x11)
+ 825   8                        {
+ 826   9                          ResponseTowifi(4,WifiRx[5]);//处理WiFi下发的菜谱以及其他数据，命令0x03,0x04
+ 827   9                          GetNetMsg(&WifiRx[9]);
+ 828   9                        }
+ 829   8                        else if(WifiRx[8]==0x12)
+ 830   8                        {
+ 831   9                          ReportStatusFlag = 0x13;
+ 832   9                          ReportNum = WifiRx[5];
+ 833   9                        }
+ 834   8                        break;
+ 835   8                      case 0x06:
+ 836   8                        if(WifiTx[4]==0x05)//上报状态后收到WiFi回复，命令0x05,0x06
+ 837   8                        {
+ 838   9                          if(WifiAutoTx)
+ 839   9                            WifiAutoTx = 0;
+ 840   9                          TxNum++;
+ 841   9                        }
+ 842   8                        break;
+ 843   8                      case 0x07:
+ 844   8                        ResponseTowifi(8,WifiRx[5]);//WiFi下发的心跳，命令0x07,0x08
+ 845   8                        break;
+ 846   8                      case 0x0a:
+ 847   8      //                  if(WifiTx[4]==0x09)//使得WiFi进入配网模式，命令0x09,0x0a
+ 848   8      //                  {
+ 849   8      //                    if(WifiAutoTx)
+ 850   8      //                      WifiAutoTx = 0;
+ 851   8      //                    TxNum++;
+ 852   8      //                  }
+ 853   8                        TxNum++;
+ 854   8                        break;
+ 855   8                      case 0x0c:
+ 856   8      //                  if(WifiTx[4]==0x0b)//使得WiFi进入配网模式，命令0x0b,0x0c
+ 857   8      //                  {
+ 858   8      //                    EnConfigCnt = 0;
+ 859   8      //                    EnConfigFlag = 1;
+ 860   8      //                    if(WifiAutoTx)
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 15  
+
+ 861   8      //                      WifiAutoTx = 0;
+ 862   8      //                    TxNum++;
+ 863   8      //                  }
+ 864   8                        EnConfigCnt = 0;
+ 865   8                        EnConfigFlag = 1;
+ 866   8                        TxNum++;
+ 867   8                        break;  
+ 868   8                      case 0x0d:
+ 869   8                        ResponseTowifi(0x0e,WifiRx[5]);//WiFi下发的联网状态
+ 870   8                        if((WifiRx[9]&0x30)==0x30)
+ 871   8                        {
+ 872   9                          WifiConnectState = 2;
+ 873   9                          WifiRSSI = WifiRx[8]&0x07;
+ 874   9                        }
+ 875   8                        else if((WifiRx[9]&0x30)==0x10)
+ 876   8                        {
+ 877   9                          WifiConnectState = 1;
+ 878   9                        }
+ 879   8                        else
+ 880   8                        {
+ 881   9                          WifiConnectState = 0;
+ 882   9                        }
+ 883   8                        break;
+ 884   8                      case 0x18:
+ 885   8                        if(WifiTx[4]==0x17)//获取网络时间
+ 886   8                        {
+ 887   9                          if(WifiAutoTx)
+ 888   9                            WifiAutoTx = 0;
+ 889   9                          TxNum++;
+ 890   9                        }
+ 891   8                        WifiRx[0] = (u8)(*(u16*)&WifiRx[8]-2000);
+ 892   8                        WifiRx[1] = WifiRx[10];
+ 893   8                        WifiRx[2] = WifiRx[11];
+ 894   8                        WifiRx[3] = 0;
+ 895   8                        WifiRx[4] = WifiRx[12];
+ 896   8                        WifiRx[5] = WifiRx[13];
+ 897   8                        WifiRx[6] = WifiRx[14];
+ 898   8                        WifiRx[7] = 0;
+ 899   8                        write_dgus_vp(0x10,WifiRx,4);//更新网络时间到本地
+ 900   8                        break;
+ 901   8                      case 0x22:
+ 902   8                        if(WifiTx[4]==0x21)//获取WiFiMAC地址以及IP地址
+ 903   8                        {
+ 904   9                          if(WifiAutoTx)
+ 905   9                            WifiAutoTx = 0;
+ 906   9                          TxNum++;
+ 907   9                        }
+ 908   8                        EnGetMacIP = 0;
+ 909   8                        write_dgus_vp(0x1660,&WifiRx[33],8);//MAC地址
+ 910   8                        write_dgus_vp(0x1640,&WifiRx[49],8);//连接的IP地址
+ 911   8                        break;
+ 912   8                      case 0x65:
+ 913   8                        ResponseTowifi(0x66,WifiRx[5]);//WiFi下发的NFC中断
+ 914   8                        if(PowerState)
+ 915   8                          MusicDirectPlay(0);
+ 916   8                        else
+ 917   8                          Key_Enable[1] = 1;
+ 918   8                      default:
+ 919   8                        break;
+ 920   8                    }
+ 921   7                    CommuCnt = 0;
+ 922   7                  }
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 16  
+
+ 923   6                }
+ 924   5              }
+ 925   4              else
+ 926   4              {
+ 927   5                UartWifi.rx_tail += 1;
+ 928   5                if(UartWifi.rx_tail >= WIFIBUFSIZEMI)
+ 929   5                  UartWifi.rx_tail = WIFIBUFSIZECNTMI;
+ 930   5              }
+ 931   4            }
+ 932   3            else
+ 933   3            {
+ 934   4              UartWifi.rx_tail += 1;
+ 935   4              if(UartWifi.rx_tail >= WIFIBUFSIZEMI)
+ 936   4                UartWifi.rx_tail = WIFIBUFSIZECNTMI;
+ 937   4            }
+ 938   3          }
+ 939   2        }
+ 940   1      }
+ 941          
+ 942          void MachineStatusUpAction(void)
+ 943          {
+ 944   1        u16 i;
+ 945   1        
+ 946   1        if((ReportStatusFlag!=0)&&(WifiAutoTx==0))
+ 947   1        {
+ 948   2          if(ReportStatusFlag==0x13)
+ 949   2          {
+ 950   3            WifiTx[4] = 0x04;//帧类型
+ 951   3            WifiTx[8] = 0x13;
+ 952   3          }
+ 953   2          else
+ 954   2          {
+ 955   3            WifiTx[4] = 0x05;//帧类型
+ 956   3            WifiTx[8] = 0x14;
+ 957   3          }
+ 958   2          WifiTx[0] = 0xff;
+ 959   2          WifiTx[1] = 0xff;//帧头
+ 960   2          *(u16*)&WifiTx[2] = 12+sizeof(MACHINESTATUSBUF);//帧长度
+ 961   2          WifiTx[5] = ReportNum;//帧序号
+ 962   2          WifiTx[6] = 0;
+ 963   2          WifiTx[7] = 0;
+ 964   2          for(i=0;i<6;i++)
+ 965   2          {
+ 966   3            WifiTx[9+i] = UploadFlag[i];
+ 967   3          }
+ 968   2          StrCopy(&WifiTx[15],(u8*)&RealStatus,sizeof(RealStatus));
+ 969   2          WifiAutoTxNum = 2;
+ 970   2          WifiAutoTxCnt = 0;
+ 971   2          WifiAutoTx = 1;
+ 972   2          ReportStatusFlag = 0;
+ 973   2        }
+ 974   1      }
+ 975          
+ 976          //void NFCRecorrdInit(void)
+ 977          //{
+ 978          //  
+ 979          //}
+ 980          
+ 981          void MachineStatusUpload(void)
+ 982          {
+ 983   1        u8 flag;
+ 984   1        
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 17  
+
+ 985   1        if(WifiConnectState>1)
+ 986   1        {
+ 987   2          StatusCmpCnt++;
+ 988   2          if(StatusCmpCnt >=25)
+ 989   2          {
+ 990   3            StatusCmpCnt = 0;
+ 991   3            flag = StrCopare((u8*)&RealStatus,(u8*)&UploadStatus,sizeof(RealStatus));
+ 992   3            if(flag)
+ 993   3            {
+ 994   4              StrCopy((u8*)&UploadStatus,(u8*)&RealStatus,sizeof(RealStatus));
+ 995   4              StatusNotChangeCnt = 0;
+ 996   4              ReportStatusFlag = 0x14;
+ 997   4              ReportNum = TxNum;
+ 998   4            }
+ 999   3          }
+1000   2        }
+1001   1      }
+1002          
+1003          void WifiAction(void)
+1004          {
+1005   1        MachineStatusUpload();
+1006   1        WifiErrorCnt();
+1007   1        MachineStatusUpAction();
+1008   1        WifiIconDisplay();
+1009   1        EnModuleConfig();
+1010   1        GetModuleMacIp();
+1011   1      //  NFCRecorrdInit();
+1012   1      //  GetOlineTime();
+1013   1        AutoSendToWifi();
+1014   1      }
+1015          
+1016          void SendToWifi(u8 *WifiMsg)
+1017          {
+1018   1        u16 i;
+1019   1        u16 Len,SendLen;
+1020   1        u8 sendtmp[1024];
+1021   1        
+1022   1        Len = *(u16*)&WifiMsg[2];
+1023   1        WifiMsg[Len+3] = CheckSum(WifiMsg+2,Len+1);
+1024   1        for(i=0;i<5;i++)
+1025   1        {
+1026   2          sendtmp[i] = WifiMsg[i];
+1027   2        }
+1028   1        SendLen = 5;
+1029   1        for(i=5;i<Len+4;i++)
+1030   1        {
+1031   2          sendtmp[SendLen] = WifiMsg[i];
+1032   2          if(WifiMsg[i] == 0xff)
+1033   2          {
+1034   3            SendLen++;
+1035   3            sendtmp[SendLen] = 0x55;
+1036   3          }
+1037   2          SendLen++;
+1038   2        } 
+1039   1        for(i=0;i<SendLen;i++)
+1040   1        {
+1041   2          UartWifi.tx_buf[UartWifi.tx_head] = sendtmp[i];
+1042   2          UartWifi.tx_head++;
+1043   2          UartWifi.tx_head &= WIFIBUFSIZESMACNT;
+1044   2        }
+1045   1        if(UartWifi.tx_flag == 0)
+1046   1        {
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 18  
+
+1047   2          UartWifi.tx_flag = 1;
+1048   2          SBUF3_TX = UartWifi.tx_buf[UartWifi.tx_tail];
+1049   2          UartWifi.tx_tail++;
+1050   2          UartWifi.tx_tail &= WIFIBUFSIZESMACNT;
+1051   2        } 
+1052   1      //  WifiTx[5]++;//帧序号+1
+1053   1      }
+1054          
+1055          void AutoSendToWifi(void)
+1056          {
+1057   1        if(WifiAutoTx)
+1058   1        {
+1059   2          WifiAutoTxCnt++;
+1060   2          if(WifiAutoTxCnt>=MAXTXTOWIFINUM)
+1061   2          {
+1062   3            WifiAutoTxCnt = 0;
+1063   3            SendToWifi(WifiTx);
+1064   3            WifiAutoTxNum++;
+1065   3            if(WifiAutoTxNum>=3)
+1066   3            {
+1067   4              WifiAutoTx = 0;
+1068   4              TxNum++;//帧序号+1
+1069   4            }
+1070   3          }
+1071   2        }
+1072   1      }
+1073          
+1074          void uart5t_Isr() interrupt 12
+1075          {
+1076   1        EA = 0;
+1077   1        SCON3T &= 0XFE;
+1078   1        if(UartWifi.tx_head != UartWifi.tx_tail)
+1079   1        {
+1080   2          SBUF3_TX = UartWifi.tx_buf[UartWifi.tx_tail]; 
+1081   2          UartWifi.tx_tail++;
+1082   2          UartWifi.tx_tail &= WIFIBUFSIZESMACNT;
+1083   2        }
+1084   1        else
+1085   1        {
+1086   2          UartWifi.tx_flag = 0;
+1087   2        }
+1088   1        EA = 1;
+1089   1      }
+1090          
+1091          void uart5r_Isr() interrupt 13
+1092          {
+1093   1        EA = 0;
+1094   1        SCON3R &= 0XFE;
+1095   1        UartWifi.rx_tmp[UartWifi.rxtmp_head] = SBUF3_RX;
+1096   1        UartWifi.rxtmp_head++;
+1097   1        UartWifi.rxtmp_head &= WIFIBUFSIZECNT;  
+1098   1        EA = 1;
+1099   1      }
+1100          
+1101          //        k_data[0] = UploadStatus.BitSate1;
+1102          //        k_data[1] = UploadStatus.BitSate2;
+1103          //        k_data[2] = UploadStatus.WifiType;
+1104          //        k_data[3] = UploadStatus.NetDbm;
+1105          //        k_data[4] = UploadStatus.DailyRecipesCnt;
+1106          //        k_data[5] = UploadStatus.MachineStatus;
+1107          //        k_data[6] = UploadStatus.RecipeStepNum;
+1108          //        k_data[7] = UploadStatus.TotalRecipeStepNum;
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 19  
+
+1109          //        k_data[8] = UploadStatus.ContextState;
+1110          //        k_data[9] = UploadStatus.LidStatus;
+1111          //        k_data[10] = UploadStatus.PowerScale;
+1112          //        k_data[11] = UploadStatus.SetTempValue;
+1113          //        k_data[12] = UploadStatus.RealTempValue;
+1114          //        k_data[13] = UploadStatus.RealPressureValue;
+1115          //        k_data[14] = UploadStatus.RealBladeStatus;
+1116          //        k_data[15] = 0;
+1117          //        *(u16*)&k_data[16] = UploadStatus.PowerOnTotalTime;
+1118          //        *(u16*)&k_data[18] = UploadStatus.LightTotalTime;
+1119          //        *(u16*)&k_data[20] = UploadStatus.RelayActionCount;
+1120          //        *(u16*)&k_data[22] = UploadStatus.InnerIOCount;
+1121          //        for(i=0;i<20;i++)
+1122          //        {
+1123          //          k_data[24+i] = UploadStatus.ProductType[i];
+1124          //        }
+1125          //        for(i=0;i<20;i++)
+1126          //        {
+1127          //          k_data[44+i] = UploadStatus.ProductModel[i];
+1128          //        }
+1129          //        for(i=0;i<20;i++)
+1130          //        {
+1131          //          k_data[64+i] = UploadStatus.AnticollusionCode[i];
+1132          //        }
+1133          //        for(i=0;i<80;i++)
+1134          //        {
+1135          //          k_data[84+i] = UploadStatus.Record1[i];
+1136          //        }
+1137          //        for(i=0;i<20;i++)
+1138          //        {
+1139          //          k_data[164+i] = UploadStatus.Record2[i];
+1140          //        }
+1141          //        for(i=0;i<50;i++)
+1142          //        {
+1143          //          k_data[184+i] = UploadStatus.Record3[i];
+1144          //        }
+1145          //        for(i=0;i<80;i++)
+1146          //        {
+1147          //          k_data[234+i] = UploadStatus.Record4[i];
+1148          //        }
+1149          //        *(u32*)&k_data[314] = UploadStatus.RecipeID;
+1150          //        *(u16*)&k_data[318] = UploadStatus.WorkStatus;
+1151          //        *(u32*)&k_data[320] = UploadStatus.WorkTime;
+1152          //        *(u32*)&k_data[324] = UploadStatus.MachSavedRecipeID[0];
+1153          //        *(u32*)&k_data[328] = UploadStatus.MachSavedRecipeID[1];
+1154          //        *(u32*)&k_data[332] = UploadStatus.MachSavedRecipeID[2];
+1155          //        *(u32*)&k_data[336] = UploadStatus.MachSavedRecipeID[3];
+1156          //        *(u32*)&k_data[340] = UploadStatus.MachSavedRecipeID[4];
+1157          //        *(u32*)&k_data[344] = UploadStatus.MachSavedRecipeID[5];
+1158          //        write_dgus_vp(0xc000,k_data,348/2);
+1159          
+1160          //        k_data[0] = RealStatus.BitSate1;
+1161          //        k_data[1] = RealStatus.BitSate2;
+1162          //        k_data[2] = RealStatus.WifiType;
+1163          //        k_data[3] = RealStatus.NetDbm;
+1164          //        k_data[4] = RealStatus.DailyRecipesCnt;
+1165          //        k_data[5] = RealStatus.MachineStatus;
+1166          //        k_data[6] = RealStatus.RecipeStepNum;
+1167          //        k_data[7] = RealStatus.TotalRecipeStepNum;
+1168          //        k_data[8] = RealStatus.ContextState;
+1169          //        k_data[9] = RealStatus.LidStatus;
+1170          //        k_data[10] = RealStatus.PowerScale;
+C51 COMPILER V9.57.0.0   WIFI                                                              12/10/2020 18:06:06 PAGE 20  
+
+1171          //        k_data[11] = RealStatus.SetTempValue;
+1172          //        k_data[12] = RealStatus.RealTempValue;
+1173          //        k_data[13] = RealStatus.RealPressureValue;
+1174          //        k_data[14] = RealStatus.RealBladeStatus;
+1175          //        k_data[15] = 0;
+1176          //        *(u16*)&k_data[16] = RealStatus.PowerOnTotalTime;
+1177          //        *(u16*)&k_data[18] = RealStatus.LightTotalTime;
+1178          //        *(u16*)&k_data[20] = RealStatus.RelayActionCount;
+1179          //        *(u16*)&k_data[22] = RealStatus.InnerIOCount;
+1180          //        for(i=0;i<20;i++)
+1181          //        {
+1182          //          k_data[24+i] = RealStatus.ProductType[i];
+1183          //        }
+1184          //        for(i=0;i<20;i++)
+1185          //        {
+1186          //          k_data[44+i] = RealStatus.ProductModel[i];
+1187          //        }
+1188          //        for(i=0;i<20;i++)
+1189          //        {
+1190          //          k_data[64+i] = RealStatus.AnticollusionCode[i];
+1191          //        }
+1192          //        for(i=0;i<80;i++)
+1193          //        {
+1194          //          k_data[84+i] = RealStatus.Record1[i];
+1195          //        }
+1196          //        for(i=0;i<20;i++)
+1197          //        {
+1198          //          k_data[164+i] = RealStatus.Record2[i];
+1199          //        }
+1200          //        for(i=0;i<50;i++)
+1201          //        {
+1202          //          k_data[184+i] = RealStatus.Record3[i];
+1203          //        }
+1204          //        for(i=0;i<80;i++)
+1205          //        {
+1206          //          k_data[234+i] = RealStatus.Record4[i];
+1207          //        }
+1208          //        *(u32*)&k_data[314] = RealStatus.RecipeID;
+1209          //        *(u16*)&k_data[318] = RealStatus.WorkStatus;
+1210          //        *(u32*)&k_data[320] = RealStatus.WorkTime;
+1211          //        *(u32*)&k_data[324] = RealStatus.MachSavedRecipeID[0];
+1212          //        *(u32*)&k_data[328] = RealStatus.MachSavedRecipeID[1];
+1213          //        *(u32*)&k_data[332] = RealStatus.MachSavedRecipeID[2];
+1214          //        *(u32*)&k_data[336] = RealStatus.MachSavedRecipeID[3];
+1215          //        *(u32*)&k_data[340] = RealStatus.MachSavedRecipeID[4];
+1216          //        *(u32*)&k_data[344] = RealStatus.MachSavedRecipeID[5];
+1217          //        write_dgus_vp(0xc000,k_data,348/2);
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   7362    ----
+   CONSTANT SIZE    =    172    ----
+   XDATA SIZE       =  15567    6153
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

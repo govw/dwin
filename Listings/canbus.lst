@@ -1,0 +1,2014 @@
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE CANBUS
+OBJECT MODULE PLACED IN .\Objects\canbus.obj
+COMPILER INVOKED BY: D:\DWIN\Keil_v5\C51\BIN\C51.EXE driver\canbus.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\driver;.\so
+                    -urce) DEBUG OBJECTEXTEND CODE SYMBOLS PRINT(.\Listings\canbus.lst) OBJECT(.\Objects\canbus.obj)
+
+line level    source
+
+   1          #include "canbus.h"
+   2          #include "timer.h"
+   3          //如果使用CAN，那么sys.h  必须增加如下宏定义  #define INTVPACTION
+   4          
+   5          /*CAN总线位时间参数的设定与调整
+   6          1、     确定时间份额
+   7                          时间份额数量为8~25
+   8                          位时间=1/波特率           ( 250K           4us)
+   9                          时间份额=位时间/时间份额数量        
+  10                          BRP=时间份额/(2*tclk)=  时间份额/2*FOSC=206*200/2000=40      
+  11          2、     设置时间段和采样点
+  12                          时间份额数量=1+T1+T2
+  13                          采样点80%最佳
+  14                          (1+T1)/(1+T1+T2)=0.8
+  15                          就可以确定T1  T2
+  16                          传播时间段和相位缓冲器段1  =T1
+  17                          相位缓冲器段2              =T2
+  18          3、     确定同步跳转宽度和采样次数
+  19                          同步跳转宽度1~4  尽量大
+  20          
+  21          */
+  22          CANBUSUNIT   CanData;
+  23          //https://blog.csdn.net/weixin_44536482/article/details/89030152
+  24          //125K{0x3F,0x40,0x72,0x00},250K{0x1F,0x40,0x72,0x00},500K{0x0F,0x40,0x72,0x00},1M{0x07,0x40,0x72,0x00}
+  25          //根据T5L应用开发指南3.8对CAN接口进行初始化
+  26          void CanBusInit(u8* RegCfg)
+  27          {
+  28   1              SetPinOut(0,2);
+  29   1              SetPinIn(0,3);
+  30   1              PinOutput(0,2,1);
+  31   1              MUX_SEL |= 0x80;                //将CAN接口引出到P0.2,P0.3      
+  32   1              ADR_H = 0xFF;
+  33   1              ADR_M = 0x00;
+  34   1              ADR_L = 0x60;
+  35   1              ADR_INC = 1;
+  36   1              RAMMODE = 0x8F;         //写操作
+  37   1              while(!APP_ACK);
+  38   1              #if 0
+                      DATA3 = 17;
+                      DATA2 = 0x4c;
+                      DATA1 = 0x1f;
+                      DATA0 = 0x00;   
+                      #else
+  44   1              DATA3 = RegCfg[0];
+  45   1              DATA2 = RegCfg[1];
+  46   1              DATA1 = RegCfg[2];
+  47   1              DATA0 = RegCfg[3];                      
+  48   1              #endif          
+  49   1              APP_EN = 1;
+  50   1              while(APP_EN);
+  51   1              DATA3 = 0;
+  52   1              DATA2 = 0;
+  53   1              DATA1 = 0;
+  54   1              DATA0 = 0;                      //配置验收寄存器ACR
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 2   
+
+  55   1              APP_EN = 1;       
+  56   1              while(APP_EN);
+  57   1              DATA3 = 0xFF;
+  58   1              DATA2 = 0xFF;
+  59   1              DATA1 = 0xFF;
+  60   1              DATA0 = 0xFF;           //配置AMR
+  61   1              APP_EN = 1;     
+  62   1              while(APP_EN);
+  63   1              RAMMODE = 0;
+  64   1              CAN_CR = 0xA0;
+  65   1              while(CAN_CR&0x20);     //执行配置FF0060-FF0062动作
+  66   1              ECAN = 1;                       //打开CAN中断   
+  67   1      }
+  68          
+  69          
+  70          /**************************************************************
+  71          D3  1  CAN_RX_BUFFER  [7] IDE ，[6]RTR， [3:0]—DLC，帧数据长度。
+  72          0xFF:0068
+  73          D2:D0  3  未定义 
+  74          ID  ID，扩展帧时 29bit 有效，标准帧时 11bit 有效。
+  75          D3  1  ID 第一个字节，标准帧与扩展帧。
+  76          D2  1  ID 第二个字节，[7:5]为标准帧的高 3bit，扩展帧第 2 字节。
+  77          D1  1  ID 第三个字节，标准帧无效，扩展帧第 3 字节。
+  78          0xFF:0069
+  79          D0  1  ID 第四个字节，标准帧无效，[7:3]-扩展帧的高 5bit。
+  80          0xFF:006A  D3:D0  4  数据  接收数据，DATA1-DATA4。
+  81          0xFF:006B  D3:D0  4  数据  接收数据，DATA5-DATA8。
+  82          ******************************************************************/
+  83          //对于T5L1和T5L2必须在main函数，while(1)中调用
+  84          void CanErrorReset(void)
+  85          {
+  86   1              // EA=0;
+  87   1              if(CAN_ET&0X20)
+  88   1              {
+  89   2                      CAN_ET &= 0XDF;
+  90   2                      CAN_CR |= 0X40;
+  91   2                      delay_us(1000);
+  92   2                      CAN_CR &= 0XBF;  
+  93   2                      CanData.CanTxFlag = 0;
+  94   2              }
+  95   1              // EA=1;
+  96   1      }
+  97          
+  98          
+  99          void LoadOneFrame(void)
+ 100          {
+ 101   1              ADR_H = 0xFF;
+ 102   1              ADR_M = 0x00;
+ 103   1              ADR_L = 0x64;
+ 104   1              ADR_INC = 1;
+ 105   1              RAMMODE = 0x8F;         //写操作
+ 106   1              while(!APP_ACK);
+ 107   1              DATA3 = CanData.BusTXbuf[CanData.CanTxTail].status;                     //帧类长度型以及数据
+ 108   1              DATA2 = 0;
+ 109   1              DATA1 = 0;
+ 110   1              DATA0 = 0;                      
+ 111   1              APP_EN = 1;
+ 112   1              while(APP_EN);          //写入RTR,IDE,DLC等数据
+ 113   1              DATA3 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID>>24);
+ 114   1              DATA2 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID>>16);
+ 115   1              DATA1 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID>>8);
+ 116   1              DATA0 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID);                   
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 3   
+
+ 117   1              APP_EN = 1;
+ 118   1              while(APP_EN);          //写入ID数据
+ 119   1              DATA3 = CanData.BusTXbuf[CanData.CanTxTail].candata[0];
+ 120   1              DATA2 = CanData.BusTXbuf[CanData.CanTxTail].candata[1];
+ 121   1              DATA1 = CanData.BusTXbuf[CanData.CanTxTail].candata[2];
+ 122   1              DATA0 = CanData.BusTXbuf[CanData.CanTxTail].candata[3];                 
+ 123   1              APP_EN = 1;
+ 124   1              while(APP_EN);          //写入发送数据前4字节
+ 125   1              DATA3 = CanData.BusTXbuf[CanData.CanTxTail].candata[4];
+ 126   1              DATA2 = CanData.BusTXbuf[CanData.CanTxTail].candata[5];
+ 127   1              DATA1 = CanData.BusTXbuf[CanData.CanTxTail].candata[6];
+ 128   1              DATA0 = CanData.BusTXbuf[CanData.CanTxTail].candata[7];                 
+ 129   1              APP_EN = 1;
+ 130   1              while(APP_EN);          //写入发送数据后4字节
+ 131   1              CanData.CanTxTail++;
+ 132   1              RAMMODE = 0;
+ 133   1      }
+ 134          
+ 135          //status主要用于提供IDE 和 RTR状态，实际发送长度有len自动处理，大于8字节会自动拆分成多包
+ 136          void CanTx(u32 ID, u8 status, u16 len, const u8 *pData)
+ 137          {
+ 138   1              u8 i,j,k,framnum,framoffset;
+ 139   1              u32 idtmp,statustmp;
+ 140   1      
+ 141   1              if(len>2048)//发送长度大于队列长度
+ 142   1                      return;
+ 143   1              if(status&0x80)//扩展帧
+ 144   1              {
+ 145   2                      idtmp = ID << 3;
+ 146   2              }
+ 147   1              else
+ 148   1              {
+ 149   2                      idtmp = ID << 21;
+ 150   2              }
+ 151   1              if(CanData.BusTXbuf[CanData.CanTxHead].status&0x40)//远程帧不需要发送数据
+ 152   1              {
+ 153   2                      CanData.BusTXbuf[CanData.CanTxHead].ID = idtmp;
+ 154   2                      CanData.BusTXbuf[CanData.CanTxHead].status = status&0xC0;//远程帧发送长度强制清零
+ 155   2                      CanData.CanTxHead++;
+ 156   2              }
+ 157   1              else
+ 158   1              {
+ 159   2                      framnum = len >> 3;
+ 160   2                      framoffset = len % 8;
+ 161   2                      k=0;
+ 162   2                      statustmp = status&0xC0;
+ 163   2                      for(i=0;i<framnum;i++)
+ 164   2                      {
+ 165   3                              CanData.BusTXbuf[CanData.CanTxHead].ID = idtmp;
+ 166   3                              CanData.BusTXbuf[CanData.CanTxHead].status = statustmp | 0x08;
+ 167   3                              for(j=0;j<8;j++)
+ 168   3                              {
+ 169   4                                      CanData.BusTXbuf[CanData.CanTxHead].candata[j] = pData[k];
+ 170   4                                      k++;
+ 171   4                              }
+ 172   3                              CanData.CanTxHead++;
+ 173   3                      }
+ 174   2                      if(framoffset)
+ 175   2                      {
+ 176   3                              CanData.BusTXbuf[CanData.CanTxHead].ID = idtmp;
+ 177   3                              CanData.BusTXbuf[CanData.CanTxHead].status = statustmp | framoffset;
+ 178   3                              for(j=0;j<framoffset;j++)
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 4   
+
+ 179   3                              {
+ 180   4                                      CanData.BusTXbuf[CanData.CanTxHead].candata[j] = pData[k];
+ 181   4                                      k++;
+ 182   4                              }
+ 183   3                              for(;j<8;j++)
+ 184   3                                      CanData.BusTXbuf[CanData.CanTxHead].candata[j] = 0;
+ 185   3                              CanData.CanTxHead++;
+ 186   3                      }
+ 187   2              }
+ 188   1              if(0==CanData.CanTxFlag)
+ 189   1              {
+ 190   2                      EA = 0;
+ 191   2                      LoadOneFrame();
+ 192   2                      EA = 1;
+ 193   2                      CanData.CanTxFlag = 1;
+ 194   2                      CAN_CR |= 0x04;         //启动发送
+ 195   2              }
+ 196   1      }
+ 197          
+ 198          void Can_Isr() interrupt 9
+ 199          {
+ 200   1              u8 status;
+ 201   1              
+ 202   1              EA = 0;
+ 203   1              if((CAN_IR&0x80) == 0x80)
+ 204   1              {
+ 205   2                      CAN_IR &= 0x3F; //清空远程帧标记位                      
+ 206   2              }
+ 207   1              if((CAN_IR&0x40) == 0x40)
+ 208   1              {
+ 209   2                      CAN_IR &= 0xBF; //清空数据帧标记位
+ 210   2                      ADR_H = 0xFF;
+ 211   2                      ADR_M = 0x00;
+ 212   2                      ADR_L = 0x68;
+ 213   2                      ADR_INC = 1;
+ 214   2                      RAMMODE = 0xAF;         //读操作
+ 215   2                      while(!APP_ACK);
+ 216   2                      APP_EN = 1;
+ 217   2                      while(APP_EN);
+ 218   2                      status = DATA3;
+ 219   2                      CanData.BusRXbuf[CanData.CanRxHead].status = status;
+ 220   2                      APP_EN = 1;
+ 221   2                      while(APP_EN);                  
+ 222   2                      CanData.BusRXbuf[CanData.CanRxHead].ID <<= 8;
+ 223   2                      CanData.BusRXbuf[CanData.CanRxHead].ID |= DATA3;
+ 224   2                      CanData.BusRXbuf[CanData.CanRxHead].ID <<= 8;
+ 225   2                      CanData.BusRXbuf[CanData.CanRxHead].ID |= DATA2;
+ 226   2                      CanData.BusRXbuf[CanData.CanRxHead].ID <<= 8;
+ 227   2                      CanData.BusRXbuf[CanData.CanRxHead].ID |= DATA1;
+ 228   2                      CanData.BusRXbuf[CanData.CanRxHead].ID <<= 8;
+ 229   2                      CanData.BusRXbuf[CanData.CanRxHead].ID |= DATA0;
+ 230   2                      CanData.BusRXbuf[CanData.CanRxHead].ID=CanData.BusRXbuf[CanData.CanRxHead].ID>>3;
+ 231   2                      if(0==(status&0x80))//标准帧ID还需要右移18位
+ 232   2                      {
+ 233   3                              CanData.BusRXbuf[CanData.CanRxHead].ID >>= 18;
+ 234   3                      }
+ 235   2                      if(0==(status&0x40))//数据帧才需要读取数据
+ 236   2                      {
+ 237   3                              APP_EN = 1;
+ 238   3                              while(APP_EN);
+ 239   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[0] = DATA3;
+ 240   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[1] = DATA2;
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 5   
+
+ 241   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[2] = DATA1;
+ 242   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[3] = DATA0;
+ 243   3                              APP_EN = 1;
+ 244   3                              while(APP_EN);
+ 245   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[4] = DATA3;
+ 246   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[5] = DATA2;
+ 247   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[6] = DATA1;
+ 248   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[7] = DATA0; 
+ 249   3                      }
+ 250   2                      RAMMODE = 0;
+ 251   2                      CanData.CanRxHead++;
+ 252   2              }
+ 253   1              if((CAN_IR&0x20) == 0x20)
+ 254   1              {
+ 255   2                      CAN_IR &= ~(0x20);      //清空发送帧标记位
+ 256   2                      if(CanData.CanTxTail != CanData.CanTxHead)
+ 257   2                      {
+ 258   3                              LoadOneFrame();
+ 259   3                              CAN_CR |= 0x04;         //启动发送              
+ 260   3                      }
+ 261   2                      else
+ 262   2                      {
+ 263   3                              CanData.CanTxFlag = 0;//清空发送标记位
+ 264   3                      }
+ 265   2              }
+ 266   1              if((CAN_IR&0x10) == 0x10)
+ 267   1              {
+ 268   2                      CAN_IR &= 0xEF; //清空接收溢出标记位
+ 269   2              }
+ 270   1              if((CAN_IR&0x08) == 0x08)
+ 271   1              {
+ 272   2                      CAN_IR &= 0xF7; //清空错误标记位
+ 273   2              }
+ 274   1              if((CAN_IR&0x04) == 0x04)
+ 275   1              {
+ 276   2                      CAN_IR &= 0xFB; //清空仲裁失败标记位
+ 277   2                      CAN_CR |= 0x04; //重新启动发送  
+ 278   2              }
+ 279   1              CAN_ET=0;
+ 280   1              EA = 1;  
+ 281   1      }
+ 282          
+ 283          
+ 284          /*主循环调用，将需要发送的数据放在缓存区即可，同时CAN发送会占用定时器7，其余位置则不能在使用*/
+ 285          // void CANTx(void)
+ 286          // {
+ 287          //      u32 tmp32;
+ 288          //      if((0==CanData.CanTxFlag)&&(CanData.CanTxTail != CanData.CanTxFlag))
+ 289          //      {
+ 290          //              EA = 0;
+ 291          //              tmp32=CanData.BusTXbuf[CanData.CanTxTail].ID;
+ 292          //              ADR_H = 0xFF;
+ 293          //              ADR_M = 0x00;
+ 294          //              ADR_L = 0x64;
+ 295          //              ADR_INC = 1;
+ 296          //              RAMMODE = 0x8F;         //写操作
+ 297          //              while(!APP_ACK);
+ 298          //              DATA3 = CanData.BusTXbuf[CanData.CanTxTail].status;                     //帧类长度型以及数据
+ 299          //              DATA2 = 0;
+ 300          //              DATA1 = 0;
+ 301          //              DATA0 = 0;                      
+ 302          //              APP_EN = 1;
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 6   
+
+ 303          //              while(APP_EN);          //写入RTR,IDE,DLC等数据
+ 304          //              DATA3 = (u8)(tmp32>>24);
+ 305          //              DATA2 = (u8)(tmp32>>16);
+ 306          //              DATA1 = (u8)(tmp32>>8);
+ 307          //              DATA0 = (u8)(tmp32>>0);                 
+ 308          //              APP_EN = 1;
+ 309          //              while(APP_EN);          //写入ID数据
+ 310          //              DATA3 = CanData.BusTXbuf[CanData.CanTxTail].candata[0];
+ 311          //              DATA2 = CanData.BusTXbuf[CanData.CanTxTail].candata[1];
+ 312          //              DATA1 = CanData.BusTXbuf[CanData.CanTxTail].candata[2];
+ 313          //              DATA0 = CanData.BusTXbuf[CanData.CanTxTail].candata[3];                 
+ 314          //              APP_EN = 1;
+ 315          //              while(APP_EN);          //写入发送数据前4字节
+ 316          //              DATA3 = CanData.BusTXbuf[CanData.CanTxTail].candata[4];
+ 317          //              DATA2 = CanData.BusTXbuf[CanData.CanTxTail].candata[5];
+ 318          //              DATA1 = CanData.BusTXbuf[CanData.CanTxTail].candata[6];
+ 319          //              DATA0 = CanData.BusTXbuf[CanData.CanTxTail].candata[7];                 
+ 320          //              APP_EN = 1;
+ 321          //              while(APP_EN);          //写入发送数据后4字节
+ 322          //              CanData.CanTxTail++;
+ 323          //              CanData.CanTxFlag = 1;
+ 324          //              StartTimer(7,3000);//3S还未发送出去，则清空发送标记
+ 325          //              EA = 1;
+ 326          //              RAMMODE = 0;
+ 327          //              CAN_CR |= 0x04;         //启动发送              
+ 328          //      }
+ 329          //      if(CanData.CanTxFlag!=0)
+ 330          //      {
+ 331          //              if(GetTimeOutFlag(7))
+ 332          //              {
+ 333          //                      CanData.CanTxFlag = 0;
+ 334          //              }
+ 335          //      }
+ 336          // }
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 7   
+
+ASSEMBLY LISTING OF GENERATED OBJECT CODE
+
+
+             ; FUNCTION _CanBusInit (BEGIN)
+                                           ; SOURCE LINE # 26
+0000 900000      R     MOV     DPTR,#RegCfg
+0003 EB                MOV     A,R3
+0004 F0                MOVX    @DPTR,A
+0005 A3                INC     DPTR
+0006 EA                MOV     A,R2
+0007 F0                MOVX    @DPTR,A
+0008 A3                INC     DPTR
+0009 E9                MOV     A,R1
+000A F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 27
+                                           ; SOURCE LINE # 28
+000B 7D02              MOV     R5,#02H
+000D E4                CLR     A
+000E FF                MOV     R7,A
+000F 120000      E     LCALL   _SetPinOut
+                                           ; SOURCE LINE # 29
+0012 7D03              MOV     R5,#03H
+0014 E4                CLR     A
+0015 FF                MOV     R7,A
+0016 120000      E     LCALL   _SetPinIn
+                                           ; SOURCE LINE # 30
+0019 7B01              MOV     R3,#01H
+001B 7D02              MOV     R5,#02H
+001D E4                CLR     A
+001E FF                MOV     R7,A
+001F 120000      E     LCALL   _PinOutput
+                                           ; SOURCE LINE # 31
+0022 43C980            ORL     MUX_SEL,#080H
+                                           ; SOURCE LINE # 32
+0025 75F1FF            MOV     ADR_H,#0FFH
+                                           ; SOURCE LINE # 33
+0028 E4                CLR     A
+0029 F5F2              MOV     ADR_M,A
+                                           ; SOURCE LINE # 34
+002B 75F360            MOV     ADR_L,#060H
+                                           ; SOURCE LINE # 35
+002E 75F401            MOV     ADR_INC,#01H
+                                           ; SOURCE LINE # 36
+0031 75F88F            MOV     RAMMODE,#08FH
+0034         ?C0001:
+                                           ; SOURCE LINE # 37
+0034 30FCFD            JNB     APP_ACK,?C0001
+0037         ?C0002:
+                                           ; SOURCE LINE # 44
+0037 900000      R     MOV     DPTR,#RegCfg
+003A E0                MOVX    A,@DPTR
+003B FB                MOV     R3,A
+003C A3                INC     DPTR
+003D E0                MOVX    A,@DPTR
+003E FA                MOV     R2,A
+003F A3                INC     DPTR
+0040 E0                MOVX    A,@DPTR
+0041 F9                MOV     R1,A
+0042 120000      E     LCALL   ?C?CLDPTR
+0045 F5FA              MOV     DATA3,A
+                                           ; SOURCE LINE # 45
+0047 900001            MOV     DPTR,#01H
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 8   
+
+004A 120000      E     LCALL   ?C?CLDOPTR
+004D F5FB              MOV     DATA2,A
+                                           ; SOURCE LINE # 46
+004F 900002            MOV     DPTR,#02H
+0052 120000      E     LCALL   ?C?CLDOPTR
+0055 F5FC              MOV     DATA1,A
+                                           ; SOURCE LINE # 47
+0057 900003            MOV     DPTR,#03H
+005A 120000      E     LCALL   ?C?CLDOPTR
+005D F5FD              MOV     DATA0,A
+                                           ; SOURCE LINE # 49
+005F D2FE              SETB    APP_EN
+0061         ?C0003:
+                                           ; SOURCE LINE # 50
+0061 20FEFD            JB      APP_EN,?C0003
+0064         ?C0004:
+                                           ; SOURCE LINE # 51
+0064 E4                CLR     A
+0065 F5FA              MOV     DATA3,A
+                                           ; SOURCE LINE # 52
+0067 F5FB              MOV     DATA2,A
+                                           ; SOURCE LINE # 53
+0069 F5FC              MOV     DATA1,A
+                                           ; SOURCE LINE # 54
+006B F5FD              MOV     DATA0,A
+                                           ; SOURCE LINE # 55
+006D D2FE              SETB    APP_EN
+006F         ?C0005:
+                                           ; SOURCE LINE # 56
+006F 20FEFD            JB      APP_EN,?C0005
+0072         ?C0006:
+                                           ; SOURCE LINE # 57
+0072 75FAFF            MOV     DATA3,#0FFH
+                                           ; SOURCE LINE # 58
+0075 75FBFF            MOV     DATA2,#0FFH
+                                           ; SOURCE LINE # 59
+0078 75FCFF            MOV     DATA1,#0FFH
+                                           ; SOURCE LINE # 60
+007B 75FDFF            MOV     DATA0,#0FFH
+                                           ; SOURCE LINE # 61
+007E D2FE              SETB    APP_EN
+0080         ?C0007:
+                                           ; SOURCE LINE # 62
+0080 20FEFD            JB      APP_EN,?C0007
+0083         ?C0008:
+                                           ; SOURCE LINE # 63
+0083 E4                CLR     A
+0084 F5F8              MOV     RAMMODE,A
+                                           ; SOURCE LINE # 64
+0086 758FA0            MOV     CAN_CR,#0A0H
+0089         ?C0009:
+                                           ; SOURCE LINE # 65
+0089 E58F              MOV     A,CAN_CR
+008B 20E5FB            JB      ACC.5,?C0009
+008E         ?C0010:
+                                           ; SOURCE LINE # 66
+008E D2B9              SETB    ECAN
+                                           ; SOURCE LINE # 67
+0090 22                RET     
+             ; FUNCTION _CanBusInit (END)
+
+             ; FUNCTION CanErrorReset (BEGIN)
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 9   
+
+                                           ; SOURCE LINE # 84
+                                           ; SOURCE LINE # 85
+                                           ; SOURCE LINE # 87
+0000 E5E8              MOV     A,CAN_ET
+0002 30E515            JNB     ACC.5,?C0013
+                                           ; SOURCE LINE # 88
+                                           ; SOURCE LINE # 89
+0005 53E8DF            ANL     CAN_ET,#0DFH
+                                           ; SOURCE LINE # 90
+0008 438F40            ORL     CAN_CR,#040H
+                                           ; SOURCE LINE # 91
+000B 7FE8              MOV     R7,#0E8H
+000D 7E03              MOV     R6,#03H
+000F 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 92
+0012 538FBF            ANL     CAN_CR,#0BFH
+                                           ; SOURCE LINE # 93
+0015 E4                CLR     A
+0016 900000      R     MOV     DPTR,#CanData+01A04H
+0019 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 94
+                                           ; SOURCE LINE # 96
+001A         ?C0013:
+001A 22                RET     
+             ; FUNCTION CanErrorReset (END)
+
+             ; FUNCTION LoadOneFrame (BEGIN)
+                                           ; SOURCE LINE # 99
+                                           ; SOURCE LINE # 100
+                                           ; SOURCE LINE # 101
+0000 75F1FF            MOV     ADR_H,#0FFH
+                                           ; SOURCE LINE # 102
+0003 E4                CLR     A
+0004 F5F2              MOV     ADR_M,A
+                                           ; SOURCE LINE # 103
+0006 75F364            MOV     ADR_L,#064H
+                                           ; SOURCE LINE # 104
+0009 75F401            MOV     ADR_INC,#01H
+                                           ; SOURCE LINE # 105
+000C 75F88F            MOV     RAMMODE,#08FH
+000F         ?C0014:
+                                           ; SOURCE LINE # 106
+000F 30FCFD            JNB     APP_ACK,?C0014
+0012         ?C0015:
+                                           ; SOURCE LINE # 107
+0012 900000      R     MOV     DPTR,#CanData+01A03H
+0015 E0                MOVX    A,@DPTR
+0016 75F00D            MOV     B,#0DH
+0019 A4                MUL     AB
+001A 2400        R     ADD     A,#LOW CanData+0D00H
+001C F582              MOV     DPL,A
+001E E5F0              MOV     A,B
+0020 3400        R     ADDC    A,#HIGH CanData+0D00H
+0022 F583              MOV     DPH,A
+0024 E0                MOVX    A,@DPTR
+0025 F5FA              MOV     DATA3,A
+                                           ; SOURCE LINE # 108
+0027 E4                CLR     A
+0028 F5FB              MOV     DATA2,A
+                                           ; SOURCE LINE # 109
+002A F5FC              MOV     DATA1,A
+                                           ; SOURCE LINE # 110
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 10  
+
+002C F5FD              MOV     DATA0,A
+                                           ; SOURCE LINE # 111
+002E D2FE              SETB    APP_EN
+0030         ?C0016:
+                                           ; SOURCE LINE # 112
+0030 20FEFD            JB      APP_EN,?C0016
+0033         ?C0017:
+                                           ; SOURCE LINE # 113
+0033 900000      R     MOV     DPTR,#CanData+01A03H
+0036 E0                MOVX    A,@DPTR
+0037 FB                MOV     R3,A
+0038 75F00D            MOV     B,#0DH
+003B A4                MUL     AB
+003C 2400        R     ADD     A,#LOW CanData+0D01H
+003E F582              MOV     DPL,A
+0040 E5F0              MOV     A,B
+0042 3400        R     ADDC    A,#HIGH CanData+0D01H
+0044 F583              MOV     DPH,A
+0046 E0                MOVX    A,@DPTR
+0047 FC                MOV     R4,A
+0048 A3                INC     DPTR
+0049 E0                MOVX    A,@DPTR
+004A FD                MOV     R5,A
+004B A3                INC     DPTR
+004C E0                MOVX    A,@DPTR
+004D FE                MOV     R6,A
+004E A3                INC     DPTR
+004F E0                MOVX    A,@DPTR
+0050 FF                MOV     R7,A
+0051 7818              MOV     R0,#018H
+0053 120000      E     LCALL   ?C?ULSHR
+0056 8FFA              MOV     DATA3,R7
+                                           ; SOURCE LINE # 114
+0058 75F00D            MOV     B,#0DH
+005B EB                MOV     A,R3
+005C A4                MUL     AB
+005D 2400        R     ADD     A,#LOW CanData+0D01H
+005F F582              MOV     DPL,A
+0061 E5F0              MOV     A,B
+0063 3400        R     ADDC    A,#HIGH CanData+0D01H
+0065 F583              MOV     DPH,A
+0067 E0                MOVX    A,@DPTR
+0068 FC                MOV     R4,A
+0069 A3                INC     DPTR
+006A E0                MOVX    A,@DPTR
+006B FD                MOV     R5,A
+006C A3                INC     DPTR
+006D E0                MOVX    A,@DPTR
+006E FE                MOV     R6,A
+006F A3                INC     DPTR
+0070 E0                MOVX    A,@DPTR
+0071 FF                MOV     R7,A
+0072 7810              MOV     R0,#010H
+0074 120000      E     LCALL   ?C?ULSHR
+0077 8FFB              MOV     DATA2,R7
+                                           ; SOURCE LINE # 115
+0079 900000      R     MOV     DPTR,#CanData+01A03H
+007C E0                MOVX    A,@DPTR
+007D FB                MOV     R3,A
+007E 75F00D            MOV     B,#0DH
+0081 A4                MUL     AB
+0082 2400        R     ADD     A,#LOW CanData+0D01H
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 11  
+
+0084 F582              MOV     DPL,A
+0086 E5F0              MOV     A,B
+0088 3400        R     ADDC    A,#HIGH CanData+0D01H
+008A F583              MOV     DPH,A
+008C E0                MOVX    A,@DPTR
+008D FC                MOV     R4,A
+008E A3                INC     DPTR
+008F E0                MOVX    A,@DPTR
+0090 FD                MOV     R5,A
+0091 A3                INC     DPTR
+0092 E0                MOVX    A,@DPTR
+0093 FE                MOV     R6,A
+0094 A3                INC     DPTR
+0095 E0                MOVX    A,@DPTR
+0096 FF                MOV     R7,A
+0097 7808              MOV     R0,#08H
+0099 120000      E     LCALL   ?C?ULSHR
+009C 8FFC              MOV     DATA1,R7
+                                           ; SOURCE LINE # 116
+009E 75F00D            MOV     B,#0DH
+00A1 EB                MOV     A,R3
+00A2 A4                MUL     AB
+00A3 2400        R     ADD     A,#LOW CanData+0D01H
+00A5 F582              MOV     DPL,A
+00A7 E5F0              MOV     A,B
+00A9 3400        R     ADDC    A,#HIGH CanData+0D01H
+00AB F583              MOV     DPH,A
+00AD A3                INC     DPTR
+00AE A3                INC     DPTR
+00AF A3                INC     DPTR
+00B0 E0                MOVX    A,@DPTR
+00B1 F5FD              MOV     DATA0,A
+                                           ; SOURCE LINE # 117
+00B3 D2FE              SETB    APP_EN
+00B5         ?C0018:
+                                           ; SOURCE LINE # 118
+00B5 20FEFD            JB      APP_EN,?C0018
+00B8         ?C0019:
+                                           ; SOURCE LINE # 119
+00B8 900000      R     MOV     DPTR,#CanData+01A03H
+00BB E0                MOVX    A,@DPTR
+00BC FF                MOV     R7,A
+00BD 75F00D            MOV     B,#0DH
+00C0 A4                MUL     AB
+00C1 2400        R     ADD     A,#LOW CanData+0D05H
+00C3 F582              MOV     DPL,A
+00C5 E5F0              MOV     A,B
+00C7 3400        R     ADDC    A,#HIGH CanData+0D05H
+00C9 F583              MOV     DPH,A
+00CB E0                MOVX    A,@DPTR
+00CC F5FA              MOV     DATA3,A
+                                           ; SOURCE LINE # 120
+00CE 75F00D            MOV     B,#0DH
+00D1 EF                MOV     A,R7
+00D2 A4                MUL     AB
+00D3 2400        R     ADD     A,#LOW CanData+0D06H
+00D5 F582              MOV     DPL,A
+00D7 E5F0              MOV     A,B
+00D9 3400        R     ADDC    A,#HIGH CanData+0D06H
+00DB F583              MOV     DPH,A
+00DD E0                MOVX    A,@DPTR
+00DE F5FB              MOV     DATA2,A
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 12  
+
+                                           ; SOURCE LINE # 121
+00E0 900000      R     MOV     DPTR,#CanData+01A03H
+00E3 E0                MOVX    A,@DPTR
+00E4 FF                MOV     R7,A
+00E5 75F00D            MOV     B,#0DH
+00E8 A4                MUL     AB
+00E9 2400        R     ADD     A,#LOW CanData+0D07H
+00EB F582              MOV     DPL,A
+00ED E5F0              MOV     A,B
+00EF 3400        R     ADDC    A,#HIGH CanData+0D07H
+00F1 F583              MOV     DPH,A
+00F3 E0                MOVX    A,@DPTR
+00F4 F5FC              MOV     DATA1,A
+                                           ; SOURCE LINE # 122
+00F6 75F00D            MOV     B,#0DH
+00F9 EF                MOV     A,R7
+00FA A4                MUL     AB
+00FB 2400        R     ADD     A,#LOW CanData+0D08H
+00FD F582              MOV     DPL,A
+00FF E5F0              MOV     A,B
+0101 3400        R     ADDC    A,#HIGH CanData+0D08H
+0103 F583              MOV     DPH,A
+0105 E0                MOVX    A,@DPTR
+0106 F5FD              MOV     DATA0,A
+                                           ; SOURCE LINE # 123
+0108 D2FE              SETB    APP_EN
+010A         ?C0020:
+                                           ; SOURCE LINE # 124
+010A 20FEFD            JB      APP_EN,?C0020
+010D         ?C0021:
+                                           ; SOURCE LINE # 125
+010D 900000      R     MOV     DPTR,#CanData+01A03H
+0110 E0                MOVX    A,@DPTR
+0111 FF                MOV     R7,A
+0112 75F00D            MOV     B,#0DH
+0115 A4                MUL     AB
+0116 2400        R     ADD     A,#LOW CanData+0D09H
+0118 F582              MOV     DPL,A
+011A E5F0              MOV     A,B
+011C 3400        R     ADDC    A,#HIGH CanData+0D09H
+011E F583              MOV     DPH,A
+0120 E0                MOVX    A,@DPTR
+0121 F5FA              MOV     DATA3,A
+                                           ; SOURCE LINE # 126
+0123 75F00D            MOV     B,#0DH
+0126 EF                MOV     A,R7
+0127 A4                MUL     AB
+0128 2400        R     ADD     A,#LOW CanData+0D0AH
+012A F582              MOV     DPL,A
+012C E5F0              MOV     A,B
+012E 3400        R     ADDC    A,#HIGH CanData+0D0AH
+0130 F583              MOV     DPH,A
+0132 E0                MOVX    A,@DPTR
+0133 F5FB              MOV     DATA2,A
+                                           ; SOURCE LINE # 127
+0135 900000      R     MOV     DPTR,#CanData+01A03H
+0138 E0                MOVX    A,@DPTR
+0139 FF                MOV     R7,A
+013A 75F00D            MOV     B,#0DH
+013D A4                MUL     AB
+013E 2400        R     ADD     A,#LOW CanData+0D0BH
+0140 F582              MOV     DPL,A
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 13  
+
+0142 E5F0              MOV     A,B
+0144 3400        R     ADDC    A,#HIGH CanData+0D0BH
+0146 F583              MOV     DPH,A
+0148 E0                MOVX    A,@DPTR
+0149 F5FC              MOV     DATA1,A
+                                           ; SOURCE LINE # 128
+014B 75F00D            MOV     B,#0DH
+014E EF                MOV     A,R7
+014F A4                MUL     AB
+0150 2400        R     ADD     A,#LOW CanData+0D0CH
+0152 F582              MOV     DPL,A
+0154 E5F0              MOV     A,B
+0156 3400        R     ADDC    A,#HIGH CanData+0D0CH
+0158 F583              MOV     DPH,A
+015A E0                MOVX    A,@DPTR
+015B F5FD              MOV     DATA0,A
+                                           ; SOURCE LINE # 129
+015D D2FE              SETB    APP_EN
+015F         ?C0022:
+                                           ; SOURCE LINE # 130
+015F 20FEFD            JB      APP_EN,?C0022
+0162         ?C0023:
+                                           ; SOURCE LINE # 131
+0162 900000      R     MOV     DPTR,#CanData+01A03H
+0165 E0                MOVX    A,@DPTR
+0166 04                INC     A
+0167 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 132
+0168 E4                CLR     A
+0169 F5F8              MOV     RAMMODE,A
+                                           ; SOURCE LINE # 133
+016B 22                RET     
+             ; FUNCTION LoadOneFrame (END)
+
+             ; FUNCTION _CanTx (BEGIN)
+                                           ; SOURCE LINE # 136
+0000 900000      R     MOV     DPTR,#ID
+0003 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 137
+                                           ; SOURCE LINE # 141
+0006 D3                SETB    C
+0007 900000      R     MOV     DPTR,#len+01H
+000A E0                MOVX    A,@DPTR
+000B 9400              SUBB    A,#00H
+000D 900000      R     MOV     DPTR,#len
+0010 E0                MOVX    A,@DPTR
+0011 9408              SUBB    A,#08H
+0013 4003              JC      $ + 5H
+0015 020000      R     LJMP    ?C0026
+0018         ?C0025:
+                                           ; SOURCE LINE # 143
+0018 900000      R     MOV     DPTR,#status
+001B E0                MOVX    A,@DPTR
+001C FB                MOV     R3,A
+001D 900000      R     MOV     DPTR,#ID
+0020 30E70F            JNB     ACC.7,?C0027
+                                           ; SOURCE LINE # 144
+                                           ; SOURCE LINE # 145
+0023 E0                MOVX    A,@DPTR
+0024 FC                MOV     R4,A
+0025 A3                INC     DPTR
+0026 E0                MOVX    A,@DPTR
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 14  
+
+0027 FD                MOV     R5,A
+0028 A3                INC     DPTR
+0029 E0                MOVX    A,@DPTR
+002A FE                MOV     R6,A
+002B A3                INC     DPTR
+002C E0                MOVX    A,@DPTR
+002D FF                MOV     R7,A
+002E 7803              MOV     R0,#03H
+                                           ; SOURCE LINE # 146
+0030 800D              SJMP    ?C0067
+0032         ?C0027:
+                                           ; SOURCE LINE # 148
+                                           ; SOURCE LINE # 149
+0032 E0                MOVX    A,@DPTR
+0033 FC                MOV     R4,A
+0034 A3                INC     DPTR
+0035 E0                MOVX    A,@DPTR
+0036 FD                MOV     R5,A
+0037 A3                INC     DPTR
+0038 E0                MOVX    A,@DPTR
+0039 FE                MOV     R6,A
+003A A3                INC     DPTR
+003B E0                MOVX    A,@DPTR
+003C FF                MOV     R7,A
+003D 7815              MOV     R0,#015H
+003F         ?C0067:
+003F 120000      E     LCALL   ?C?LSHL
+0042 900000      R     MOV     DPTR,#idtmp
+0045 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 150
+0048         ?C0028:
+                                           ; SOURCE LINE # 151
+0048 900000      R     MOV     DPTR,#CanData+01A02H
+004B E0                MOVX    A,@DPTR
+004C FA                MOV     R2,A
+004D 75F00D            MOV     B,#0DH
+0050 A4                MUL     AB
+0051 2400        R     ADD     A,#LOW CanData+0D00H
+0053 F582              MOV     DPL,A
+0055 E5F0              MOV     A,B
+0057 3400        R     ADDC    A,#HIGH CanData+0D00H
+0059 F583              MOV     DPH,A
+005B E0                MOVX    A,@DPTR
+005C 30E638            JNB     ACC.6,?C0029
+                                           ; SOURCE LINE # 152
+                                           ; SOURCE LINE # 153
+005F 900000      R     MOV     DPTR,#idtmp
+0062 E0                MOVX    A,@DPTR
+0063 FC                MOV     R4,A
+0064 A3                INC     DPTR
+0065 E0                MOVX    A,@DPTR
+0066 FD                MOV     R5,A
+0067 A3                INC     DPTR
+0068 E0                MOVX    A,@DPTR
+0069 FE                MOV     R6,A
+006A A3                INC     DPTR
+006B E0                MOVX    A,@DPTR
+006C FF                MOV     R7,A
+006D 75F00D            MOV     B,#0DH
+0070 EA                MOV     A,R2
+0071 A4                MUL     AB
+0072 2400        R     ADD     A,#LOW CanData+0D01H
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 15  
+
+0074 F582              MOV     DPL,A
+0076 E5F0              MOV     A,B
+0078 3400        R     ADDC    A,#HIGH CanData+0D01H
+007A F583              MOV     DPH,A
+007C 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 154
+007F EB                MOV     A,R3
+0080 54C0              ANL     A,#0C0H
+0082 FF                MOV     R7,A
+0083 75F00D            MOV     B,#0DH
+0086 EA                MOV     A,R2
+0087 A4                MUL     AB
+0088 2400        R     ADD     A,#LOW CanData+0D00H
+008A F582              MOV     DPL,A
+008C E5F0              MOV     A,B
+008E 3400        R     ADDC    A,#HIGH CanData+0D00H
+0090 F583              MOV     DPH,A
+0092 EF                MOV     A,R7
+0093 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 155
+                                           ; SOURCE LINE # 156
+0094 020000      R     LJMP    ?C0068
+0097         ?C0029:
+                                           ; SOURCE LINE # 158
+                                           ; SOURCE LINE # 159
+0097 900000      R     MOV     DPTR,#len
+009A E0                MOVX    A,@DPTR
+009B FC                MOV     R4,A
+009C A3                INC     DPTR
+009D E0                MOVX    A,@DPTR
+009E FD                MOV     R5,A
+009F AE04              MOV     R6,AR4
+00A1 7803              MOV     R0,#03H
+00A3         ?C0066:
+00A3 CE                XCH     A,R6
+00A4 C3                CLR     C
+00A5 13                RRC     A
+00A6 CE                XCH     A,R6
+00A7 13                RRC     A
+00A8 D8F9              DJNZ    R0,?C0066
+00AA 900000      R     MOV     DPTR,#framnum
+00AD F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 160
+00AE ED                MOV     A,R5
+00AF 5407              ANL     A,#07H
+00B1 A3                INC     DPTR
+00B2 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 161
+00B3 E4                CLR     A
+00B4 900000      R     MOV     DPTR,#k
+00B7 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 162
+00B8 900000      R     MOV     DPTR,#status
+00BB E0                MOVX    A,@DPTR
+00BC 54C0              ANL     A,#0C0H
+00BE FF                MOV     R7,A
+00BF E4                CLR     A
+00C0 FC                MOV     R4,A
+00C1 FD                MOV     R5,A
+00C2 FE                MOV     R6,A
+00C3 900000      R     MOV     DPTR,#statustmp
+00C6 120000      E     LCALL   ?C?LSTXDATA
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 16  
+
+                                           ; SOURCE LINE # 163
+00C9 E4                CLR     A
+00CA 900000      R     MOV     DPTR,#i
+00CD F0                MOVX    @DPTR,A
+00CE         ?C0031:
+00CE 900000      R     MOV     DPTR,#framnum
+00D1 E0                MOVX    A,@DPTR
+00D2 FF                MOV     R7,A
+00D3 900000      R     MOV     DPTR,#i
+00D6 E0                MOVX    A,@DPTR
+00D7 C3                CLR     C
+00D8 9F                SUBB    A,R7
+00D9 4003              JC      $ + 5H
+00DB 020000      R     LJMP    ?C0032
+                                           ; SOURCE LINE # 164
+                                           ; SOURCE LINE # 165
+00DE 900000      R     MOV     DPTR,#idtmp
+00E1 E0                MOVX    A,@DPTR
+00E2 FC                MOV     R4,A
+00E3 A3                INC     DPTR
+00E4 E0                MOVX    A,@DPTR
+00E5 FD                MOV     R5,A
+00E6 A3                INC     DPTR
+00E7 E0                MOVX    A,@DPTR
+00E8 FE                MOV     R6,A
+00E9 A3                INC     DPTR
+00EA E0                MOVX    A,@DPTR
+00EB FF                MOV     R7,A
+00EC 900000      R     MOV     DPTR,#CanData+01A02H
+00EF E0                MOVX    A,@DPTR
+00F0 FB                MOV     R3,A
+00F1 75F00D            MOV     B,#0DH
+00F4 A4                MUL     AB
+00F5 2400        R     ADD     A,#LOW CanData+0D01H
+00F7 F582              MOV     DPL,A
+00F9 E5F0              MOV     A,B
+00FB 3400        R     ADDC    A,#HIGH CanData+0D01H
+00FD F583              MOV     DPH,A
+00FF 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 166
+0102 900000      R     MOV     DPTR,#statustmp
+0105 E0                MOVX    A,@DPTR
+0106 FC                MOV     R4,A
+0107 A3                INC     DPTR
+0108 E0                MOVX    A,@DPTR
+0109 FD                MOV     R5,A
+010A A3                INC     DPTR
+010B E0                MOVX    A,@DPTR
+010C FE                MOV     R6,A
+010D A3                INC     DPTR
+010E E0                MOVX    A,@DPTR
+010F 4408              ORL     A,#08H
+0111 FF                MOV     R7,A
+0112 75F00D            MOV     B,#0DH
+0115 EB                MOV     A,R3
+0116 A4                MUL     AB
+0117 2400        R     ADD     A,#LOW CanData+0D00H
+0119 F582              MOV     DPL,A
+011B E5F0              MOV     A,B
+011D 3400        R     ADDC    A,#HIGH CanData+0D00H
+011F F583              MOV     DPH,A
+0121 EF                MOV     A,R7
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 17  
+
+0122 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 167
+0123 E4                CLR     A
+0124 900000      R     MOV     DPTR,#j
+0127 F0                MOVX    @DPTR,A
+0128         ?C0034:
+0128 900000      R     MOV     DPTR,#j
+012B E0                MOVX    A,@DPTR
+012C FF                MOV     R7,A
+012D C3                CLR     C
+012E 9408              SUBB    A,#08H
+0130 5044              JNC     ?C0035
+                                           ; SOURCE LINE # 168
+                                           ; SOURCE LINE # 169
+0132 900000      R     MOV     DPTR,#pData
+0135 E0                MOVX    A,@DPTR
+0136 FB                MOV     R3,A
+0137 A3                INC     DPTR
+0138 E0                MOVX    A,@DPTR
+0139 FA                MOV     R2,A
+013A A3                INC     DPTR
+013B E0                MOVX    A,@DPTR
+013C F9                MOV     R1,A
+013D 900000      R     MOV     DPTR,#k
+0140 E0                MOVX    A,@DPTR
+0141 F582              MOV     DPL,A
+0143 758300            MOV     DPH,#00H
+0146 120000      E     LCALL   ?C?CLDOPTR
+0149 FE                MOV     R6,A
+014A 900000      R     MOV     DPTR,#CanData+01A02H
+014D E0                MOVX    A,@DPTR
+014E 75F00D            MOV     B,#0DH
+0151 A4                MUL     AB
+0152 2400        R     ADD     A,#LOW CanData+0D05H
+0154 F582              MOV     DPL,A
+0156 E5F0              MOV     A,B
+0158 3400        R     ADDC    A,#HIGH CanData+0D05H
+015A F583              MOV     DPH,A
+015C E582              MOV     A,DPL
+015E 2F                ADD     A,R7
+015F F582              MOV     DPL,A
+0161 E4                CLR     A
+0162 3583              ADDC    A,DPH
+0164 F583              MOV     DPH,A
+0166 EE                MOV     A,R6
+0167 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 170
+0168 900000      R     MOV     DPTR,#k
+016B E0                MOVX    A,@DPTR
+016C 04                INC     A
+016D F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 171
+016E 900000      R     MOV     DPTR,#j
+0171 E0                MOVX    A,@DPTR
+0172 04                INC     A
+0173 F0                MOVX    @DPTR,A
+0174 80B2              SJMP    ?C0034
+0176         ?C0035:
+                                           ; SOURCE LINE # 172
+0176 900000      R     MOV     DPTR,#CanData+01A02H
+0179 E0                MOVX    A,@DPTR
+017A 04                INC     A
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 18  
+
+017B F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 173
+017C 900000      R     MOV     DPTR,#i
+017F E0                MOVX    A,@DPTR
+0180 04                INC     A
+0181 F0                MOVX    @DPTR,A
+0182 020000      R     LJMP    ?C0031
+0185         ?C0032:
+                                           ; SOURCE LINE # 174
+0185 900000      R     MOV     DPTR,#framoffset
+0188 E0                MOVX    A,@DPTR
+0189 FB                MOV     R3,A
+018A 7003              JNZ     $ + 5H
+018C 020000      R     LJMP    ?C0030
+                                           ; SOURCE LINE # 175
+                                           ; SOURCE LINE # 176
+018F A3                INC     DPTR
+0190 E0                MOVX    A,@DPTR
+0191 FC                MOV     R4,A
+0192 A3                INC     DPTR
+0193 E0                MOVX    A,@DPTR
+0194 FD                MOV     R5,A
+0195 A3                INC     DPTR
+0196 E0                MOVX    A,@DPTR
+0197 FE                MOV     R6,A
+0198 A3                INC     DPTR
+0199 E0                MOVX    A,@DPTR
+019A FF                MOV     R7,A
+019B 900000      R     MOV     DPTR,#CanData+01A02H
+019E E0                MOVX    A,@DPTR
+019F 75F00D            MOV     B,#0DH
+01A2 A4                MUL     AB
+01A3 2400        R     ADD     A,#LOW CanData+0D01H
+01A5 F582              MOV     DPL,A
+01A7 E5F0              MOV     A,B
+01A9 3400        R     ADDC    A,#HIGH CanData+0D01H
+01AB F583              MOV     DPH,A
+01AD 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 177
+01B0 AF03              MOV     R7,AR3
+01B2 900000      R     MOV     DPTR,#statustmp
+01B5 A3                INC     DPTR
+01B6 E0                MOVX    A,@DPTR
+01B7 F9                MOV     R1,A
+01B8 A3                INC     DPTR
+01B9 E0                MOVX    A,@DPTR
+01BA FA                MOV     R2,A
+01BB A3                INC     DPTR
+01BC E0                MOVX    A,@DPTR
+01BD 4F                ORL     A,R7
+01BE FF                MOV     R7,A
+01BF 900000      R     MOV     DPTR,#CanData+01A02H
+01C2 E0                MOVX    A,@DPTR
+01C3 75F00D            MOV     B,#0DH
+01C6 A4                MUL     AB
+01C7 2400        R     ADD     A,#LOW CanData+0D00H
+01C9 F582              MOV     DPL,A
+01CB E5F0              MOV     A,B
+01CD 3400        R     ADDC    A,#HIGH CanData+0D00H
+01CF F583              MOV     DPH,A
+01D1 EF                MOV     A,R7
+01D2 F0                MOVX    @DPTR,A
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 19  
+
+                                           ; SOURCE LINE # 178
+01D3 E4                CLR     A
+01D4 900000      R     MOV     DPTR,#j
+01D7 F0                MOVX    @DPTR,A
+01D8         ?C0038:
+01D8 900000      R     MOV     DPTR,#framoffset
+01DB E0                MOVX    A,@DPTR
+01DC FF                MOV     R7,A
+01DD 900000      R     MOV     DPTR,#j
+01E0 E0                MOVX    A,@DPTR
+01E1 FE                MOV     R6,A
+01E2 C3                CLR     C
+01E3 9F                SUBB    A,R7
+01E4 5044              JNC     ?C0041
+                                           ; SOURCE LINE # 179
+                                           ; SOURCE LINE # 180
+01E6 900000      R     MOV     DPTR,#pData
+01E9 E0                MOVX    A,@DPTR
+01EA FB                MOV     R3,A
+01EB A3                INC     DPTR
+01EC E0                MOVX    A,@DPTR
+01ED FA                MOV     R2,A
+01EE A3                INC     DPTR
+01EF E0                MOVX    A,@DPTR
+01F0 F9                MOV     R1,A
+01F1 900000      R     MOV     DPTR,#k
+01F4 E0                MOVX    A,@DPTR
+01F5 F582              MOV     DPL,A
+01F7 758300            MOV     DPH,#00H
+01FA 120000      E     LCALL   ?C?CLDOPTR
+01FD FF                MOV     R7,A
+01FE 900000      R     MOV     DPTR,#CanData+01A02H
+0201 E0                MOVX    A,@DPTR
+0202 75F00D            MOV     B,#0DH
+0205 A4                MUL     AB
+0206 2400        R     ADD     A,#LOW CanData+0D05H
+0208 F582              MOV     DPL,A
+020A E5F0              MOV     A,B
+020C 3400        R     ADDC    A,#HIGH CanData+0D05H
+020E F583              MOV     DPH,A
+0210 E582              MOV     A,DPL
+0212 2E                ADD     A,R6
+0213 F582              MOV     DPL,A
+0215 E4                CLR     A
+0216 3583              ADDC    A,DPH
+0218 F583              MOV     DPH,A
+021A EF                MOV     A,R7
+021B F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 181
+021C 900000      R     MOV     DPTR,#k
+021F E0                MOVX    A,@DPTR
+0220 04                INC     A
+0221 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 182
+0222 900000      R     MOV     DPTR,#j
+0225 E0                MOVX    A,@DPTR
+0226 04                INC     A
+0227 F0                MOVX    @DPTR,A
+0228 80AE              SJMP    ?C0038
+                                           ; SOURCE LINE # 183
+022A         ?C0041:
+022A 900000      R     MOV     DPTR,#j
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 20  
+
+022D E0                MOVX    A,@DPTR
+022E FF                MOV     R7,A
+022F C3                CLR     C
+0230 9408              SUBB    A,#08H
+0232 5026              JNC     ?C0042
+                                           ; SOURCE LINE # 184
+0234 900000      R     MOV     DPTR,#CanData+01A02H
+0237 E0                MOVX    A,@DPTR
+0238 75F00D            MOV     B,#0DH
+023B A4                MUL     AB
+023C 2400        R     ADD     A,#LOW CanData+0D05H
+023E F582              MOV     DPL,A
+0240 E5F0              MOV     A,B
+0242 3400        R     ADDC    A,#HIGH CanData+0D05H
+0244 F583              MOV     DPH,A
+0246 E582              MOV     A,DPL
+0248 2F                ADD     A,R7
+0249 F582              MOV     DPL,A
+024B E4                CLR     A
+024C 3583              ADDC    A,DPH
+024E F583              MOV     DPH,A
+0250 E4                CLR     A
+0251 F0                MOVX    @DPTR,A
+0252 900000      R     MOV     DPTR,#j
+0255 E0                MOVX    A,@DPTR
+0256 04                INC     A
+0257 F0                MOVX    @DPTR,A
+0258 80D0              SJMP    ?C0041
+025A         ?C0042:
+                                           ; SOURCE LINE # 185
+025A         ?C0068:
+025A 900000      R     MOV     DPTR,#CanData+01A02H
+025D E0                MOVX    A,@DPTR
+025E 04                INC     A
+025F F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 186
+                                           ; SOURCE LINE # 187
+0260         ?C0030:
+                                           ; SOURCE LINE # 188
+0260 900000      R     MOV     DPTR,#CanData+01A04H
+0263 E0                MOVX    A,@DPTR
+0264 7010              JNZ     ?C0026
+                                           ; SOURCE LINE # 189
+                                           ; SOURCE LINE # 190
+0266 C2AF              CLR     EA
+                                           ; SOURCE LINE # 191
+0268 120000      R     LCALL   LoadOneFrame
+                                           ; SOURCE LINE # 192
+026B D2AF              SETB    EA
+                                           ; SOURCE LINE # 193
+026D 900000      R     MOV     DPTR,#CanData+01A04H
+0270 7401              MOV     A,#01H
+0272 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 194
+0273 438F04            ORL     CAN_CR,#04H
+                                           ; SOURCE LINE # 195
+                                           ; SOURCE LINE # 196
+0276         ?C0026:
+0276 22                RET     
+             ; FUNCTION _CanTx (END)
+
+             ; FUNCTION Can_Isr (BEGIN)
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 21  
+
+0000 C0E0              PUSH    ACC
+0002 C0F0              PUSH    B
+0004 C083              PUSH    DPH
+0006 C082              PUSH    DPL
+0008 C0D0              PUSH    PSW
+000A 75D000            MOV     PSW,#00H
+000D C000              PUSH    AR0
+000F C001              PUSH    AR1
+0011 C002              PUSH    AR2
+0013 C003              PUSH    AR3
+0015 C004              PUSH    AR4
+0017 C005              PUSH    AR5
+0019 C006              PUSH    AR6
+001B C007              PUSH    AR7
+                                           ; SOURCE LINE # 198
+                                           ; SOURCE LINE # 202
+001D C2AF              CLR     EA
+                                           ; SOURCE LINE # 203
+001F E591              MOV     A,CAN_IR
+0021 30E703            JNB     ACC.7,?C0045
+                                           ; SOURCE LINE # 204
+                                           ; SOURCE LINE # 205
+0024 53913F            ANL     CAN_IR,#03FH
+                                           ; SOURCE LINE # 206
+0027         ?C0045:
+                                           ; SOURCE LINE # 207
+0027 E591              MOV     A,CAN_IR
+0029 20E603            JB      ACC.6,$ + 6H
+002C 020000      R     LJMP    ?C0046
+                                           ; SOURCE LINE # 208
+                                           ; SOURCE LINE # 209
+002F 5391BF            ANL     CAN_IR,#0BFH
+                                           ; SOURCE LINE # 210
+0032 75F1FF            MOV     ADR_H,#0FFH
+                                           ; SOURCE LINE # 211
+0035 75F200            MOV     ADR_M,#00H
+                                           ; SOURCE LINE # 212
+0038 75F368            MOV     ADR_L,#068H
+                                           ; SOURCE LINE # 213
+003B 75F401            MOV     ADR_INC,#01H
+                                           ; SOURCE LINE # 214
+003E 75F8AF            MOV     RAMMODE,#0AFH
+0041         ?C0047:
+                                           ; SOURCE LINE # 215
+0041 30FCFD            JNB     APP_ACK,?C0047
+0044         ?C0048:
+                                           ; SOURCE LINE # 216
+0044 D2FE              SETB    APP_EN
+0046         ?C0049:
+                                           ; SOURCE LINE # 217
+0046 20FEFD            JB      APP_EN,?C0049
+0049         ?C0050:
+                                           ; SOURCE LINE # 218
+0049 900000      R     MOV     DPTR,#status
+004C E5FA              MOV     A,DATA3
+004E F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 219
+004F E0                MOVX    A,@DPTR
+0050 FF                MOV     R7,A
+0051 900000      R     MOV     DPTR,#CanData+01A00H
+0054 E0                MOVX    A,@DPTR
+0055 75F00D            MOV     B,#0DH
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 22  
+
+0058 A4                MUL     AB
+0059 2400        R     ADD     A,#LOW CanData
+005B F582              MOV     DPL,A
+005D E5F0              MOV     A,B
+005F 3400        R     ADDC    A,#HIGH CanData
+0061 F583              MOV     DPH,A
+0063 EF                MOV     A,R7
+0064 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 220
+0065 D2FE              SETB    APP_EN
+0067         ?C0051:
+                                           ; SOURCE LINE # 221
+0067 20FEFD            JB      APP_EN,?C0051
+006A         ?C0052:
+                                           ; SOURCE LINE # 222
+006A 900000      R     MOV     DPTR,#CanData+01A00H
+006D E0                MOVX    A,@DPTR
+006E 75F00D            MOV     B,#0DH
+0071 A4                MUL     AB
+0072 2400        R     ADD     A,#LOW CanData+01H
+0074 F582              MOV     DPL,A
+0076 E5F0              MOV     A,B
+0078 3400        R     ADDC    A,#HIGH CanData+01H
+007A F583              MOV     DPH,A
+007C C083              PUSH    DPH
+007E C082              PUSH    DPL
+0080 E0                MOVX    A,@DPTR
+0081 FC                MOV     R4,A
+0082 A3                INC     DPTR
+0083 E0                MOVX    A,@DPTR
+0084 FD                MOV     R5,A
+0085 A3                INC     DPTR
+0086 E0                MOVX    A,@DPTR
+0087 FE                MOV     R6,A
+0088 A3                INC     DPTR
+0089 E0                MOVX    A,@DPTR
+008A FF                MOV     R7,A
+008B 7808              MOV     R0,#08H
+008D 120000      E     LCALL   ?C?LSHL
+0090 D082              POP     DPL
+0092 D083              POP     DPH
+0094 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 223
+0097 900000      R     MOV     DPTR,#CanData+01A00H
+009A E0                MOVX    A,@DPTR
+009B 75F00D            MOV     B,#0DH
+009E A4                MUL     AB
+009F 2400        R     ADD     A,#LOW CanData+01H
+00A1 F582              MOV     DPL,A
+00A3 E5F0              MOV     A,B
+00A5 3400        R     ADDC    A,#HIGH CanData+01H
+00A7 F583              MOV     DPH,A
+00A9 C083              PUSH    DPH
+00AB C082              PUSH    DPL
+00AD E0                MOVX    A,@DPTR
+00AE F8                MOV     R0,A
+00AF A3                INC     DPTR
+00B0 E0                MOVX    A,@DPTR
+00B1 F9                MOV     R1,A
+00B2 A3                INC     DPTR
+00B3 E0                MOVX    A,@DPTR
+00B4 FA                MOV     R2,A
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 23  
+
+00B5 A3                INC     DPTR
+00B6 E0                MOVX    A,@DPTR
+00B7 FB                MOV     R3,A
+00B8 AFFA              MOV     R7,DATA3
+00BA EB                MOV     A,R3
+00BB 4F                ORL     A,R7
+00BC FF                MOV     R7,A
+00BD EA                MOV     A,R2
+00BE FE                MOV     R6,A
+00BF E9                MOV     A,R1
+00C0 FD                MOV     R5,A
+00C1 E8                MOV     A,R0
+00C2 FC                MOV     R4,A
+00C3 D082              POP     DPL
+00C5 D083              POP     DPH
+00C7 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 224
+00CA 900000      R     MOV     DPTR,#CanData+01A00H
+00CD E0                MOVX    A,@DPTR
+00CE 75F00D            MOV     B,#0DH
+00D1 A4                MUL     AB
+00D2 2400        R     ADD     A,#LOW CanData+01H
+00D4 F582              MOV     DPL,A
+00D6 E5F0              MOV     A,B
+00D8 3400        R     ADDC    A,#HIGH CanData+01H
+00DA F583              MOV     DPH,A
+00DC C083              PUSH    DPH
+00DE C082              PUSH    DPL
+00E0 E0                MOVX    A,@DPTR
+00E1 FC                MOV     R4,A
+00E2 A3                INC     DPTR
+00E3 E0                MOVX    A,@DPTR
+00E4 FD                MOV     R5,A
+00E5 A3                INC     DPTR
+00E6 E0                MOVX    A,@DPTR
+00E7 FE                MOV     R6,A
+00E8 A3                INC     DPTR
+00E9 E0                MOVX    A,@DPTR
+00EA FF                MOV     R7,A
+00EB 7808              MOV     R0,#08H
+00ED 120000      E     LCALL   ?C?LSHL
+00F0 D082              POP     DPL
+00F2 D083              POP     DPH
+00F4 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 225
+00F7 900000      R     MOV     DPTR,#CanData+01A00H
+00FA E0                MOVX    A,@DPTR
+00FB 75F00D            MOV     B,#0DH
+00FE A4                MUL     AB
+00FF 2400        R     ADD     A,#LOW CanData+01H
+0101 F582              MOV     DPL,A
+0103 E5F0              MOV     A,B
+0105 3400        R     ADDC    A,#HIGH CanData+01H
+0107 F583              MOV     DPH,A
+0109 C083              PUSH    DPH
+010B C082              PUSH    DPL
+010D E0                MOVX    A,@DPTR
+010E F8                MOV     R0,A
+010F A3                INC     DPTR
+0110 E0                MOVX    A,@DPTR
+0111 F9                MOV     R1,A
+0112 A3                INC     DPTR
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 24  
+
+0113 E0                MOVX    A,@DPTR
+0114 FA                MOV     R2,A
+0115 A3                INC     DPTR
+0116 E0                MOVX    A,@DPTR
+0117 FB                MOV     R3,A
+0118 AFFB              MOV     R7,DATA2
+011A EB                MOV     A,R3
+011B 4F                ORL     A,R7
+011C FF                MOV     R7,A
+011D EA                MOV     A,R2
+011E FE                MOV     R6,A
+011F E9                MOV     A,R1
+0120 FD                MOV     R5,A
+0121 E8                MOV     A,R0
+0122 FC                MOV     R4,A
+0123 D082              POP     DPL
+0125 D083              POP     DPH
+0127 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 226
+012A 900000      R     MOV     DPTR,#CanData+01A00H
+012D E0                MOVX    A,@DPTR
+012E 75F00D            MOV     B,#0DH
+0131 A4                MUL     AB
+0132 2400        R     ADD     A,#LOW CanData+01H
+0134 F582              MOV     DPL,A
+0136 E5F0              MOV     A,B
+0138 3400        R     ADDC    A,#HIGH CanData+01H
+013A F583              MOV     DPH,A
+013C C083              PUSH    DPH
+013E C082              PUSH    DPL
+0140 E0                MOVX    A,@DPTR
+0141 FC                MOV     R4,A
+0142 A3                INC     DPTR
+0143 E0                MOVX    A,@DPTR
+0144 FD                MOV     R5,A
+0145 A3                INC     DPTR
+0146 E0                MOVX    A,@DPTR
+0147 FE                MOV     R6,A
+0148 A3                INC     DPTR
+0149 E0                MOVX    A,@DPTR
+014A FF                MOV     R7,A
+014B 7808              MOV     R0,#08H
+014D 120000      E     LCALL   ?C?LSHL
+0150 D082              POP     DPL
+0152 D083              POP     DPH
+0154 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 227
+0157 900000      R     MOV     DPTR,#CanData+01A00H
+015A E0                MOVX    A,@DPTR
+015B 75F00D            MOV     B,#0DH
+015E A4                MUL     AB
+015F 2400        R     ADD     A,#LOW CanData+01H
+0161 F582              MOV     DPL,A
+0163 E5F0              MOV     A,B
+0165 3400        R     ADDC    A,#HIGH CanData+01H
+0167 F583              MOV     DPH,A
+0169 C083              PUSH    DPH
+016B C082              PUSH    DPL
+016D E0                MOVX    A,@DPTR
+016E F8                MOV     R0,A
+016F A3                INC     DPTR
+0170 E0                MOVX    A,@DPTR
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 25  
+
+0171 F9                MOV     R1,A
+0172 A3                INC     DPTR
+0173 E0                MOVX    A,@DPTR
+0174 FA                MOV     R2,A
+0175 A3                INC     DPTR
+0176 E0                MOVX    A,@DPTR
+0177 FB                MOV     R3,A
+0178 AFFC              MOV     R7,DATA1
+017A EB                MOV     A,R3
+017B 4F                ORL     A,R7
+017C FF                MOV     R7,A
+017D EA                MOV     A,R2
+017E FE                MOV     R6,A
+017F E9                MOV     A,R1
+0180 FD                MOV     R5,A
+0181 E8                MOV     A,R0
+0182 FC                MOV     R4,A
+0183 D082              POP     DPL
+0185 D083              POP     DPH
+0187 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 228
+018A 900000      R     MOV     DPTR,#CanData+01A00H
+018D E0                MOVX    A,@DPTR
+018E 75F00D            MOV     B,#0DH
+0191 A4                MUL     AB
+0192 2400        R     ADD     A,#LOW CanData+01H
+0194 F582              MOV     DPL,A
+0196 E5F0              MOV     A,B
+0198 3400        R     ADDC    A,#HIGH CanData+01H
+019A F583              MOV     DPH,A
+019C C083              PUSH    DPH
+019E C082              PUSH    DPL
+01A0 E0                MOVX    A,@DPTR
+01A1 FC                MOV     R4,A
+01A2 A3                INC     DPTR
+01A3 E0                MOVX    A,@DPTR
+01A4 FD                MOV     R5,A
+01A5 A3                INC     DPTR
+01A6 E0                MOVX    A,@DPTR
+01A7 FE                MOV     R6,A
+01A8 A3                INC     DPTR
+01A9 E0                MOVX    A,@DPTR
+01AA FF                MOV     R7,A
+01AB 7808              MOV     R0,#08H
+01AD 120000      E     LCALL   ?C?LSHL
+01B0 D082              POP     DPL
+01B2 D083              POP     DPH
+01B4 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 229
+01B7 900000      R     MOV     DPTR,#CanData+01A00H
+01BA E0                MOVX    A,@DPTR
+01BB 75F00D            MOV     B,#0DH
+01BE A4                MUL     AB
+01BF 2400        R     ADD     A,#LOW CanData+01H
+01C1 F582              MOV     DPL,A
+01C3 E5F0              MOV     A,B
+01C5 3400        R     ADDC    A,#HIGH CanData+01H
+01C7 F583              MOV     DPH,A
+01C9 C083              PUSH    DPH
+01CB C082              PUSH    DPL
+01CD E0                MOVX    A,@DPTR
+01CE F8                MOV     R0,A
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 26  
+
+01CF A3                INC     DPTR
+01D0 E0                MOVX    A,@DPTR
+01D1 F9                MOV     R1,A
+01D2 A3                INC     DPTR
+01D3 E0                MOVX    A,@DPTR
+01D4 FA                MOV     R2,A
+01D5 A3                INC     DPTR
+01D6 E0                MOVX    A,@DPTR
+01D7 FB                MOV     R3,A
+01D8 AFFD              MOV     R7,DATA0
+01DA EB                MOV     A,R3
+01DB 4F                ORL     A,R7
+01DC FF                MOV     R7,A
+01DD EA                MOV     A,R2
+01DE FE                MOV     R6,A
+01DF E9                MOV     A,R1
+01E0 FD                MOV     R5,A
+01E1 E8                MOV     A,R0
+01E2 FC                MOV     R4,A
+01E3 D082              POP     DPL
+01E5 D083              POP     DPH
+01E7 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 230
+01EA 900000      R     MOV     DPTR,#CanData+01A00H
+01ED E0                MOVX    A,@DPTR
+01EE 75F00D            MOV     B,#0DH
+01F1 A4                MUL     AB
+01F2 2400        R     ADD     A,#LOW CanData+01H
+01F4 F582              MOV     DPL,A
+01F6 E5F0              MOV     A,B
+01F8 3400        R     ADDC    A,#HIGH CanData+01H
+01FA F583              MOV     DPH,A
+01FC C083              PUSH    DPH
+01FE C082              PUSH    DPL
+0200 E0                MOVX    A,@DPTR
+0201 FC                MOV     R4,A
+0202 A3                INC     DPTR
+0203 E0                MOVX    A,@DPTR
+0204 FD                MOV     R5,A
+0205 A3                INC     DPTR
+0206 E0                MOVX    A,@DPTR
+0207 FE                MOV     R6,A
+0208 A3                INC     DPTR
+0209 E0                MOVX    A,@DPTR
+020A FF                MOV     R7,A
+020B 7803              MOV     R0,#03H
+020D 120000      E     LCALL   ?C?ULSHR
+0210 D082              POP     DPL
+0212 D083              POP     DPH
+0214 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 231
+0217 900000      R     MOV     DPTR,#status
+021A E0                MOVX    A,@DPTR
+021B 20E72D            JB      ACC.7,?C0053
+                                           ; SOURCE LINE # 232
+                                           ; SOURCE LINE # 233
+021E 900000      R     MOV     DPTR,#CanData+01A00H
+0221 E0                MOVX    A,@DPTR
+0222 75F00D            MOV     B,#0DH
+0225 A4                MUL     AB
+0226 2400        R     ADD     A,#LOW CanData+01H
+0228 F582              MOV     DPL,A
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 27  
+
+022A E5F0              MOV     A,B
+022C 3400        R     ADDC    A,#HIGH CanData+01H
+022E F583              MOV     DPH,A
+0230 C083              PUSH    DPH
+0232 C082              PUSH    DPL
+0234 E0                MOVX    A,@DPTR
+0235 FC                MOV     R4,A
+0236 A3                INC     DPTR
+0237 E0                MOVX    A,@DPTR
+0238 FD                MOV     R5,A
+0239 A3                INC     DPTR
+023A E0                MOVX    A,@DPTR
+023B FE                MOV     R6,A
+023C A3                INC     DPTR
+023D E0                MOVX    A,@DPTR
+023E FF                MOV     R7,A
+023F 7812              MOV     R0,#012H
+0241 120000      E     LCALL   ?C?ULSHR
+0244 D082              POP     DPL
+0246 D083              POP     DPH
+0248 120000      E     LCALL   ?C?LSTXDATA
+                                           ; SOURCE LINE # 234
+024B         ?C0053:
+                                           ; SOURCE LINE # 235
+024B 900000      R     MOV     DPTR,#status
+024E E0                MOVX    A,@DPTR
+024F 30E603            JNB     ACC.6,$ + 6H
+0252 020000      R     LJMP    ?C0054
+                                           ; SOURCE LINE # 236
+                                           ; SOURCE LINE # 237
+0255 D2FE              SETB    APP_EN
+0257         ?C0055:
+                                           ; SOURCE LINE # 238
+0257 20FEFD            JB      APP_EN,?C0055
+025A         ?C0056:
+                                           ; SOURCE LINE # 239
+025A 900000      R     MOV     DPTR,#CanData+01A00H
+025D E0                MOVX    A,@DPTR
+025E FF                MOV     R7,A
+025F 75F00D            MOV     B,#0DH
+0262 A4                MUL     AB
+0263 2400        R     ADD     A,#LOW CanData+05H
+0265 F582              MOV     DPL,A
+0267 E5F0              MOV     A,B
+0269 3400        R     ADDC    A,#HIGH CanData+05H
+026B F583              MOV     DPH,A
+026D E5FA              MOV     A,DATA3
+026F F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 240
+0270 75F00D            MOV     B,#0DH
+0273 EF                MOV     A,R7
+0274 A4                MUL     AB
+0275 2400        R     ADD     A,#LOW CanData+06H
+0277 F582              MOV     DPL,A
+0279 E5F0              MOV     A,B
+027B 3400        R     ADDC    A,#HIGH CanData+06H
+027D F583              MOV     DPH,A
+027F E5FB              MOV     A,DATA2
+0281 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 241
+0282 75F00D            MOV     B,#0DH
+0285 EF                MOV     A,R7
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 28  
+
+0286 A4                MUL     AB
+0287 2400        R     ADD     A,#LOW CanData+07H
+0289 F582              MOV     DPL,A
+028B E5F0              MOV     A,B
+028D 3400        R     ADDC    A,#HIGH CanData+07H
+028F F583              MOV     DPH,A
+0291 E5FC              MOV     A,DATA1
+0293 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 242
+0294 75F00D            MOV     B,#0DH
+0297 EF                MOV     A,R7
+0298 A4                MUL     AB
+0299 2400        R     ADD     A,#LOW CanData+08H
+029B F582              MOV     DPL,A
+029D E5F0              MOV     A,B
+029F 3400        R     ADDC    A,#HIGH CanData+08H
+02A1 F583              MOV     DPH,A
+02A3 E5FD              MOV     A,DATA0
+02A5 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 243
+02A6 D2FE              SETB    APP_EN
+02A8         ?C0057:
+                                           ; SOURCE LINE # 244
+02A8 20FEFD            JB      APP_EN,?C0057
+02AB         ?C0058:
+                                           ; SOURCE LINE # 245
+02AB 900000      R     MOV     DPTR,#CanData+01A00H
+02AE E0                MOVX    A,@DPTR
+02AF FF                MOV     R7,A
+02B0 75F00D            MOV     B,#0DH
+02B3 A4                MUL     AB
+02B4 2400        R     ADD     A,#LOW CanData+09H
+02B6 F582              MOV     DPL,A
+02B8 E5F0              MOV     A,B
+02BA 3400        R     ADDC    A,#HIGH CanData+09H
+02BC F583              MOV     DPH,A
+02BE E5FA              MOV     A,DATA3
+02C0 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 246
+02C1 75F00D            MOV     B,#0DH
+02C4 EF                MOV     A,R7
+02C5 A4                MUL     AB
+02C6 2400        R     ADD     A,#LOW CanData+0AH
+02C8 F582              MOV     DPL,A
+02CA E5F0              MOV     A,B
+02CC 3400        R     ADDC    A,#HIGH CanData+0AH
+02CE F583              MOV     DPH,A
+02D0 E5FB              MOV     A,DATA2
+02D2 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 247
+02D3 75F00D            MOV     B,#0DH
+02D6 EF                MOV     A,R7
+02D7 A4                MUL     AB
+02D8 2400        R     ADD     A,#LOW CanData+0BH
+02DA F582              MOV     DPL,A
+02DC E5F0              MOV     A,B
+02DE 3400        R     ADDC    A,#HIGH CanData+0BH
+02E0 F583              MOV     DPH,A
+02E2 E5FC              MOV     A,DATA1
+02E4 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 248
+02E5 75F00D            MOV     B,#0DH
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 29  
+
+02E8 EF                MOV     A,R7
+02E9 A4                MUL     AB
+02EA 2400        R     ADD     A,#LOW CanData+0CH
+02EC F582              MOV     DPL,A
+02EE E5F0              MOV     A,B
+02F0 3400        R     ADDC    A,#HIGH CanData+0CH
+02F2 F583              MOV     DPH,A
+02F4 E5FD              MOV     A,DATA0
+02F6 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 249
+02F7         ?C0054:
+                                           ; SOURCE LINE # 250
+02F7 75F800            MOV     RAMMODE,#00H
+                                           ; SOURCE LINE # 251
+02FA 900000      R     MOV     DPTR,#CanData+01A00H
+02FD E0                MOVX    A,@DPTR
+02FE 04                INC     A
+02FF F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 252
+0300         ?C0046:
+                                           ; SOURCE LINE # 253
+0300 E591              MOV     A,CAN_IR
+0302 30E51A            JNB     ACC.5,?C0059
+                                           ; SOURCE LINE # 254
+                                           ; SOURCE LINE # 255
+0305 5391DF            ANL     CAN_IR,#0DFH
+                                           ; SOURCE LINE # 256
+0308 900000      R     MOV     DPTR,#CanData+01A02H
+030B E0                MOVX    A,@DPTR
+030C FF                MOV     R7,A
+030D A3                INC     DPTR
+030E E0                MOVX    A,@DPTR
+030F 6F                XRL     A,R7
+0310 6008              JZ      ?C0060
+                                           ; SOURCE LINE # 257
+                                           ; SOURCE LINE # 258
+0312 120000      R     LCALL   LoadOneFrame
+                                           ; SOURCE LINE # 259
+0315 438F04            ORL     CAN_CR,#04H
+                                           ; SOURCE LINE # 260
+0318 8005              SJMP    ?C0059
+031A         ?C0060:
+                                           ; SOURCE LINE # 262
+                                           ; SOURCE LINE # 263
+031A 900000      R     MOV     DPTR,#CanData+01A04H
+031D E4                CLR     A
+031E F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 264
+                                           ; SOURCE LINE # 265
+031F         ?C0059:
+                                           ; SOURCE LINE # 266
+031F E591              MOV     A,CAN_IR
+0321 30E403            JNB     ACC.4,?C0062
+                                           ; SOURCE LINE # 267
+                                           ; SOURCE LINE # 268
+0324 5391EF            ANL     CAN_IR,#0EFH
+                                           ; SOURCE LINE # 269
+0327         ?C0062:
+                                           ; SOURCE LINE # 270
+0327 E591              MOV     A,CAN_IR
+0329 30E303            JNB     ACC.3,?C0063
+                                           ; SOURCE LINE # 271
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 30  
+
+                                           ; SOURCE LINE # 272
+032C 5391F7            ANL     CAN_IR,#0F7H
+                                           ; SOURCE LINE # 273
+032F         ?C0063:
+                                           ; SOURCE LINE # 274
+032F E591              MOV     A,CAN_IR
+0331 30E206            JNB     ACC.2,?C0064
+                                           ; SOURCE LINE # 275
+                                           ; SOURCE LINE # 276
+0334 5391FB            ANL     CAN_IR,#0FBH
+                                           ; SOURCE LINE # 277
+0337 438F04            ORL     CAN_CR,#04H
+                                           ; SOURCE LINE # 278
+033A         ?C0064:
+                                           ; SOURCE LINE # 279
+033A 75E800            MOV     CAN_ET,#00H
+                                           ; SOURCE LINE # 280
+033D D2AF              SETB    EA
+                                           ; SOURCE LINE # 281
+033F D007              POP     AR7
+0341 D006              POP     AR6
+0343 D005              POP     AR5
+0345 D004              POP     AR4
+0347 D003              POP     AR3
+0349 D002              POP     AR2
+034B D001              POP     AR1
+034D D000              POP     AR0
+034F D0D0              POP     PSW
+0351 D082              POP     DPL
+0353 D083              POP     DPH
+0355 D0F0              POP     B
+0357 D0E0              POP     ACC
+0359 32                RETI    
+             ; FUNCTION Can_Isr (END)
+
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 31  
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+ADR_H. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F1H  1
+CANBUSUNIT . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  6661
+  BusRXbuf . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  3328
+  BusTXbuf . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0D00H  3328
+  CanRxHead. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A00H  1
+  CanRxTail. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A01H  1
+  CanTxHead. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A02H  1
+  CanTxTail. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A03H  1
+  CanTxFlag. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A04H  1
+ADR_L. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F3H  1
+ADR_M. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F2H  1
+EA . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00AFH  1
+RAMMODE. . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F8H  1
+_SetPinIn. . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+CanData. . . . . . . . . . . . . . . .  PUBLIC   XDATA  STRUCT   0000H  6661
+_SetPinOut . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+APP_ACK. . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00FCH  1
+ADR_INC. . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F4H  1
+LoadOneFrame . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+CANBUS8283 . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  260
+  Busbuf . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  256
+  Can8283RxHead. . . . . . . . . . . .  MEMBER   -----  U_INT    0100H  2
+  Can8283RxTail. . . . . . . . . . . .  MEMBER   -----  U_INT    0102H  2
+CANUNIT. . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  13
+  status . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
+  candata. . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0005H  8
+ECAN . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00B9H  1
+Can_Isr. . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  status . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0000H  1
+CanErrorReset. . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+MSPIFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  16
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0001H  2
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0003H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0009H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      000BH  3
+  Delay. . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    000EH  2
+_mSPIFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  16
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0001H  2
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0003H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0009H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      000BH  3
+  Delay. . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    000EH  2
+s8 . . . . . . . . . . . . . . . . . .  TYPEDEF  -----  CHAR     -----  1
+u8 . . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_CHAR   -----  1
+MNORFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  12
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
+_mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 32  
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
+_candataunitbuf. . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  6661
+  BusRXbuf . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  3328
+  BusTXbuf . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0D00H  3328
+  CanRxHead. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A00H  1
+  CanRxTail. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A01H  1
+  CanTxHead. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A02H  1
+  CanTxTail. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A03H  1
+  CanTxFlag. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A04H  1
+_PinOutput . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+MUX_SEL. . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C9H  1
+CAN_CR . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   008FH  1
+DATA0. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00FDH  1
+DATA1. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00FCH  1
+CAN_ET . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00E8H  1
+DATA2. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00FBH  1
+DATA3. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00FAH  1
+CAN_IR . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   0091H  1
+MMUSIC . . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  35
+  IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
+  PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
+  PlayHead . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0021H  1
+  PlayInterrupt. . . . . . . . . . . .  MEMBER   -----  U_CHAR   0022H  1
+_mMUSIC. . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  35
+  IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
+  PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
+  PlayHead . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0021H  1
+  PlayInterrupt. . . . . . . . . . . .  MEMBER   -----  U_CHAR   0022H  1
+APP_EN . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00FEH  1
+_CanBusInit. . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  RegCfg . . . . . . . . . . . . . . .  AUTO     XDATA  PTR      0000H  3
+s32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  LONG     -----  4
+u32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_LONG   -----  4
+s16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  INT      -----  2
+_delay_us. . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+u16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
+_CanTx . . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  ID . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_LONG   0000H  4
+  status . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0004H  1
+  len. . . . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0005H  2
+  pData. . . . . . . . . . . . . . . .  AUTO     XDATA  PTR      0007H  3
+  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   000AH  1
+  j. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   000BH  1
+  k. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   000CH  1
+  framnum. . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   000DH  1
+  framoffset . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   000EH  1
+  idtmp. . . . . . . . . . . . . . . .  AUTO     XDATA  U_LONG   000FH  4
+  statustmp. . . . . . . . . . . . . .  AUTO     XDATA  U_LONG   0013H  4
+T2CON. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C8H  1
+_can8283 . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  260
+  Busbuf . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  256
+  Can8283RxHead. . . . . . . . . . . .  MEMBER   -----  U_INT    0100H  2
+  Can8283RxTail. . . . . . . . . . . .  MEMBER   -----  U_INT    0102H  2
+_candataunit . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  13
+C51 COMPILER V9.53.0.0   CANBUS                                                            10/30/2023 15:32:53 PAGE 33  
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+  status . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
+  candata. . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0005H  8
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2025    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   6661      27
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

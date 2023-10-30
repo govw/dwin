@@ -1,0 +1,2571 @@
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE SSD2828
+OBJECT MODULE PLACED IN .\Objects\ssd2828.obj
+COMPILER INVOKED BY: D:\DWIN\Keil_v5\C51\BIN\C51.EXE source\ssd2828.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\driver;.\s
+                    -ource) DEBUG OBJECTEXTEND CODE SYMBOLS PRINT(.\Listings\ssd2828.lst) OBJECT(.\Objects\ssd2828.obj)
+
+line level    source
+
+   1          
+   2          #include "sys.h"
+   3          // #include "common.h"
+   4          #include "ssd2828.h"
+*** WARNING C235 IN LINE 76 OF source\ssd2828.h: parameter 1: different types
+   5          //#include "interrupts.h"
+   6          bit ssd2828_cfg_ok=0;
+   7          code const u8 pa_tab1[]={0xff, 0x98, 0x81, 0x03};
+   8          
+   9          code const u8 pa_tab4[]={0xff, 0x98, 0x81, 0x04};
+  10          code const u8 pa_tab5[]={0xff, 0x98, 0x81, 0x01};
+  11          
+  12          code const u8 pa_tab8[]={0xff, 0x98, 0x81, 0x00};
+  13          code const u8 pa_tab9[]={0x35};
+  14          code const u8 pa_tab10[]={0x11};
+  15          code const u8 pa_tab11[]={0x29};
+  16          
+  17          
+  18          
+  19          #if 0
+              void delay_us(u8 t){
+                      u8 i,j;
+                      for(i=0;i<t;i++){
+                              for(j=0;j<4;j++);
+                      }
+              }
+              #endif
+  27          
+  28          u16 ssd2828_readID(void){
+  29   1              u16 ssd2828_id=0,reg_temp=0xb0fa;
+  30   1              u8 i;
+  31   1              csx=0;
+  32   1              sdc=0;          //??
+  33   1              delay_us(5);
+  34   1              for(i=0;i<16;i++){
+  35   2                      
+  36   2                      if(reg_temp&0x8000)             //msb
+  37   2                              sdi=1;
+  38   2                      else
+  39   2                              sdi=0;
+  40   2                      sck=0;
+  41   2                      delay_us(5);
+  42   2                      sck=1;
+  43   2                      delay_us(5);
+  44   2                      reg_temp<<=1;                   //???
+  45   2              }
+  46   1              sdc=1;
+  47   1              delay_us(5);
+  48   1              for(i=0;i<16;i++){
+  49   2                      sck=0;
+  50   2                      delay_us(5);
+  51   2                      sck=1;
+  52   2                      delay_us(5);
+  53   2                      ssd2828_id<<=1;
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 2   
+
+  54   2                      if(sdo)
+  55   2                              ssd2828_id|=1;
+  56   2              }
+  57   1              csx=1;
+  58   1              delay_us(5);
+  59   1              return ssd2828_id;
+  60   1      }
+  61          
+  62          u16 ssd2828_readReg(u8 addr_reg){
+  63   1              u16 reg_value=0,reg_temp;
+  64   1              u8 i;
+  65   1              reg_temp=0x00fa|(addr_reg<<8);
+  66   1              csx=0;
+  67   1              sdc=0;          //??
+  68   1              delay_us(5);
+  69   1              for(i=0;i<16;i++){
+  70   2                      
+  71   2                      if(reg_temp&0x8000)             //msb
+  72   2                              sdi=1;
+  73   2                      else
+  74   2                              sdi=0;
+  75   2                      sck=0;
+  76   2                      delay_us(5);
+  77   2                      sck=1;
+  78   2                      delay_us(5);
+  79   2                      reg_temp<<=1;                   //???
+  80   2              }
+  81   1              sdc=1;
+  82   1              delay_us(5);
+  83   1              for(i=0;i<16;i++){
+  84   2                      sck=0;
+  85   2                      delay_us(5);
+  86   2                      sck=1;
+  87   2                      delay_us(5);
+  88   2                      reg_value<<=1;
+  89   2                      if(sdo)
+  90   2                              reg_value|=1;
+  91   2              }
+  92   1              csx=1;
+  93   1              delay_us(5);
+  94   1              return reg_value;       
+  95   1      }
+  96          
+  97          void ssd2828_writecmd(u8 cmd){
+  98   1              u8 i,ssd2828_cmd;
+  99   1              ssd2828_cmd=cmd;
+ 100   1              csx=0;
+ 101   1              sdc=0;
+ 102   1              delay_us(5);
+ 103   1              for(i=0;i<8;i++){
+ 104   2                      if(ssd2828_cmd&0x80)
+ 105   2                              sdi=1;
+ 106   2                      else
+ 107   2                              sdi=0;
+ 108   2                      sck=0;
+ 109   2                      delay_us(5);
+ 110   2                      sck=1;
+ 111   2                      delay_us(5);
+ 112   2                      ssd2828_cmd<<=1;        
+ 113   2              }
+ 114   1              csx=1;
+ 115   1              delay_us(5);
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 3   
+
+ 116   1      }
+ 117          
+ 118          void ssd2828_regconfig(u8 reg_addr,u16 reg_data){
+ 119   1              u8 i,addr_temp,data_H,data_L;
+ 120   1              addr_temp=reg_addr;
+ 121   1              data_H=reg_data>>8;
+ 122   1              data_L=reg_data;
+ 123   1              csx=0;
+ 124   1              sdc=0;
+ 125   1              delay_us(5);
+ 126   1              for(i=0;i<8;i++){               //???????
+ 127   2                      if(addr_temp&0x80)
+ 128   2                              sdi=1;
+ 129   2                      else
+ 130   2                              sdi=0;
+ 131   2                      sck=0;
+ 132   2                      delay_us(5);
+ 133   2                      sck=1;
+ 134   2                      delay_us(5);
+ 135   2                      addr_temp<<=1;
+ 136   2              }
+ 137   1              sdc=1;
+ 138   1              delay_us(5);
+ 139   1              for(i=0;i<8;i++){               //lsb
+ 140   2                      if(data_L&0x80)
+ 141   2                              sdi=1;
+ 142   2                      else
+ 143   2                              sdi=0;
+ 144   2                      sck=0;
+ 145   2                      delay_us(5);
+ 146   2                      sck=1;
+ 147   2                      delay_us(5);
+ 148   2                      data_L<<=1;
+ 149   2              }
+ 150   1              for(i=0;i<8;i++){
+ 151   2                      if(data_H&0x80)
+ 152   2                              sdi=1;
+ 153   2                      else
+ 154   2                              sdi=0;
+ 155   2                      sck=0;
+ 156   2                      delay_us(5);
+ 157   2                      sck=1;
+ 158   2                      delay_us(5);
+ 159   2                      data_H<<=1;
+ 160   2              }
+ 161   1              csx=1;
+ 162   1              delay_us(5);
+ 163   1      }
+ 164          
+ 165          void ssd2828_writepackage(u8 *pbuf,u16 len){
+ 166   1              u16 lenth;
+ 167   1              u8 i,temp;
+ 168   1              lenth=len;
+ 169   1              ssd2828_regconfig(0xbc,lenth);
+ 170   1              ssd2828_regconfig(0xbe,lenth);
+ 171   1              ssd2828_writecmd(0xbf);
+ 172   1              csx=0;
+ 173   1              sdc=1;
+ 174   1              delay_us(5);
+ 175   1              while(lenth--){
+ 176   2                      temp=*pbuf++;
+ 177   2                      for(i=0;i<8;i++){
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 4   
+
+ 178   3                              if(temp&0x80)
+ 179   3                                      sdi=1;
+ 180   3                              else
+ 181   3                                      sdi=0;
+ 182   3                              sck=0;
+ 183   3                              delay_us(5);
+ 184   3                              sck=1;
+ 185   3                              delay_us(5);
+ 186   3                              temp<<=1;
+ 187   3                      }
+ 188   2              }
+ 189   1              csx=1;
+ 190   1              delay_us(5);
+ 191   1      }
+ 192          
+ 193          
+ 194          
+ 195          void W_COM(u8 addr,u8 dat){
+ 196   1              u16 lenth;
+ 197   1              u8 i,temp;
+ 198   1              u8 atr[2];
+ 199   1              u8* pbuf = atr;
+ 200   1              atr[0] = addr;
+ 201   1              atr[1] = dat;
+ 202   1              lenth=2;
+ 203   1              ssd2828_regconfig(0xbc,lenth);
+ 204   1              ssd2828_regconfig(0xbe,lenth);
+ 205   1              ssd2828_writecmd(0xbf);
+ 206   1              csx=0;
+ 207   1              sdc=1;
+ 208   1              delay_us(15);
+ 209   1              while(lenth--){
+ 210   2                      temp=*pbuf++;
+ 211   2                      for(i=0;i<8;i++){
+ 212   3                              if(temp&0x80)
+ 213   3                                      sdi=1;
+ 214   3                              else
+ 215   3                                      sdi=0;
+ 216   3                              sck=0;
+ 217   3                              delay_us(15);
+ 218   3                              sck=1;
+ 219   3                              delay_us(15);
+ 220   3                              temp<<=1;
+ 221   3                      }
+ 222   2              }
+ 223   1              csx=1;
+ 224   1              delay_us(15);
+ 225   1      }
+ 226          
+ 227          /******************************************
+ 228                  ssd2828配置为non-burst mode，NVD=0,BLLP=0
+ 229                  ssd2828仅在垂直消隐期间发送非视频数据包
+ 230          //*******************************************/
+ 231          //u16 ssd2828_read_mipi(u16 mipi_reg){          //仅读取一个字
+ 232          //      u16 reg_value=0,mipi_reg_value=0;
+ 233          //      u8 mipi_read_cnt=0;
+ 234          //      do{
+ 235          //              ssd2828_regconfig(0xb7,0x02CB);         //REN=1
+ 236          ////            ssd2828_regconfig(0xbb,0x0002);         //设定接收速率，必须比送图速率小
+ 237          //              ssd2828_regconfig(0xc1,0x0001);         //设置读取mipi slave数据的最大长度
+ 238          ////            ssd2828_regconfig(0xc0,0x0100);         //停止送图，准备读取mipi slave寄存器
+ 239          //              ssd2828_regconfig(0xbc,0x0001);         //设置带读取数据包数量
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 5   
+
+ 240          //              ssd2828_regconfig(0xbf,mipi_reg);               //读取mipi slave寄存器
+ 241          //              ssd2828_regconfig(0xd4,0x00fa);         //复位SPI读寄存器
+ 242          //              reg_value=ssd2828_readReg(0xc6);
+ 243          //              reg_value&=0x01;                //RDR=0xc6.0
+ 244          //              mipi_read_cnt++;
+ 245          //      } while((reg_value==0)&&(mipi_read_cnt<3));
+ 246          //      //RDR=1，则表明mipi slave已回复
+ 247          //      mipi_reg_value=ssd2828_readReg(0xff);   //mipi slave返回的数据存储在0xff寄存器地址
+ 248          //      ssd2828_regconfig(0xb7,0x024b);                         //恢复正常显示
+ 249          //      return mipi_reg_value;
+ 250          //}
+ 251          
+ 252          void W_write()
+ 253          {
+ 254   1              ssd2828_writepackage(pa_tab1,sizeof(pa_tab1));
+ 255   1              W_COM(0x01,0x00);
+ 256   1              W_COM(0x02,0x00);
+ 257   1              W_COM(0x03,0x57);      //STVA=STV1~4
+ 258   1              W_COM(0x04,0xD3);       //STVB=STV0 
+ 259   1              W_COM(0x05,0x00);        
+ 260   1              W_COM(0x06,0x11);       //STVA_Rise
+ 261   1              W_COM(0x07,0x08);       //STVB_Rise 
+ 262   1              W_COM(0x08,0x00);        
+ 263   1              W_COM(0x09,0x00);       //FTI1R(A) STV1=3.6H      
+ 264   1              W_COM(0x0a,0x3F);          
+ 265   1              W_COM(0x0b,0x00);      
+ 266   1              W_COM(0x0c,0x00);    
+ 267   1              W_COM(0x0d,0x00); //FTI2F(B) STV0=3.6H    
+ 268   1              W_COM(0x0e,0x00);        
+ 269   1              W_COM(0x0f,0x3F);       //CLW1(ALR) Duty=45%
+ 270   1              W_COM(0x10,0x3F);       //CLW2(ARR) Duty=45%
+ 271   1              W_COM(0x11,0x00);           
+ 272   1              W_COM(0x12,0x00);       
+ 273   1              W_COM(0x13,0x00);        
+ 274   1              W_COM(0x14,0x00);
+ 275   1              W_COM(0x15,0x00);        
+ 276   1              W_COM(0x16,0x00);        
+ 277   1              W_COM(0x17,0x00);        
+ 278   1              W_COM(0x18,0x00);        
+ 279   1              W_COM(0x19,0x00);
+ 280   1              W_COM(0x1a,0x00);
+ 281   1              W_COM(0x1b,0x00);   
+ 282   1              W_COM(0x1c,0x00);
+ 283   1              W_COM(0x1d,0x00);
+ 284   1              W_COM(0x1e,0x40);       //CLKA 40?郯胜? C0も笆は(X8把σCLKB)
+ 285   1              W_COM(0x1f,0x80);       //C0
+ 286   1              W_COM(0x20,0x06);       //CLKA_Rise
+ 287   1              W_COM(0x21,0x01);       //CLKA_Fall
+ 288   1              W_COM(0x22,0x00);        
+ 289   1              W_COM(0x23,0x00);        
+ 290   1              W_COM(0x24,0x00);        
+ 291   1              W_COM(0x25,0x00);        
+ 292   1              W_COM(0x26,0x00);
+ 293   1              W_COM(0x27,0x00);
+ 294   1              W_COM(0x28,0x33);       //CLK Phase
+ 295   1              W_COM(0x29,0x33);       //CLK overlap
+ 296   1              W_COM(0x2a,0x00);  
+ 297   1              W_COM(0x2b,0x00);
+ 298   1              W_COM(0x2c,0x00);       //GCH R
+ 299   1              W_COM(0x2d,0x00);       //GCL R 
+ 300   1              W_COM(0x2e,0x00);       //GCH F        
+ 301   1              W_COM(0x2f,0x00);       //GCL F       
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 6   
+
+ 302   1              W_COM(0x30,0x00);
+ 303   1              W_COM(0x31,0x00);
+ 304   1              W_COM(0x32,0x00);       //GCH/L ext2/1︽??  5E 01:31   5E 00:42      
+ 305   1              W_COM(0x33,0x00);
+ 306   1              W_COM(0x34,0x00);      
+ 307   1              W_COM(0x35,0x00);       //GCH/L 跋丁 00:VS玡 01:VS?? 10:阁VS 11:frameい             
+ 308   1              W_COM(0x36,0x00);
+ 309   1              W_COM(0x37,0x00);       //GCH/L      
+ 310   1              W_COM(0x38,0x78);       
+ 311   1              W_COM(0x39,0x00);
+ 312   1              W_COM(0x3a,0x00); 
+ 313   1              W_COM(0x3b,0x00);
+ 314   1              W_COM(0x3c,0x00);
+ 315   1              W_COM(0x3d,0x00);
+ 316   1              W_COM(0x3e,0x00);
+ 317   1              W_COM(0x3f,0x00);
+ 318   1              W_COM(0x40,0x00);
+ 319   1              W_COM(0x41,0x00);
+ 320   1              W_COM(0x42,0x00);
+ 321   1              W_COM(0x43,0x00);      //GCH/L      
+ 322   1              W_COM(0x44,0x00);
+ 323   1              W_COM(0x50,0x00);
+ 324   1              W_COM(0x51,0x23);
+ 325   1              W_COM(0x52,0x45);   
+ 326   1              W_COM(0x53,0x67);      
+ 327   1              W_COM(0x54,0x89);        
+ 328   1              W_COM(0x55,0xab);       
+ 329   1              W_COM(0x56,0x01); 
+ 330   1              W_COM(0x57,0x23);        
+ 331   1              W_COM(0x58,0x45);  
+ 332   1              W_COM(0x59,0x67);          
+ 333   1              W_COM(0x5a,0x89);      
+ 334   1              W_COM(0x5b,0xab);    
+ 335   1              W_COM(0x5c,0xcd);    
+ 336   1              W_COM(0x5d,0xef);
+ 337   1              W_COM(0x5e,0x00);       
+ 338   1              W_COM(0x5f,0x0D);      
+ 339   1              W_COM(0x60,0x0D);           
+ 340   1              W_COM(0x61,0x0C);       
+ 341   1              W_COM(0x62,0x0C);        
+ 342   1              W_COM(0x63,0x0F);
+ 343   1              W_COM(0x64,0x0F);        
+ 344   1              W_COM(0x65,0x0E);        
+ 345   1              W_COM(0x66,0x0E);        
+ 346   1              W_COM(0x67,0x08);        
+ 347   1              W_COM(0x68,0x02);
+ 348   1              W_COM(0x69,0x02);
+ 349   1              W_COM(0x6a,0x02);   
+ 350   1              W_COM(0x6b,0x02);
+ 351   1              W_COM(0x6c,0x02);
+ 352   1              W_COM(0x6d,0x02);       //CLKA 40?郯胜? C0も笆は(X8把σCLKB)
+ 353   1              W_COM(0x6e,0x02);       //C0
+ 354   1              W_COM(0x6f,0x02);       //CLKA_Rise
+ 355   1              W_COM(0x70,0x14);       //CLKA_Fall
+ 356   1              W_COM(0x71,0x15);        
+ 357   1              W_COM(0x72,0x06);        
+ 358   1              W_COM(0x73,0x02);        
+ 359   1              W_COM(0x74,0x02);
+ 360   1              W_COM(0x75,0x0D); 
+ 361   1              W_COM(0x76,0x0D);    
+ 362   1              W_COM(0x77,0x0C);    
+ 363   1              W_COM(0x78,0x0C);    
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 7   
+
+ 364   1              W_COM(0x79,0x0F);    
+ 365   1              W_COM(0x7a,0x0F);     
+ 366   1              W_COM(0x7b,0x0E);   
+ 367   1              W_COM(0x7c,0x0E);    
+ 368   1              W_COM(0x7d,0x08);    
+ 369   1              W_COM(0x7e,0x02);
+ 370   1              W_COM(0x7f,0x02);  
+ 371   1              W_COM(0x80,0x02);  
+ 372   1              W_COM(0x81,0x02);
+ 373   1              W_COM(0x82,0x02);     
+ 374   1              W_COM(0x83,0x02);  
+ 375   1              W_COM(0x84,0x02);     
+ 376   1              W_COM(0x85,0x02);
+ 377   1              W_COM(0x86,0x14);
+ 378   1              W_COM(0x87,0x15);
+ 379   1              W_COM(0x88,0x06);   
+ 380   1              W_COM(0x89,0x02);  
+ 381   1              W_COM(0x8A,0x02);  
+ 382   1              ssd2828_writepackage(pa_tab4,sizeof(pa_tab4));
+ 383   1              W_COM(0x6e,0x3b);
+ 384   1              W_COM(0x6F,0x57);
+ 385   1              W_COM(0x3A,0x24);
+ 386   1              W_COM(0x8D,0x1F);
+ 387   1              W_COM(0x87,0xBA);
+ 388   1              W_COM(0xB2,0xD1);
+ 389   1              W_COM(0x88,0x0B);
+ 390   1              W_COM(0x38,0x01);
+ 391   1              W_COM(0x39,0x00);
+ 392   1              W_COM(0xB5,0x07);
+ 393   1              W_COM(0x31,0x75);
+ 394   1              W_COM(0x3B,0x98);
+ 395   1              ssd2828_writepackage(pa_tab5,sizeof(pa_tab5));
+ 396   1              W_COM(0x22,0x0A);
+ 397   1              W_COM(0x31,0x09);
+ 398   1              W_COM(0x35,0x07);
+ 399   1              W_COM(0x53,0x67);
+ 400   1              W_COM(0x55,0x84);
+ 401   1              W_COM(0x50,0x86);
+ 402   1              W_COM(0x51,0x82);
+ 403   1              W_COM(0x60,0x10);
+ 404   1              W_COM(0x62,0x00);
+ 405   1              W_COM(0xA0,0x00);
+ 406   1              W_COM(0xA1,0x12);
+ 407   1              W_COM(0xA2,0x1F);
+ 408   1              W_COM(0xA3,0x12);
+ 409   1              W_COM(0xA4,0x16);
+ 410   1              W_COM(0xA5,0x29);
+ 411   1              W_COM(0xA6,0x1E);
+ 412   1              W_COM(0xA7,0x1F);
+ 413   1              W_COM(0xA8,0x7E);
+ 414   1              W_COM(0xA9,0x1B);
+ 415   1              W_COM(0xAA,0x28);
+ 416   1              W_COM(0xAB,0x6D);
+ 417   1              W_COM(0xAC,0x19);
+ 418   1              W_COM(0xAD,0x18);
+ 419   1              W_COM(0xAE,0x4C);
+ 420   1              W_COM(0xAF,0x1E);
+ 421   1              W_COM(0xB0,0x23);
+ 422   1              W_COM(0xB1,0x52);
+ 423   1              W_COM(0xB2,0x6D);
+ 424   1              W_COM(0xB3,0x3F);
+ 425   1              W_COM(0xC0,0x00);
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 8   
+
+ 426   1              W_COM(0xC1,0x12);
+ 427   1              W_COM(0xC2,0x20);
+ 428   1              W_COM(0xC3,0x10);
+ 429   1              W_COM(0xC4,0x13);
+ 430   1              W_COM(0xC5,0x27);
+ 431   1              W_COM(0xC6,0x1B);
+ 432   1              W_COM(0xC7,0x1D);
+ 433   1              W_COM(0xC8,0x75);
+ 434   1              W_COM(0xC9,0x1F);
+ 435   1              W_COM(0xCA,0x28);
+ 436   1              W_COM(0xCB,0x68);
+ 437   1              W_COM(0xCC,0x1A);
+ 438   1              W_COM(0xCD,0x18);
+ 439   1              W_COM(0xCE,0x4D);
+ 440   1              W_COM(0xCF,0x25);
+ 441   1              W_COM(0xD0,0x2E);
+ 442   1              W_COM(0xD1,0x53);
+ 443   1              W_COM(0xD2,0x60);
+ 444   1              W_COM(0xD3,0x3F);
+ 445   1              ssd2828_writepackage(pa_tab8,sizeof(pa_tab8));
+ 446   1              ssd2828_writepackage(pa_tab9,sizeof(pa_tab9));
+ 447   1              delay_ms(140);
+ 448   1              ssd2828_writepackage(pa_tab10,sizeof(pa_tab10));
+ 449   1              delay_ms(120);
+ 450   1              ssd2828_writepackage(pa_tab11,sizeof(pa_tab11));
+ 451   1              delay_ms(170);
+ 452   1      }
+ 453          
+ 454          
+ 455          
+ 456          void lcd_pa_set(void){
+ 457   1      //      u8 lcd_vs,lcd_hs,lcd_vbp,lcd_hbp,lcd_vfp,lcd_hfp;
+ 458   1      //      u16 lcd_sw,lcd_bp,lcd_fp;
+ 459   1      //      lcd_vs=VS;
+ 460   1      //      lcd_hs=HS;
+ 461   1      //      lcd_vbp=VBP;
+ 462   1      //      lcd_hbp=HBP;
+ 463   1      //      lcd_vfp=VFP;
+ 464   1      //      lcd_hfp=HFP;
+ 465   1      //      lcd_sw=(lcd_vs<<8)| lcd_hs;
+ 466   1      //      lcd_bp=(lcd_vbp<<8)| lcd_hbp;
+ 467   1      //      lcd_fp=(lcd_vfp<<8)| lcd_hfp;
+ 468   1      //      ssd2828_regconfig(0xb1,lcd_sw);                 //H:VSA,L:HSA
+ 469   1      //      ssd2828_regconfig(0xb2,lcd_bp);                 //H:VBP,L:HBP
+ 470   1      //      ssd2828_regconfig(0xb3,lcd_fp);                 //H:VFP,L:HFP
+ 471   1      //      ssd2828_regconfig(0xb4,HACT);                   //HACT
+ 472   1      //      ssd2828_regconfig(0xb5,VACT);                   //VACT
+ 473   1              ssd2828_regconfig(0xb1,0x0806);                 //H:VSA,L:HSA
+ 474   1              ssd2828_regconfig(0xb2,0x1822);                 //H:VBP,L:HBP
+ 475   1              ssd2828_regconfig(0xb3,0x6812);                 //H:VFP,L:HFP
+ 476   1              ssd2828_regconfig(0xb4,800);                    //HACT
+ 477   1              ssd2828_regconfig(0xb5,1280);                   //VACT
+ 478   1      }
+ 479          
+ 480          void ssd2828_init(void){
+ 481   1      //#if 1
+ 482   1      //      u16 temp=0;
+ 483   1      //      temp=ssd2828_readID();
+ 484   1      //      if(temp!=0x2828)
+ 485   1      //              return;
+ 486   1      //#endif
+ 487   1              //??ssd2828????mipi??,????mipi??
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 9   
+
+ 488   1              ssd2828_regconfig(0xb7,0x0050);
+ 489   1              ssd2828_regconfig(0xb8,0x0000);
+ 490   1              ssd2828_regconfig(0xb9,0x0000);
+ 491   1              //ssd2828_regconfig(0xba,0x4114);
+ 492   1              ssd2828_regconfig(0xba,0x800A);//
+ 493   1              ssd2828_regconfig(0xbb,0x0006);
+ 494   1              ssd2828_regconfig(0xb9,0x0001);
+ 495   1              //ssd2828_regconfig(0xde,0x0003);
+ 496   1              ssd2828_regconfig(0xde,0x0000);
+ 497   1              ssd2828_regconfig(0xc9,0x2302);
+ 498   1              delay_ms(10);
+ 499   1              //ssd2828_regconfig(0xb7,0x0210);
+ 500   1      //      ssd2828_regconfig(0xb7,0x0210);
+ 501   1      //      ssd2828_regconfig(0xbd,0x0000);
+ 502   1      //      delay_ms(20);
+ 503   1              
+ 504   1              //??mipi?????
+ 505   1              //C068_code_download();
+ 506   1      //      T088_code_download();
+ 507   1              //不需下载CODE
+ 508   1              
+ 509   1              //??ssd2828?????,????
+ 510   1              
+ 511   1        W_write();
+ 512   1              
+ 513   1              ssd2828_regconfig(0xb7,0x0151);
+ 514   1              ssd2828_regconfig(0xb8,0x0000);
+ 515   1              ssd2828_regconfig(0xb9,0x0000);
+ 516   1              //ssd2828_regconfig(0xba,0x8029);                       //801B osc=12M,pll=324M;8029 osc=12M,pll=492M
+ 517   1              //ssd2828_regconfig(0xbb,0x0007);
+ 518   1      //      ssd2828_regconfig(0xba,0xc03f); //TPS02
+ 519   1              ssd2828_regconfig(0xba,0x8015); //0X804B
+ 520   1              //ssd2828_regconfig(0xba,0xC050);                       //C050 osc=12M,
+ 521   1              ssd2828_regconfig(0xbb,0x0005);
+ 522   1              ssd2828_regconfig(0xb9,0x0001);
+ 523   1              ssd2828_regconfig(0xc9,0x2302);
+ 524   1              delay_ms(10);
+ 525   1              ssd2828_regconfig(0xca,0x2301);         //MIPI????
+ 526   1              ssd2828_regconfig(0xcb,0x0510);
+ 527   1              ssd2828_regconfig(0xcc,0x1005);
+ 528   1              ssd2828_regconfig(0xd0,0x00ff);
+ 529   1              
+ 530   1              lcd_pa_set();           //??LCD?????
+ 531   1              
+ 532   1              //ssd2828_regconfig(0xb6,0x000B);               //24bit rgb
+ 533   1              ssd2828_regconfig(0xb6,0x00D3); //Non burst mode 24 bit rgb
+ 534   1              ssd2828_regconfig(0xde,0x0003);         //4 lane
+ 535   1              //ssd2828_regconfig(0xde,0x0001);               //2 lane
+ 536   1              ssd2828_regconfig(0xd6,0x0004);         //04=BGR 05=RGB
+ 537   1              //ssd2828_regconfig(0xb7,0x024B);               //024b 0659 0210
+ 538   1              ssd2828_regconfig(0xb7,0x024b);//
+ 539   1              delay_ms(60);
+ 540   1      //      ssd2828_writecmd(0x2c);
+ 541   1      //#if bist
+ 542   1      //      ssd2828_regconfig(0xee,0x0200);
+ 543   1      //      delay_ms(20);
+ 544   1      //      ssd2828_regconfig(0xee,0x0600);
+ 545   1      //#endif
+ 546   1              ssd2828_cfg_ok=1;
+ 547   1              
+ 548   1      }
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 10  
+
+ASSEMBLY LISTING OF GENERATED OBJECT CODE
+
+
+             ; FUNCTION ssd2828_readID (BEGIN)
+                                           ; SOURCE LINE # 28
+                                           ; SOURCE LINE # 29
+0000 E4                CLR     A
+0001 900000      R     MOV     DPTR,#ssd2828_id
+0004 F0                MOVX    @DPTR,A
+0005 A3                INC     DPTR
+0006 F0                MOVX    @DPTR,A
+0007 A3                INC     DPTR
+0008 74B0              MOV     A,#0B0H
+000A F0                MOVX    @DPTR,A
+000B A3                INC     DPTR
+000C 74FA              MOV     A,#0FAH
+000E F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 31
+000F C290              CLR     csx
+                                           ; SOURCE LINE # 32
+0011 C294              CLR     sdc
+                                           ; SOURCE LINE # 33
+0013 7F05              MOV     R7,#05H
+0015 7E00              MOV     R6,#00H
+0017 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 34
+001A E4                CLR     A
+001B 900000      R     MOV     DPTR,#i
+001E F0                MOVX    @DPTR,A
+001F         ?C0001:
+                                           ; SOURCE LINE # 36
+001F 900000      R     MOV     DPTR,#reg_temp
+0022 E0                MOVX    A,@DPTR
+0023 A3                INC     DPTR
+0024 30E704            JNB     ACC.7,?C0004
+                                           ; SOURCE LINE # 37
+0027 D292              SETB    sdi
+0029 8002              SJMP    ?C0005
+002B         ?C0004:
+                                           ; SOURCE LINE # 39
+002B C292              CLR     sdi
+002D         ?C0005:
+                                           ; SOURCE LINE # 40
+002D C293              CLR     sck
+                                           ; SOURCE LINE # 41
+002F 7F05              MOV     R7,#05H
+0031 7E00              MOV     R6,#00H
+0033 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 42
+0036 D293              SETB    sck
+                                           ; SOURCE LINE # 43
+0038 7F05              MOV     R7,#05H
+003A 7E00              MOV     R6,#00H
+003C 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 44
+003F 900000      R     MOV     DPTR,#reg_temp+01H
+0042 E0                MOVX    A,@DPTR
+0043 25E0              ADD     A,ACC
+0045 F0                MOVX    @DPTR,A
+0046 900000      R     MOV     DPTR,#reg_temp
+0049 E0                MOVX    A,@DPTR
+004A 33                RLC     A
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 11  
+
+004B F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 45
+004C 900000      R     MOV     DPTR,#i
+004F E0                MOVX    A,@DPTR
+0050 04                INC     A
+0051 F0                MOVX    @DPTR,A
+0052 E0                MOVX    A,@DPTR
+0053 C3                CLR     C
+0054 9410              SUBB    A,#010H
+0056 40C7              JC      ?C0001
+0058         ?C0002:
+                                           ; SOURCE LINE # 46
+0058 D294              SETB    sdc
+                                           ; SOURCE LINE # 47
+005A 7F05              MOV     R7,#05H
+005C 7E00              MOV     R6,#00H
+005E 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 48
+0061 E4                CLR     A
+0062 900000      R     MOV     DPTR,#i
+0065 F0                MOVX    @DPTR,A
+0066         ?C0006:
+                                           ; SOURCE LINE # 49
+0066 C293              CLR     sck
+                                           ; SOURCE LINE # 50
+0068 7F05              MOV     R7,#05H
+006A 7E00              MOV     R6,#00H
+006C 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 51
+006F D293              SETB    sck
+                                           ; SOURCE LINE # 52
+0071 7F05              MOV     R7,#05H
+0073 7E00              MOV     R6,#00H
+0075 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 53
+0078 900000      R     MOV     DPTR,#ssd2828_id+01H
+007B E0                MOVX    A,@DPTR
+007C 25E0              ADD     A,ACC
+007E F0                MOVX    @DPTR,A
+007F 900000      R     MOV     DPTR,#ssd2828_id
+0082 E0                MOVX    A,@DPTR
+0083 33                RLC     A
+0084 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 54
+0085 309107            JNB     sdo,?C0008
+                                           ; SOURCE LINE # 55
+0088 E0                MOVX    A,@DPTR
+0089 F0                MOVX    @DPTR,A
+008A A3                INC     DPTR
+008B E0                MOVX    A,@DPTR
+008C 4401              ORL     A,#01H
+008E F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 56
+008F         ?C0008:
+008F 900000      R     MOV     DPTR,#i
+0092 E0                MOVX    A,@DPTR
+0093 04                INC     A
+0094 F0                MOVX    @DPTR,A
+0095 E0                MOVX    A,@DPTR
+0096 C3                CLR     C
+0097 9410              SUBB    A,#010H
+0099 40CB              JC      ?C0006
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 12  
+
+009B         ?C0007:
+                                           ; SOURCE LINE # 57
+009B D290              SETB    csx
+                                           ; SOURCE LINE # 58
+009D 7F05              MOV     R7,#05H
+009F 7E00              MOV     R6,#00H
+00A1 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 59
+00A4 900000      R     MOV     DPTR,#ssd2828_id
+00A7 E0                MOVX    A,@DPTR
+00A8 FE                MOV     R6,A
+00A9 A3                INC     DPTR
+00AA E0                MOVX    A,@DPTR
+00AB FF                MOV     R7,A
+                                           ; SOURCE LINE # 60
+00AC         ?C0010:
+00AC 22                RET     
+             ; FUNCTION ssd2828_readID (END)
+
+             ; FUNCTION _ssd2828_readReg (BEGIN)
+                                           ; SOURCE LINE # 62
+;---- Variable 'addr_reg' assigned to Register 'R7' ----
+                                           ; SOURCE LINE # 63
+0000 E4                CLR     A
+0001 900000      R     MOV     DPTR,#reg_value
+0004 F0                MOVX    @DPTR,A
+0005 A3                INC     DPTR
+0006 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 65
+0007 EF                MOV     A,R7
+0008 FF                MOV     R7,A
+0009 74FA              MOV     A,#0FAH
+000B A3                INC     DPTR
+000C CF                XCH     A,R7
+000D F0                MOVX    @DPTR,A
+000E A3                INC     DPTR
+000F EF                MOV     A,R7
+0010 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 66
+0011 C290              CLR     csx
+                                           ; SOURCE LINE # 67
+0013 C294              CLR     sdc
+                                           ; SOURCE LINE # 68
+0015 7F05              MOV     R7,#05H
+0017 7E00              MOV     R6,#00H
+0019 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 69
+001C E4                CLR     A
+001D 900000      R     MOV     DPTR,#i
+0020 F0                MOVX    @DPTR,A
+0021         ?C0011:
+                                           ; SOURCE LINE # 71
+0021 900000      R     MOV     DPTR,#reg_temp
+0024 E0                MOVX    A,@DPTR
+0025 A3                INC     DPTR
+0026 30E704            JNB     ACC.7,?C0014
+                                           ; SOURCE LINE # 72
+0029 D292              SETB    sdi
+002B 8002              SJMP    ?C0015
+002D         ?C0014:
+                                           ; SOURCE LINE # 74
+002D C292              CLR     sdi
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 13  
+
+002F         ?C0015:
+                                           ; SOURCE LINE # 75
+002F C293              CLR     sck
+                                           ; SOURCE LINE # 76
+0031 7F05              MOV     R7,#05H
+0033 7E00              MOV     R6,#00H
+0035 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 77
+0038 D293              SETB    sck
+                                           ; SOURCE LINE # 78
+003A 7F05              MOV     R7,#05H
+003C 7E00              MOV     R6,#00H
+003E 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 79
+0041 900000      R     MOV     DPTR,#reg_temp+01H
+0044 E0                MOVX    A,@DPTR
+0045 25E0              ADD     A,ACC
+0047 F0                MOVX    @DPTR,A
+0048 900000      R     MOV     DPTR,#reg_temp
+004B E0                MOVX    A,@DPTR
+004C 33                RLC     A
+004D F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 80
+004E 900000      R     MOV     DPTR,#i
+0051 E0                MOVX    A,@DPTR
+0052 04                INC     A
+0053 F0                MOVX    @DPTR,A
+0054 E0                MOVX    A,@DPTR
+0055 C3                CLR     C
+0056 9410              SUBB    A,#010H
+0058 40C7              JC      ?C0011
+005A         ?C0012:
+                                           ; SOURCE LINE # 81
+005A D294              SETB    sdc
+                                           ; SOURCE LINE # 82
+005C 7F05              MOV     R7,#05H
+005E 7E00              MOV     R6,#00H
+0060 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 83
+0063 E4                CLR     A
+0064 900000      R     MOV     DPTR,#i
+0067 F0                MOVX    @DPTR,A
+0068         ?C0016:
+                                           ; SOURCE LINE # 84
+0068 C293              CLR     sck
+                                           ; SOURCE LINE # 85
+006A 7F05              MOV     R7,#05H
+006C 7E00              MOV     R6,#00H
+006E 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 86
+0071 D293              SETB    sck
+                                           ; SOURCE LINE # 87
+0073 7F05              MOV     R7,#05H
+0075 7E00              MOV     R6,#00H
+0077 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 88
+007A 900000      R     MOV     DPTR,#reg_value+01H
+007D E0                MOVX    A,@DPTR
+007E 25E0              ADD     A,ACC
+0080 F0                MOVX    @DPTR,A
+0081 900000      R     MOV     DPTR,#reg_value
+0084 E0                MOVX    A,@DPTR
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 14  
+
+0085 33                RLC     A
+0086 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 89
+0087 309107            JNB     sdo,?C0018
+                                           ; SOURCE LINE # 90
+008A E0                MOVX    A,@DPTR
+008B F0                MOVX    @DPTR,A
+008C A3                INC     DPTR
+008D E0                MOVX    A,@DPTR
+008E 4401              ORL     A,#01H
+0090 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 91
+0091         ?C0018:
+0091 900000      R     MOV     DPTR,#i
+0094 E0                MOVX    A,@DPTR
+0095 04                INC     A
+0096 F0                MOVX    @DPTR,A
+0097 E0                MOVX    A,@DPTR
+0098 C3                CLR     C
+0099 9410              SUBB    A,#010H
+009B 40CB              JC      ?C0016
+009D         ?C0017:
+                                           ; SOURCE LINE # 92
+009D D290              SETB    csx
+                                           ; SOURCE LINE # 93
+009F 7F05              MOV     R7,#05H
+00A1 7E00              MOV     R6,#00H
+00A3 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 94
+00A6 900000      R     MOV     DPTR,#reg_value
+00A9 E0                MOVX    A,@DPTR
+00AA FE                MOV     R6,A
+00AB A3                INC     DPTR
+00AC E0                MOVX    A,@DPTR
+00AD FF                MOV     R7,A
+                                           ; SOURCE LINE # 95
+00AE         ?C0020:
+00AE 22                RET     
+             ; FUNCTION _ssd2828_readReg (END)
+
+             ; FUNCTION _ssd2828_writecmd (BEGIN)
+                                           ; SOURCE LINE # 97
+;---- Variable 'cmd' assigned to Register 'R7' ----
+                                           ; SOURCE LINE # 99
+0000 900000      R     MOV     DPTR,#ssd2828_cmd
+0003 EF                MOV     A,R7
+0004 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 100
+0005 C290              CLR     csx
+                                           ; SOURCE LINE # 101
+0007 C294              CLR     sdc
+                                           ; SOURCE LINE # 102
+0009 7F05              MOV     R7,#05H
+000B 7E00              MOV     R6,#00H
+000D 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 103
+0010 E4                CLR     A
+0011 900000      R     MOV     DPTR,#i
+0014 F0                MOVX    @DPTR,A
+0015         ?C0021:
+                                           ; SOURCE LINE # 104
+0015 900000      R     MOV     DPTR,#ssd2828_cmd
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 15  
+
+0018 E0                MOVX    A,@DPTR
+0019 30E704            JNB     ACC.7,?C0024
+                                           ; SOURCE LINE # 105
+001C D292              SETB    sdi
+001E 8002              SJMP    ?C0025
+0020         ?C0024:
+                                           ; SOURCE LINE # 107
+0020 C292              CLR     sdi
+0022         ?C0025:
+                                           ; SOURCE LINE # 108
+0022 C293              CLR     sck
+                                           ; SOURCE LINE # 109
+0024 7F05              MOV     R7,#05H
+0026 7E00              MOV     R6,#00H
+0028 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 110
+002B D293              SETB    sck
+                                           ; SOURCE LINE # 111
+002D 7F05              MOV     R7,#05H
+002F 7E00              MOV     R6,#00H
+0031 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 112
+0034 900000      R     MOV     DPTR,#ssd2828_cmd
+0037 E0                MOVX    A,@DPTR
+0038 25E0              ADD     A,ACC
+003A F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 113
+003B 900000      R     MOV     DPTR,#i
+003E E0                MOVX    A,@DPTR
+003F 04                INC     A
+0040 F0                MOVX    @DPTR,A
+0041 E0                MOVX    A,@DPTR
+0042 C3                CLR     C
+0043 9408              SUBB    A,#08H
+0045 40CE              JC      ?C0021
+0047         ?C0022:
+                                           ; SOURCE LINE # 114
+0047 D290              SETB    csx
+                                           ; SOURCE LINE # 115
+0049 7F05              MOV     R7,#05H
+004B 7E00              MOV     R6,#00H
+004D 020000      E     LJMP    _delay_us
+             ; FUNCTION _ssd2828_writecmd (END)
+
+             ; FUNCTION L?0064 (BEGIN)
+0000 E4                CLR     A
+0001 FD                MOV     R5,A
+0002 FC                MOV     R4,A
+0003 7FB8              MOV     R7,#0B8H
+             ; FUNCTION _ssd2828_regconfig (BEGIN)
+                                           ; SOURCE LINE # 118
+;---- Variable 'reg_data' assigned to Register 'R4/R5' ----
+;---- Variable 'reg_addr' assigned to Register 'R7' ----
+                                           ; SOURCE LINE # 120
+0005 900000      R     MOV     DPTR,#addr_temp
+0008 EF                MOV     A,R7
+0009 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 121
+000A EC                MOV     A,R4
+000B A3                INC     DPTR
+000C F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 122
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 16  
+
+000D A3                INC     DPTR
+000E ED                MOV     A,R5
+000F F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 123
+0010 C290              CLR     csx
+                                           ; SOURCE LINE # 124
+0012 C294              CLR     sdc
+                                           ; SOURCE LINE # 125
+0014 7F05              MOV     R7,#05H
+0016 7E00              MOV     R6,#00H
+0018 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 126
+001B E4                CLR     A
+001C 900000      R     MOV     DPTR,#i
+001F F0                MOVX    @DPTR,A
+0020         ?C0027:
+                                           ; SOURCE LINE # 127
+0020 900000      R     MOV     DPTR,#addr_temp
+0023 E0                MOVX    A,@DPTR
+0024 30E704            JNB     ACC.7,?C0030
+                                           ; SOURCE LINE # 128
+0027 D292              SETB    sdi
+0029 8002              SJMP    ?C0031
+002B         ?C0030:
+                                           ; SOURCE LINE # 130
+002B C292              CLR     sdi
+002D         ?C0031:
+                                           ; SOURCE LINE # 131
+002D C293              CLR     sck
+                                           ; SOURCE LINE # 132
+002F 7F05              MOV     R7,#05H
+0031 7E00              MOV     R6,#00H
+0033 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 133
+0036 D293              SETB    sck
+                                           ; SOURCE LINE # 134
+0038 7F05              MOV     R7,#05H
+003A 7E00              MOV     R6,#00H
+003C 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 135
+003F 900000      R     MOV     DPTR,#addr_temp
+0042 E0                MOVX    A,@DPTR
+0043 25E0              ADD     A,ACC
+0045 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 136
+0046 900000      R     MOV     DPTR,#i
+0049 E0                MOVX    A,@DPTR
+004A 04                INC     A
+004B F0                MOVX    @DPTR,A
+004C E0                MOVX    A,@DPTR
+004D C3                CLR     C
+004E 9408              SUBB    A,#08H
+0050 40CE              JC      ?C0027
+0052         ?C0028:
+                                           ; SOURCE LINE # 137
+0052 D294              SETB    sdc
+                                           ; SOURCE LINE # 138
+0054 7F05              MOV     R7,#05H
+0056 7E00              MOV     R6,#00H
+0058 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 139
+005B E4                CLR     A
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 17  
+
+005C 900000      R     MOV     DPTR,#i
+005F F0                MOVX    @DPTR,A
+0060         ?C0032:
+                                           ; SOURCE LINE # 140
+0060 900000      R     MOV     DPTR,#data_L
+0063 E0                MOVX    A,@DPTR
+0064 30E704            JNB     ACC.7,?C0035
+                                           ; SOURCE LINE # 141
+0067 D292              SETB    sdi
+0069 8002              SJMP    ?C0036
+006B         ?C0035:
+                                           ; SOURCE LINE # 143
+006B C292              CLR     sdi
+006D         ?C0036:
+                                           ; SOURCE LINE # 144
+006D C293              CLR     sck
+                                           ; SOURCE LINE # 145
+006F 7F05              MOV     R7,#05H
+0071 7E00              MOV     R6,#00H
+0073 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 146
+0076 D293              SETB    sck
+                                           ; SOURCE LINE # 147
+0078 7F05              MOV     R7,#05H
+007A 7E00              MOV     R6,#00H
+007C 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 148
+007F 900000      R     MOV     DPTR,#data_L
+0082 E0                MOVX    A,@DPTR
+0083 25E0              ADD     A,ACC
+0085 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 149
+0086 900000      R     MOV     DPTR,#i
+0089 E0                MOVX    A,@DPTR
+008A 04                INC     A
+008B F0                MOVX    @DPTR,A
+008C E0                MOVX    A,@DPTR
+008D C3                CLR     C
+008E 9408              SUBB    A,#08H
+0090 40CE              JC      ?C0032
+0092         ?C0033:
+                                           ; SOURCE LINE # 150
+0092 E4                CLR     A
+0093 900000      R     MOV     DPTR,#i
+0096 F0                MOVX    @DPTR,A
+0097         ?C0037:
+                                           ; SOURCE LINE # 151
+0097 900000      R     MOV     DPTR,#data_H
+009A E0                MOVX    A,@DPTR
+009B 30E704            JNB     ACC.7,?C0040
+                                           ; SOURCE LINE # 152
+009E D292              SETB    sdi
+00A0 8002              SJMP    ?C0041
+00A2         ?C0040:
+                                           ; SOURCE LINE # 154
+00A2 C292              CLR     sdi
+00A4         ?C0041:
+                                           ; SOURCE LINE # 155
+00A4 C293              CLR     sck
+                                           ; SOURCE LINE # 156
+00A6 7F05              MOV     R7,#05H
+00A8 7E00              MOV     R6,#00H
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 18  
+
+00AA 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 157
+00AD D293              SETB    sck
+                                           ; SOURCE LINE # 158
+00AF 7F05              MOV     R7,#05H
+00B1 7E00              MOV     R6,#00H
+00B3 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 159
+00B6 900000      R     MOV     DPTR,#data_H
+00B9 E0                MOVX    A,@DPTR
+00BA 25E0              ADD     A,ACC
+00BC F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 160
+00BD 900000      R     MOV     DPTR,#i
+00C0 E0                MOVX    A,@DPTR
+00C1 04                INC     A
+00C2 F0                MOVX    @DPTR,A
+00C3 E0                MOVX    A,@DPTR
+00C4 C3                CLR     C
+00C5 9408              SUBB    A,#08H
+00C7 40CE              JC      ?C0037
+00C9         ?C0038:
+                                           ; SOURCE LINE # 161
+00C9 D290              SETB    csx
+                                           ; SOURCE LINE # 162
+00CB 7F05              MOV     R7,#05H
+00CD 7E00              MOV     R6,#00H
+00CF 020000      E     LJMP    _delay_us
+             ; FUNCTION _ssd2828_regconfig (END)
+
+             ; FUNCTION L?0062 (BEGIN)
+0000 7BFF              MOV     R3,#0FFH
+0002         L?0063:
+0002 7D04              MOV     R5,#04H
+0004 7C00              MOV     R4,#00H
+             ; FUNCTION _ssd2828_writepackage (BEGIN)
+                                           ; SOURCE LINE # 165
+0006 900000      R     MOV     DPTR,#pbuf
+0009 EB                MOV     A,R3
+000A F0                MOVX    @DPTR,A
+000B A3                INC     DPTR
+000C EA                MOV     A,R2
+000D F0                MOVX    @DPTR,A
+000E A3                INC     DPTR
+000F E9                MOV     A,R1
+0010 F0                MOVX    @DPTR,A
+;---- Variable 'len' assigned to Register 'R4/R5' ----
+                                           ; SOURCE LINE # 168
+0011 AE04              MOV     R6,AR4
+0013 AF05              MOV     R7,AR5
+0015 A3                INC     DPTR
+0016 EE                MOV     A,R6
+0017 F0                MOVX    @DPTR,A
+0018 A3                INC     DPTR
+0019 EF                MOV     A,R7
+001A F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 169
+001B 7FBC              MOV     R7,#0BCH
+001D 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 170
+0020 900000      R     MOV     DPTR,#lenth
+0023 E0                MOVX    A,@DPTR
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 19  
+
+0024 FC                MOV     R4,A
+0025 A3                INC     DPTR
+0026 E0                MOVX    A,@DPTR
+0027 FD                MOV     R5,A
+0028 7FBE              MOV     R7,#0BEH
+002A 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 171
+002D 7FBF              MOV     R7,#0BFH
+002F 120000      R     LCALL   _ssd2828_writecmd
+                                           ; SOURCE LINE # 172
+0032 C290              CLR     csx
+                                           ; SOURCE LINE # 173
+0034 D294              SETB    sdc
+                                           ; SOURCE LINE # 174
+0036 7F05              MOV     R7,#05H
+0038 7E00              MOV     R6,#00H
+003A 120000      E     LCALL   _delay_us
+003D         ?C0043:
+                                           ; SOURCE LINE # 175
+003D 900000      R     MOV     DPTR,#lenth
+0040 74FF              MOV     A,#0FFH
+0042 F5F0              MOV     B,A
+0044 120000      E     LCALL   ?C?ILDIX
+0047 45F0              ORL     A,B
+0049 6051              JZ      ?C0044
+                                           ; SOURCE LINE # 176
+004B 900000      R     MOV     DPTR,#pbuf
+004E E0                MOVX    A,@DPTR
+004F FB                MOV     R3,A
+0050 A3                INC     DPTR
+0051 E4                CLR     A
+0052 75F001            MOV     B,#01H
+0055 120000      E     LCALL   ?C?ILDIX
+0058 A9F0              MOV     R1,B
+005A FA                MOV     R2,A
+005B 120000      E     LCALL   ?C?CLDPTR
+005E 900000      R     MOV     DPTR,#temp
+0061 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 177
+0062 E4                CLR     A
+0063 900000      R     MOV     DPTR,#i
+0066 F0                MOVX    @DPTR,A
+0067         ?C0045:
+0067 900000      R     MOV     DPTR,#i
+006A E0                MOVX    A,@DPTR
+006B C3                CLR     C
+006C 9408              SUBB    A,#08H
+006E 50CD              JNC     ?C0043
+                                           ; SOURCE LINE # 178
+0070 A3                INC     DPTR
+0071 E0                MOVX    A,@DPTR
+0072 30E704            JNB     ACC.7,?C0048
+                                           ; SOURCE LINE # 179
+0075 D292              SETB    sdi
+0077 8002              SJMP    ?C0049
+0079         ?C0048:
+                                           ; SOURCE LINE # 181
+0079 C292              CLR     sdi
+007B         ?C0049:
+                                           ; SOURCE LINE # 182
+007B C293              CLR     sck
+                                           ; SOURCE LINE # 183
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 20  
+
+007D 7F05              MOV     R7,#05H
+007F 7E00              MOV     R6,#00H
+0081 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 184
+0084 D293              SETB    sck
+                                           ; SOURCE LINE # 185
+0086 7F05              MOV     R7,#05H
+0088 7E00              MOV     R6,#00H
+008A 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 186
+008D 900000      R     MOV     DPTR,#temp
+0090 E0                MOVX    A,@DPTR
+0091 25E0              ADD     A,ACC
+0093 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 187
+0094 900000      R     MOV     DPTR,#i
+0097 E0                MOVX    A,@DPTR
+0098 04                INC     A
+0099 F0                MOVX    @DPTR,A
+009A 80CB              SJMP    ?C0045
+                                           ; SOURCE LINE # 188
+009C         ?C0044:
+                                           ; SOURCE LINE # 189
+009C D290              SETB    csx
+                                           ; SOURCE LINE # 190
+009E 7F05              MOV     R7,#05H
+00A0 7E00              MOV     R6,#00H
+00A2 020000      E     LJMP    _delay_us
+             ; FUNCTION _ssd2828_writepackage (END)
+
+             ; FUNCTION _W_COM (BEGIN)
+                                           ; SOURCE LINE # 195
+;---- Variable 'dat' assigned to Register 'R5' ----
+;---- Variable 'addr' assigned to Register 'R7' ----
+                                           ; SOURCE LINE # 199
+0000 900000      R     MOV     DPTR,#pbuf
+0003 7401              MOV     A,#01H
+0005 F0                MOVX    @DPTR,A
+0006 A3                INC     DPTR
+0007 7400        R     MOV     A,#HIGH atr
+0009 F0                MOVX    @DPTR,A
+000A A3                INC     DPTR
+000B 7400        R     MOV     A,#LOW atr
+000D F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 200
+000E 900000      R     MOV     DPTR,#atr
+0011 EF                MOV     A,R7
+0012 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 201
+0013 A3                INC     DPTR
+0014 ED                MOV     A,R5
+0015 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 202
+0016 900000      R     MOV     DPTR,#lenth
+0019 E4                CLR     A
+001A F0                MOVX    @DPTR,A
+001B A3                INC     DPTR
+001C 7402              MOV     A,#02H
+001E F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 203
+001F FD                MOV     R5,A
+0020 7C00              MOV     R4,#00H
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 21  
+
+0022 7FBC              MOV     R7,#0BCH
+0024 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 204
+0027 900000      R     MOV     DPTR,#lenth
+002A E0                MOVX    A,@DPTR
+002B FC                MOV     R4,A
+002C A3                INC     DPTR
+002D E0                MOVX    A,@DPTR
+002E FD                MOV     R5,A
+002F 7FBE              MOV     R7,#0BEH
+0031 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 205
+0034 7FBF              MOV     R7,#0BFH
+0036 120000      R     LCALL   _ssd2828_writecmd
+                                           ; SOURCE LINE # 206
+0039 C290              CLR     csx
+                                           ; SOURCE LINE # 207
+003B D294              SETB    sdc
+                                           ; SOURCE LINE # 208
+003D 7F0F              MOV     R7,#0FH
+003F 7E00              MOV     R6,#00H
+0041 120000      E     LCALL   _delay_us
+0044         ?C0051:
+                                           ; SOURCE LINE # 209
+0044 900000      R     MOV     DPTR,#lenth
+0047 74FF              MOV     A,#0FFH
+0049 F5F0              MOV     B,A
+004B 120000      E     LCALL   ?C?ILDIX
+004E 45F0              ORL     A,B
+0050 6051              JZ      ?C0052
+                                           ; SOURCE LINE # 210
+0052 900000      R     MOV     DPTR,#pbuf
+0055 E0                MOVX    A,@DPTR
+0056 FB                MOV     R3,A
+0057 A3                INC     DPTR
+0058 E4                CLR     A
+0059 75F001            MOV     B,#01H
+005C 120000      E     LCALL   ?C?ILDIX
+005F A9F0              MOV     R1,B
+0061 FA                MOV     R2,A
+0062 120000      E     LCALL   ?C?CLDPTR
+0065 900000      R     MOV     DPTR,#temp
+0068 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 211
+0069 E4                CLR     A
+006A 900000      R     MOV     DPTR,#i
+006D F0                MOVX    @DPTR,A
+006E         ?C0053:
+006E 900000      R     MOV     DPTR,#i
+0071 E0                MOVX    A,@DPTR
+0072 C3                CLR     C
+0073 9408              SUBB    A,#08H
+0075 50CD              JNC     ?C0051
+                                           ; SOURCE LINE # 212
+0077 A3                INC     DPTR
+0078 E0                MOVX    A,@DPTR
+0079 30E704            JNB     ACC.7,?C0056
+                                           ; SOURCE LINE # 213
+007C D292              SETB    sdi
+007E 8002              SJMP    ?C0057
+0080         ?C0056:
+                                           ; SOURCE LINE # 215
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 22  
+
+0080 C292              CLR     sdi
+0082         ?C0057:
+                                           ; SOURCE LINE # 216
+0082 C293              CLR     sck
+                                           ; SOURCE LINE # 217
+0084 7F0F              MOV     R7,#0FH
+0086 7E00              MOV     R6,#00H
+0088 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 218
+008B D293              SETB    sck
+                                           ; SOURCE LINE # 219
+008D 7F0F              MOV     R7,#0FH
+008F 7E00              MOV     R6,#00H
+0091 120000      E     LCALL   _delay_us
+                                           ; SOURCE LINE # 220
+0094 900000      R     MOV     DPTR,#temp
+0097 E0                MOVX    A,@DPTR
+0098 25E0              ADD     A,ACC
+009A F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 221
+009B 900000      R     MOV     DPTR,#i
+009E E0                MOVX    A,@DPTR
+009F 04                INC     A
+00A0 F0                MOVX    @DPTR,A
+00A1 80CB              SJMP    ?C0053
+                                           ; SOURCE LINE # 222
+00A3         ?C0052:
+                                           ; SOURCE LINE # 223
+00A3 D290              SETB    csx
+                                           ; SOURCE LINE # 224
+00A5 7F0F              MOV     R7,#0FH
+00A7 7E00              MOV     R6,#00H
+00A9 020000      E     LJMP    _delay_us
+             ; FUNCTION _W_COM (END)
+
+             ; FUNCTION W_write (BEGIN)
+                                           ; SOURCE LINE # 252
+                                           ; SOURCE LINE # 253
+                                           ; SOURCE LINE # 254
+0000 7A00        R     MOV     R2,#HIGH pa_tab1
+0002 7900        R     MOV     R1,#LOW pa_tab1
+0004 120000      R     LCALL   L?0062
+                                           ; SOURCE LINE # 255
+0007 E4                CLR     A
+0008 FD                MOV     R5,A
+0009 7F01              MOV     R7,#01H
+000B 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 256
+000E E4                CLR     A
+000F FD                MOV     R5,A
+0010 7F02              MOV     R7,#02H
+0012 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 257
+0015 7D57              MOV     R5,#057H
+0017 7F03              MOV     R7,#03H
+0019 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 258
+001C 7DD3              MOV     R5,#0D3H
+001E 7F04              MOV     R7,#04H
+0020 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 259
+0023 E4                CLR     A
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 23  
+
+0024 FD                MOV     R5,A
+0025 7F05              MOV     R7,#05H
+0027 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 260
+002A 7D11              MOV     R5,#011H
+002C 7F06              MOV     R7,#06H
+002E 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 261
+0031 7D08              MOV     R5,#08H
+0033 7F07              MOV     R7,#07H
+0035 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 262
+0038 E4                CLR     A
+0039 FD                MOV     R5,A
+003A 7F08              MOV     R7,#08H
+003C 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 263
+003F E4                CLR     A
+0040 FD                MOV     R5,A
+0041 7F09              MOV     R7,#09H
+0043 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 264
+0046 7D3F              MOV     R5,#03FH
+0048 7F0A              MOV     R7,#0AH
+004A 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 265
+004D E4                CLR     A
+004E FD                MOV     R5,A
+004F 7F0B              MOV     R7,#0BH
+0051 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 266
+0054 E4                CLR     A
+0055 FD                MOV     R5,A
+0056 7F0C              MOV     R7,#0CH
+0058 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 267
+005B E4                CLR     A
+005C FD                MOV     R5,A
+005D 7F0D              MOV     R7,#0DH
+005F 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 268
+0062 E4                CLR     A
+0063 FD                MOV     R5,A
+0064 7F0E              MOV     R7,#0EH
+0066 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 269
+0069 7D3F              MOV     R5,#03FH
+006B 7F0F              MOV     R7,#0FH
+006D 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 270
+0070 7D3F              MOV     R5,#03FH
+0072 7F10              MOV     R7,#010H
+0074 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 271
+0077 E4                CLR     A
+0078 FD                MOV     R5,A
+0079 7F11              MOV     R7,#011H
+007B 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 272
+007E E4                CLR     A
+007F FD                MOV     R5,A
+0080 7F12              MOV     R7,#012H
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 24  
+
+0082 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 273
+0085 E4                CLR     A
+0086 FD                MOV     R5,A
+0087 7F13              MOV     R7,#013H
+0089 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 274
+008C E4                CLR     A
+008D FD                MOV     R5,A
+008E 7F14              MOV     R7,#014H
+0090 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 275
+0093 E4                CLR     A
+0094 FD                MOV     R5,A
+0095 7F15              MOV     R7,#015H
+0097 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 276
+009A E4                CLR     A
+009B FD                MOV     R5,A
+009C 7F16              MOV     R7,#016H
+009E 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 277
+00A1 E4                CLR     A
+00A2 FD                MOV     R5,A
+00A3 7F17              MOV     R7,#017H
+00A5 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 278
+00A8 E4                CLR     A
+00A9 FD                MOV     R5,A
+00AA 7F18              MOV     R7,#018H
+00AC 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 279
+00AF E4                CLR     A
+00B0 FD                MOV     R5,A
+00B1 7F19              MOV     R7,#019H
+00B3 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 280
+00B6 E4                CLR     A
+00B7 FD                MOV     R5,A
+00B8 7F1A              MOV     R7,#01AH
+00BA 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 281
+00BD E4                CLR     A
+00BE FD                MOV     R5,A
+00BF 7F1B              MOV     R7,#01BH
+00C1 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 282
+00C4 E4                CLR     A
+00C5 FD                MOV     R5,A
+00C6 7F1C              MOV     R7,#01CH
+00C8 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 283
+00CB E4                CLR     A
+00CC FD                MOV     R5,A
+00CD 7F1D              MOV     R7,#01DH
+00CF 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 284
+00D2 7D40              MOV     R5,#040H
+00D4 7F1E              MOV     R7,#01EH
+00D6 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 285
+00D9 7D80              MOV     R5,#080H
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 25  
+
+00DB 7F1F              MOV     R7,#01FH
+00DD 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 286
+00E0 7D06              MOV     R5,#06H
+00E2 7F20              MOV     R7,#020H
+00E4 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 287
+00E7 7D01              MOV     R5,#01H
+00E9 7F21              MOV     R7,#021H
+00EB 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 288
+00EE E4                CLR     A
+00EF FD                MOV     R5,A
+00F0 7F22              MOV     R7,#022H
+00F2 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 289
+00F5 E4                CLR     A
+00F6 FD                MOV     R5,A
+00F7 7F23              MOV     R7,#023H
+00F9 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 290
+00FC E4                CLR     A
+00FD FD                MOV     R5,A
+00FE 7F24              MOV     R7,#024H
+0100 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 291
+0103 E4                CLR     A
+0104 FD                MOV     R5,A
+0105 7F25              MOV     R7,#025H
+0107 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 292
+010A E4                CLR     A
+010B FD                MOV     R5,A
+010C 7F26              MOV     R7,#026H
+010E 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 293
+0111 E4                CLR     A
+0112 FD                MOV     R5,A
+0113 7F27              MOV     R7,#027H
+0115 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 294
+0118 7D33              MOV     R5,#033H
+011A 7F28              MOV     R7,#028H
+011C 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 295
+011F 7D33              MOV     R5,#033H
+0121 7F29              MOV     R7,#029H
+0123 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 296
+0126 E4                CLR     A
+0127 FD                MOV     R5,A
+0128 7F2A              MOV     R7,#02AH
+012A 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 297
+012D E4                CLR     A
+012E FD                MOV     R5,A
+012F 7F2B              MOV     R7,#02BH
+0131 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 298
+0134 E4                CLR     A
+0135 FD                MOV     R5,A
+0136 7F2C              MOV     R7,#02CH
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 26  
+
+0138 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 299
+013B E4                CLR     A
+013C FD                MOV     R5,A
+013D 7F2D              MOV     R7,#02DH
+013F 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 300
+0142 E4                CLR     A
+0143 FD                MOV     R5,A
+0144 7F2E              MOV     R7,#02EH
+0146 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 301
+0149 E4                CLR     A
+014A FD                MOV     R5,A
+014B 7F2F              MOV     R7,#02FH
+014D 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 302
+0150 E4                CLR     A
+0151 FD                MOV     R5,A
+0152 7F30              MOV     R7,#030H
+0154 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 303
+0157 E4                CLR     A
+0158 FD                MOV     R5,A
+0159 7F31              MOV     R7,#031H
+015B 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 304
+015E E4                CLR     A
+015F FD                MOV     R5,A
+0160 7F32              MOV     R7,#032H
+0162 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 305
+0165 E4                CLR     A
+0166 FD                MOV     R5,A
+0167 7F33              MOV     R7,#033H
+0169 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 306
+016C E4                CLR     A
+016D FD                MOV     R5,A
+016E 7F34              MOV     R7,#034H
+0170 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 307
+0173 E4                CLR     A
+0174 FD                MOV     R5,A
+0175 7F35              MOV     R7,#035H
+0177 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 308
+017A E4                CLR     A
+017B FD                MOV     R5,A
+017C 7F36              MOV     R7,#036H
+017E 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 309
+0181 E4                CLR     A
+0182 FD                MOV     R5,A
+0183 7F37              MOV     R7,#037H
+0185 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 310
+0188 7D78              MOV     R5,#078H
+018A 7F38              MOV     R7,#038H
+018C 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 311
+018F E4                CLR     A
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 27  
+
+0190 FD                MOV     R5,A
+0191 7F39              MOV     R7,#039H
+0193 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 312
+0196 E4                CLR     A
+0197 FD                MOV     R5,A
+0198 7F3A              MOV     R7,#03AH
+019A 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 313
+019D E4                CLR     A
+019E FD                MOV     R5,A
+019F 7F3B              MOV     R7,#03BH
+01A1 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 314
+01A4 E4                CLR     A
+01A5 FD                MOV     R5,A
+01A6 7F3C              MOV     R7,#03CH
+01A8 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 315
+01AB E4                CLR     A
+01AC FD                MOV     R5,A
+01AD 7F3D              MOV     R7,#03DH
+01AF 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 316
+01B2 E4                CLR     A
+01B3 FD                MOV     R5,A
+01B4 7F3E              MOV     R7,#03EH
+01B6 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 317
+01B9 E4                CLR     A
+01BA FD                MOV     R5,A
+01BB 7F3F              MOV     R7,#03FH
+01BD 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 318
+01C0 E4                CLR     A
+01C1 FD                MOV     R5,A
+01C2 7F40              MOV     R7,#040H
+01C4 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 319
+01C7 E4                CLR     A
+01C8 FD                MOV     R5,A
+01C9 7F41              MOV     R7,#041H
+01CB 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 320
+01CE E4                CLR     A
+01CF FD                MOV     R5,A
+01D0 7F42              MOV     R7,#042H
+01D2 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 321
+01D5 E4                CLR     A
+01D6 FD                MOV     R5,A
+01D7 7F43              MOV     R7,#043H
+01D9 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 322
+01DC E4                CLR     A
+01DD FD                MOV     R5,A
+01DE 7F44              MOV     R7,#044H
+01E0 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 323
+01E3 E4                CLR     A
+01E4 FD                MOV     R5,A
+01E5 7F50              MOV     R7,#050H
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 28  
+
+01E7 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 324
+01EA 7D23              MOV     R5,#023H
+01EC 7F51              MOV     R7,#051H
+01EE 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 325
+01F1 7D45              MOV     R5,#045H
+01F3 7F52              MOV     R7,#052H
+01F5 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 326
+01F8 7D67              MOV     R5,#067H
+01FA 7F53              MOV     R7,#053H
+01FC 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 327
+01FF 7D89              MOV     R5,#089H
+0201 7F54              MOV     R7,#054H
+0203 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 328
+0206 7DAB              MOV     R5,#0ABH
+0208 7F55              MOV     R7,#055H
+020A 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 329
+020D 7D01              MOV     R5,#01H
+020F 7F56              MOV     R7,#056H
+0211 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 330
+0214 7D23              MOV     R5,#023H
+0216 7F57              MOV     R7,#057H
+0218 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 331
+021B 7D45              MOV     R5,#045H
+021D 7F58              MOV     R7,#058H
+021F 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 332
+0222 7D67              MOV     R5,#067H
+0224 7F59              MOV     R7,#059H
+0226 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 333
+0229 7D89              MOV     R5,#089H
+022B 7F5A              MOV     R7,#05AH
+022D 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 334
+0230 7DAB              MOV     R5,#0ABH
+0232 7F5B              MOV     R7,#05BH
+0234 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 335
+0237 7DCD              MOV     R5,#0CDH
+0239 7F5C              MOV     R7,#05CH
+023B 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 336
+023E 7DEF              MOV     R5,#0EFH
+0240 7F5D              MOV     R7,#05DH
+0242 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 337
+0245 E4                CLR     A
+0246 FD                MOV     R5,A
+0247 7F5E              MOV     R7,#05EH
+0249 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 338
+024C 7D0D              MOV     R5,#0DH
+024E 7F5F              MOV     R7,#05FH
+0250 120000      R     LCALL   _W_COM
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 29  
+
+                                           ; SOURCE LINE # 339
+0253 7D0D              MOV     R5,#0DH
+0255 7F60              MOV     R7,#060H
+0257 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 340
+025A 7D0C              MOV     R5,#0CH
+025C 7F61              MOV     R7,#061H
+025E 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 341
+0261 7D0C              MOV     R5,#0CH
+0263 7F62              MOV     R7,#062H
+0265 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 342
+0268 7D0F              MOV     R5,#0FH
+026A 7F63              MOV     R7,#063H
+026C 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 343
+026F 7D0F              MOV     R5,#0FH
+0271 7F64              MOV     R7,#064H
+0273 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 344
+0276 7D0E              MOV     R5,#0EH
+0278 7F65              MOV     R7,#065H
+027A 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 345
+027D 7D0E              MOV     R5,#0EH
+027F 7F66              MOV     R7,#066H
+0281 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 346
+0284 7D08              MOV     R5,#08H
+0286 7F67              MOV     R7,#067H
+0288 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 347
+028B 7D02              MOV     R5,#02H
+028D 7F68              MOV     R7,#068H
+028F 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 348
+0292 7D02              MOV     R5,#02H
+0294 7F69              MOV     R7,#069H
+0296 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 349
+0299 7D02              MOV     R5,#02H
+029B 7F6A              MOV     R7,#06AH
+029D 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 350
+02A0 7D02              MOV     R5,#02H
+02A2 7F6B              MOV     R7,#06BH
+02A4 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 351
+02A7 7D02              MOV     R5,#02H
+02A9 7F6C              MOV     R7,#06CH
+02AB 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 352
+02AE 7D02              MOV     R5,#02H
+02B0 7F6D              MOV     R7,#06DH
+02B2 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 353
+02B5 7D02              MOV     R5,#02H
+02B7 7F6E              MOV     R7,#06EH
+02B9 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 354
+02BC 7D02              MOV     R5,#02H
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 30  
+
+02BE 7F6F              MOV     R7,#06FH
+02C0 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 355
+02C3 7D14              MOV     R5,#014H
+02C5 7F70              MOV     R7,#070H
+02C7 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 356
+02CA 7D15              MOV     R5,#015H
+02CC 7F71              MOV     R7,#071H
+02CE 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 357
+02D1 7D06              MOV     R5,#06H
+02D3 7F72              MOV     R7,#072H
+02D5 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 358
+02D8 7D02              MOV     R5,#02H
+02DA 7F73              MOV     R7,#073H
+02DC 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 359
+02DF 7D02              MOV     R5,#02H
+02E1 7F74              MOV     R7,#074H
+02E3 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 360
+02E6 7D0D              MOV     R5,#0DH
+02E8 7F75              MOV     R7,#075H
+02EA 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 361
+02ED 7D0D              MOV     R5,#0DH
+02EF 7F76              MOV     R7,#076H
+02F1 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 362
+02F4 7D0C              MOV     R5,#0CH
+02F6 7F77              MOV     R7,#077H
+02F8 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 363
+02FB 7D0C              MOV     R5,#0CH
+02FD 7F78              MOV     R7,#078H
+02FF 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 364
+0302 7D0F              MOV     R5,#0FH
+0304 7F79              MOV     R7,#079H
+0306 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 365
+0309 7D0F              MOV     R5,#0FH
+030B 7F7A              MOV     R7,#07AH
+030D 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 366
+0310 7D0E              MOV     R5,#0EH
+0312 7F7B              MOV     R7,#07BH
+0314 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 367
+0317 7D0E              MOV     R5,#0EH
+0319 7F7C              MOV     R7,#07CH
+031B 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 368
+031E 7D08              MOV     R5,#08H
+0320 7F7D              MOV     R7,#07DH
+0322 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 369
+0325 7D02              MOV     R5,#02H
+0327 7F7E              MOV     R7,#07EH
+0329 120000      R     LCALL   _W_COM
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 31  
+
+                                           ; SOURCE LINE # 370
+032C 7D02              MOV     R5,#02H
+032E 7F7F              MOV     R7,#07FH
+0330 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 371
+0333 7D02              MOV     R5,#02H
+0335 7F80              MOV     R7,#080H
+0337 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 372
+033A 7D02              MOV     R5,#02H
+033C 7F81              MOV     R7,#081H
+033E 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 373
+0341 7D02              MOV     R5,#02H
+0343 7F82              MOV     R7,#082H
+0345 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 374
+0348 7D02              MOV     R5,#02H
+034A 7F83              MOV     R7,#083H
+034C 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 375
+034F 7D02              MOV     R5,#02H
+0351 7F84              MOV     R7,#084H
+0353 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 376
+0356 7D02              MOV     R5,#02H
+0358 7F85              MOV     R7,#085H
+035A 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 377
+035D 7D14              MOV     R5,#014H
+035F 7F86              MOV     R7,#086H
+0361 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 378
+0364 7D15              MOV     R5,#015H
+0366 7F87              MOV     R7,#087H
+0368 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 379
+036B 7D06              MOV     R5,#06H
+036D 7F88              MOV     R7,#088H
+036F 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 380
+0372 7D02              MOV     R5,#02H
+0374 7F89              MOV     R7,#089H
+0376 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 381
+0379 7D02              MOV     R5,#02H
+037B 7F8A              MOV     R7,#08AH
+037D 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 382
+0380 7A00        R     MOV     R2,#HIGH pa_tab4
+0382 7900        R     MOV     R1,#LOW pa_tab4
+0384 120000      R     LCALL   L?0062
+                                           ; SOURCE LINE # 383
+0387 7D3B              MOV     R5,#03BH
+0389 7F6E              MOV     R7,#06EH
+038B 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 384
+038E 7D57              MOV     R5,#057H
+0390 7F6F              MOV     R7,#06FH
+0392 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 385
+0395 7D24              MOV     R5,#024H
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 32  
+
+0397 7F3A              MOV     R7,#03AH
+0399 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 386
+039C 7D1F              MOV     R5,#01FH
+039E 7F8D              MOV     R7,#08DH
+03A0 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 387
+03A3 7DBA              MOV     R5,#0BAH
+03A5 7F87              MOV     R7,#087H
+03A7 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 388
+03AA 7DD1              MOV     R5,#0D1H
+03AC 7FB2              MOV     R7,#0B2H
+03AE 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 389
+03B1 7D0B              MOV     R5,#0BH
+03B3 7F88              MOV     R7,#088H
+03B5 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 390
+03B8 7D01              MOV     R5,#01H
+03BA 7F38              MOV     R7,#038H
+03BC 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 391
+03BF E4                CLR     A
+03C0 FD                MOV     R5,A
+03C1 7F39              MOV     R7,#039H
+03C3 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 392
+03C6 7D07              MOV     R5,#07H
+03C8 7FB5              MOV     R7,#0B5H
+03CA 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 393
+03CD 7D75              MOV     R5,#075H
+03CF 7F31              MOV     R7,#031H
+03D1 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 394
+03D4 7D98              MOV     R5,#098H
+03D6 7F3B              MOV     R7,#03BH
+03D8 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 395
+03DB 7BFF              MOV     R3,#0FFH
+03DD 7A00        R     MOV     R2,#HIGH pa_tab5
+03DF 7900        R     MOV     R1,#LOW pa_tab5
+03E1 120000      R     LCALL   L?0063
+                                           ; SOURCE LINE # 396
+03E4 7D0A              MOV     R5,#0AH
+03E6 7F22              MOV     R7,#022H
+03E8 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 397
+03EB 7D09              MOV     R5,#09H
+03ED 7F31              MOV     R7,#031H
+03EF 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 398
+03F2 7D07              MOV     R5,#07H
+03F4 7F35              MOV     R7,#035H
+03F6 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 399
+03F9 7D67              MOV     R5,#067H
+03FB 7F53              MOV     R7,#053H
+03FD 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 400
+0400 7D84              MOV     R5,#084H
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 33  
+
+0402 7F55              MOV     R7,#055H
+0404 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 401
+0407 7D86              MOV     R5,#086H
+0409 7F50              MOV     R7,#050H
+040B 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 402
+040E 7D82              MOV     R5,#082H
+0410 7F51              MOV     R7,#051H
+0412 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 403
+0415 7D10              MOV     R5,#010H
+0417 7F60              MOV     R7,#060H
+0419 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 404
+041C E4                CLR     A
+041D FD                MOV     R5,A
+041E 7F62              MOV     R7,#062H
+0420 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 405
+0423 E4                CLR     A
+0424 FD                MOV     R5,A
+0425 7FA0              MOV     R7,#0A0H
+0427 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 406
+042A 7D12              MOV     R5,#012H
+042C 7FA1              MOV     R7,#0A1H
+042E 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 407
+0431 7D1F              MOV     R5,#01FH
+0433 7FA2              MOV     R7,#0A2H
+0435 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 408
+0438 7D12              MOV     R5,#012H
+043A 7FA3              MOV     R7,#0A3H
+043C 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 409
+043F 7D16              MOV     R5,#016H
+0441 7FA4              MOV     R7,#0A4H
+0443 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 410
+0446 7D29              MOV     R5,#029H
+0448 7FA5              MOV     R7,#0A5H
+044A 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 411
+044D 7D1E              MOV     R5,#01EH
+044F 7FA6              MOV     R7,#0A6H
+0451 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 412
+0454 7D1F              MOV     R5,#01FH
+0456 7FA7              MOV     R7,#0A7H
+0458 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 413
+045B 7D7E              MOV     R5,#07EH
+045D 7FA8              MOV     R7,#0A8H
+045F 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 414
+0462 7D1B              MOV     R5,#01BH
+0464 7FA9              MOV     R7,#0A9H
+0466 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 415
+0469 7D28              MOV     R5,#028H
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 34  
+
+046B 7FAA              MOV     R7,#0AAH
+046D 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 416
+0470 7D6D              MOV     R5,#06DH
+0472 7FAB              MOV     R7,#0ABH
+0474 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 417
+0477 7D19              MOV     R5,#019H
+0479 7FAC              MOV     R7,#0ACH
+047B 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 418
+047E 7D18              MOV     R5,#018H
+0480 7FAD              MOV     R7,#0ADH
+0482 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 419
+0485 7D4C              MOV     R5,#04CH
+0487 7FAE              MOV     R7,#0AEH
+0489 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 420
+048C 7D1E              MOV     R5,#01EH
+048E 7FAF              MOV     R7,#0AFH
+0490 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 421
+0493 7D23              MOV     R5,#023H
+0495 7FB0              MOV     R7,#0B0H
+0497 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 422
+049A 7D52              MOV     R5,#052H
+049C 7FB1              MOV     R7,#0B1H
+049E 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 423
+04A1 7D6D              MOV     R5,#06DH
+04A3 7FB2              MOV     R7,#0B2H
+04A5 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 424
+04A8 7D3F              MOV     R5,#03FH
+04AA 7FB3              MOV     R7,#0B3H
+04AC 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 425
+04AF E4                CLR     A
+04B0 FD                MOV     R5,A
+04B1 7FC0              MOV     R7,#0C0H
+04B3 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 426
+04B6 7D12              MOV     R5,#012H
+04B8 7FC1              MOV     R7,#0C1H
+04BA 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 427
+04BD 7D20              MOV     R5,#020H
+04BF 7FC2              MOV     R7,#0C2H
+04C1 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 428
+04C4 7D10              MOV     R5,#010H
+04C6 7FC3              MOV     R7,#0C3H
+04C8 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 429
+04CB 7D13              MOV     R5,#013H
+04CD 7FC4              MOV     R7,#0C4H
+04CF 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 430
+04D2 7D27              MOV     R5,#027H
+04D4 7FC5              MOV     R7,#0C5H
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 35  
+
+04D6 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 431
+04D9 7D1B              MOV     R5,#01BH
+04DB 7FC6              MOV     R7,#0C6H
+04DD 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 432
+04E0 7D1D              MOV     R5,#01DH
+04E2 7FC7              MOV     R7,#0C7H
+04E4 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 433
+04E7 7D75              MOV     R5,#075H
+04E9 7FC8              MOV     R7,#0C8H
+04EB 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 434
+04EE 7D1F              MOV     R5,#01FH
+04F0 7FC9              MOV     R7,#0C9H
+04F2 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 435
+04F5 7D28              MOV     R5,#028H
+04F7 7FCA              MOV     R7,#0CAH
+04F9 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 436
+04FC 7D68              MOV     R5,#068H
+04FE 7FCB              MOV     R7,#0CBH
+0500 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 437
+0503 7D1A              MOV     R5,#01AH
+0505 7FCC              MOV     R7,#0CCH
+0507 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 438
+050A 7D18              MOV     R5,#018H
+050C 7FCD              MOV     R7,#0CDH
+050E 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 439
+0511 7D4D              MOV     R5,#04DH
+0513 7FCE              MOV     R7,#0CEH
+0515 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 440
+0518 7D25              MOV     R5,#025H
+051A 7FCF              MOV     R7,#0CFH
+051C 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 441
+051F 7D2E              MOV     R5,#02EH
+0521 7FD0              MOV     R7,#0D0H
+0523 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 442
+0526 7D53              MOV     R5,#053H
+0528 7FD1              MOV     R7,#0D1H
+052A 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 443
+052D 7D60              MOV     R5,#060H
+052F 7FD2              MOV     R7,#0D2H
+0531 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 444
+0534 7D3F              MOV     R5,#03FH
+0536 7FD3              MOV     R7,#0D3H
+0538 120000      R     LCALL   _W_COM
+                                           ; SOURCE LINE # 445
+053B 7BFF              MOV     R3,#0FFH
+053D 7A00        R     MOV     R2,#HIGH pa_tab8
+053F 7900        R     MOV     R1,#LOW pa_tab8
+0541 120000      R     LCALL   L?0063
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 36  
+
+                                           ; SOURCE LINE # 446
+0544 7BFF              MOV     R3,#0FFH
+0546 7A00        R     MOV     R2,#HIGH pa_tab9
+0548 7900        R     MOV     R1,#LOW pa_tab9
+054A 7D01              MOV     R5,#01H
+054C 7C00              MOV     R4,#00H
+054E 120000      R     LCALL   _ssd2828_writepackage
+                                           ; SOURCE LINE # 447
+0551 7F8C              MOV     R7,#08CH
+0553 7E00              MOV     R6,#00H
+0555 120000      E     LCALL   _delay_ms
+                                           ; SOURCE LINE # 448
+0558 7BFF              MOV     R3,#0FFH
+055A 7A00        R     MOV     R2,#HIGH pa_tab10
+055C 7900        R     MOV     R1,#LOW pa_tab10
+055E 7D01              MOV     R5,#01H
+0560 7C00              MOV     R4,#00H
+0562 120000      R     LCALL   _ssd2828_writepackage
+                                           ; SOURCE LINE # 449
+0565 7F78              MOV     R7,#078H
+0567 7E00              MOV     R6,#00H
+0569 120000      E     LCALL   _delay_ms
+                                           ; SOURCE LINE # 450
+056C 7BFF              MOV     R3,#0FFH
+056E 7A00        R     MOV     R2,#HIGH pa_tab11
+0570 7900        R     MOV     R1,#LOW pa_tab11
+0572 7D01              MOV     R5,#01H
+0574 7C00              MOV     R4,#00H
+0576 120000      R     LCALL   _ssd2828_writepackage
+                                           ; SOURCE LINE # 451
+0579 7FAA              MOV     R7,#0AAH
+057B 7E00              MOV     R6,#00H
+057D 020000      E     LJMP    _delay_ms
+             ; FUNCTION W_write (END)
+
+             ; FUNCTION lcd_pa_set (BEGIN)
+                                           ; SOURCE LINE # 456
+                                           ; SOURCE LINE # 473
+0000 7D06              MOV     R5,#06H
+0002 7C08              MOV     R4,#08H
+0004 7FB1              MOV     R7,#0B1H
+0006 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 474
+0009 7D22              MOV     R5,#022H
+000B 7C18              MOV     R4,#018H
+000D 7FB2              MOV     R7,#0B2H
+000F 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 475
+0012 7D12              MOV     R5,#012H
+0014 7C68              MOV     R4,#068H
+0016 7FB3              MOV     R7,#0B3H
+0018 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 476
+001B 7D20              MOV     R5,#020H
+001D 7C03              MOV     R4,#03H
+001F 7FB4              MOV     R7,#0B4H
+0021 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 477
+0024 7D00              MOV     R5,#00H
+0026 7C05              MOV     R4,#05H
+0028 7FB5              MOV     R7,#0B5H
+002A 020000      R     LJMP    _ssd2828_regconfig
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 37  
+
+             ; FUNCTION lcd_pa_set (END)
+
+             ; FUNCTION ssd2828_init (BEGIN)
+                                           ; SOURCE LINE # 480
+                                           ; SOURCE LINE # 488
+0000 7D50              MOV     R5,#050H
+0002 7C00              MOV     R4,#00H
+0004 7FB7              MOV     R7,#0B7H
+0006 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 489
+0009 120000      R     LCALL   L?0064
+                                           ; SOURCE LINE # 490
+000C E4                CLR     A
+000D FD                MOV     R5,A
+000E FC                MOV     R4,A
+000F 7FB9              MOV     R7,#0B9H
+0011 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 492
+0014 7D0A              MOV     R5,#0AH
+0016 7C80              MOV     R4,#080H
+0018 7FBA              MOV     R7,#0BAH
+001A 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 493
+001D 7D06              MOV     R5,#06H
+001F 7C00              MOV     R4,#00H
+0021 7FBB              MOV     R7,#0BBH
+0023 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 494
+0026 7D01              MOV     R5,#01H
+0028 7C00              MOV     R4,#00H
+002A 7FB9              MOV     R7,#0B9H
+002C 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 496
+002F E4                CLR     A
+0030 FD                MOV     R5,A
+0031 FC                MOV     R4,A
+0032 7FDE              MOV     R7,#0DEH
+0034 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 497
+0037 7D02              MOV     R5,#02H
+0039 7C23              MOV     R4,#023H
+003B 7FC9              MOV     R7,#0C9H
+003D 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 498
+0040 7F0A              MOV     R7,#0AH
+0042 7E00              MOV     R6,#00H
+0044 120000      E     LCALL   _delay_ms
+                                           ; SOURCE LINE # 511
+0047 120000      R     LCALL   W_write
+                                           ; SOURCE LINE # 513
+004A 7D51              MOV     R5,#051H
+004C 7C01              MOV     R4,#01H
+004E 7FB7              MOV     R7,#0B7H
+0050 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 514
+0053 120000      R     LCALL   L?0064
+                                           ; SOURCE LINE # 515
+0056 E4                CLR     A
+0057 FD                MOV     R5,A
+0058 FC                MOV     R4,A
+0059 7FB9              MOV     R7,#0B9H
+005B 120000      R     LCALL   _ssd2828_regconfig
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 38  
+
+                                           ; SOURCE LINE # 519
+005E 7D15              MOV     R5,#015H
+0060 7C80              MOV     R4,#080H
+0062 7FBA              MOV     R7,#0BAH
+0064 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 521
+0067 7D05              MOV     R5,#05H
+0069 7C00              MOV     R4,#00H
+006B 7FBB              MOV     R7,#0BBH
+006D 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 522
+0070 7D01              MOV     R5,#01H
+0072 7C00              MOV     R4,#00H
+0074 7FB9              MOV     R7,#0B9H
+0076 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 523
+0079 7D02              MOV     R5,#02H
+007B 7C23              MOV     R4,#023H
+007D 7FC9              MOV     R7,#0C9H
+007F 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 524
+0082 7F0A              MOV     R7,#0AH
+0084 7E00              MOV     R6,#00H
+0086 120000      E     LCALL   _delay_ms
+                                           ; SOURCE LINE # 525
+0089 7D01              MOV     R5,#01H
+008B 7C23              MOV     R4,#023H
+008D 7FCA              MOV     R7,#0CAH
+008F 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 526
+0092 7D10              MOV     R5,#010H
+0094 7C05              MOV     R4,#05H
+0096 7FCB              MOV     R7,#0CBH
+0098 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 527
+009B 7D05              MOV     R5,#05H
+009D 7C10              MOV     R4,#010H
+009F 7FCC              MOV     R7,#0CCH
+00A1 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 528
+00A4 7DFF              MOV     R5,#0FFH
+00A6 7C00              MOV     R4,#00H
+00A8 7FD0              MOV     R7,#0D0H
+00AA 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 530
+00AD 120000      R     LCALL   lcd_pa_set
+                                           ; SOURCE LINE # 533
+00B0 7DD3              MOV     R5,#0D3H
+00B2 7C00              MOV     R4,#00H
+00B4 7FB6              MOV     R7,#0B6H
+00B6 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 534
+00B9 7D03              MOV     R5,#03H
+00BB 7C00              MOV     R4,#00H
+00BD 7FDE              MOV     R7,#0DEH
+00BF 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 536
+00C2 7D04              MOV     R5,#04H
+00C4 7C00              MOV     R4,#00H
+00C6 7FD6              MOV     R7,#0D6H
+00C8 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 538
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 39  
+
+00CB 7D4B              MOV     R5,#04BH
+00CD 7C02              MOV     R4,#02H
+00CF 7FB7              MOV     R7,#0B7H
+00D1 120000      R     LCALL   _ssd2828_regconfig
+                                           ; SOURCE LINE # 539
+00D4 7F3C              MOV     R7,#03CH
+00D6 7E00              MOV     R6,#00H
+00D8 120000      E     LCALL   _delay_ms
+                                           ; SOURCE LINE # 546
+00DB D200        R     SETB    ssd2828_cfg_ok
+                                           ; SOURCE LINE # 548
+00DD 22                RET     
+             ; FUNCTION ssd2828_init (END)
+
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 40  
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+P1 . . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   0090H  1
+_ssd2828_writepackage. . . . . . . . .  PUBLIC   CODE   PROC     0006H  -----
+  pbuf . . . . . . . . . . . . . . . .  AUTO     XDATA  PTR      0000H  3
+  len. . . . . . . . . . . . . . . . .  * REG *  DATA   U_INT    0004H  2
+  lenth. . . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0003H  2
+  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0005H  1
+  temp . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0006H  1
+lcd_pa_set . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+_W_COM . . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  addr . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+  dat. . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0005H  1
+  lenth. . . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0000H  2
+  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0002H  1
+  temp . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0003H  1
+  atr. . . . . . . . . . . . . . . . .  AUTO     XDATA  ARRAY    0004H  2
+  pbuf . . . . . . . . . . . . . . . .  AUTO     XDATA  PTR      0006H  3
+pa_tab1. . . . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0000H  4
+pa_tab4. . . . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0004H  4
+pa_tab5. . . . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0008H  4
+pa_tab8. . . . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    000CH  4
+pa_tab9. . . . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0010H  1
+MSPIFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  16
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0001H  2
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0003H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0009H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      000BH  3
+  Delay. . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    000EH  2
+_mSPIFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  16
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0001H  2
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0003H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0009H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      000BH  3
+  Delay. . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    000EH  2
+s8 . . . . . . . . . . . . . . . . . .  TYPEDEF  -----  CHAR     -----  1
+u8 . . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_CHAR   -----  1
+ssd2828_readID . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  ssd2828_id . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0000H  2
+  reg_temp . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0002H  2
+  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0004H  1
+MNORFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  12
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
+_mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
+ssd2828_init . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+sdc. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0094H  1
+C51 COMPILER V9.53.0.0   SSD2828                                                           10/30/2023 15:32:53 PAGE 41  
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+_ssd2828_regconfig . . . . . . . . . .  PUBLIC   CODE   PROC     0005H  -----
+  reg_addr . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+  reg_data . . . . . . . . . . . . . .  * REG *  DATA   U_INT    0004H  2
+  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0000H  1
+  addr_temp. . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0001H  1
+  data_H . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0002H  1
+  data_L . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0003H  1
+_ssd2828_readReg . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  addr_reg . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+  reg_value. . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0000H  2
+  reg_temp . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0002H  2
+  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0004H  1
+sdi. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0092H  1
+sck. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0093H  1
+sdo. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0091H  1
+pa_tab10 . . . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0011H  1
+pa_tab11 . . . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0012H  1
+csx. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0090H  1
+MMUSIC . . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  35
+  IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
+  PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
+  PlayHead . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0021H  1
+  PlayInterrupt. . . . . . . . . . . .  MEMBER   -----  U_CHAR   0022H  1
+_mMUSIC. . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  35
+  IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
+  PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
+  PlayHead . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0021H  1
+  PlayInterrupt. . . . . . . . . . . .  MEMBER   -----  U_CHAR   0022H  1
+_delay_ms. . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+s32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  LONG     -----  4
+u32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_LONG   -----  4
+s16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  INT      -----  2
+_delay_us. . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
+u16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
+W_write. . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+_ssd2828_writecmd. . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  cmd. . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0000H  1
+  ssd2828_cmd. . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0001H  1
+T2CON. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C8H  1
+ssd2828_cfg_ok . . . . . . . . . . . .  PUBLIC   DATA   BIT      0000H  1
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2650    ----
+   CONSTANT SIZE    =     19    ----
+   XDATA SIZE       =   ----      32
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

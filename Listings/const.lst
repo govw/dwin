@@ -1,0 +1,81 @@
+C51 COMPILER V9.53.0.0   CONST                                                             10/30/2023 15:32:53 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE CONST
+OBJECT MODULE PLACED IN .\Objects\const.obj
+COMPILER INVOKED BY: D:\DWIN\Keil_v5\C51\BIN\C51.EXE source\const.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\driver;.\sou
+                    -rce) DEBUG OBJECTEXTEND CODE SYMBOLS PRINT(.\Listings\const.lst) OBJECT(.\Objects\const.obj)
+
+line level    source
+
+   1          #include "const.h"
+C51 COMPILER V9.53.0.0   CONST                                                             10/30/2023 15:32:53 PAGE 2   
+
+ASSEMBLY LISTING OF GENERATED OBJECT CODE
+
+
+C51 COMPILER V9.53.0.0   CONST                                                             10/30/2023 15:32:53 PAGE 3   
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+MSPIFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  16
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0001H  2
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0003H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0009H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      000BH  3
+  Delay. . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    000EH  2
+_mSPIFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  16
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0001H  2
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0003H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0009H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      000BH  3
+  Delay. . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    000EH  2
+s8 . . . . . . . . . . . . . . . . . .  TYPEDEF  -----  CHAR     -----  1
+u8 . . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_CHAR   -----  1
+MNORFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  12
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
+_mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
+MMUSIC . . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  35
+  IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
+  PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
+  PlayHead . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0021H  1
+  PlayInterrupt. . . . . . . . . . . .  MEMBER   -----  U_CHAR   0022H  1
+_mMUSIC. . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  35
+  IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
+  PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
+  PlayHead . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0021H  1
+  PlayInterrupt. . . . . . . . . . . .  MEMBER   -----  U_CHAR   0022H  1
+s32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  LONG     -----  4
+u32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_LONG   -----  4
+s16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  INT      -----  2
+u16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
+T2CON. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C8H  1
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   ----    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

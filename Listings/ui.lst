@@ -1,0 +1,238 @@
+C51 COMPILER V9.53.0.0   UI                                                                10/30/2023 15:32:53 PAGE 1   
+
+
+C51 COMPILER V9.53.0.0, COMPILATION OF MODULE UI
+OBJECT MODULE PLACED IN .\Objects\ui.obj
+COMPILER INVOKED BY: D:\DWIN\Keil_v5\C51\BIN\C51.EXE source\ui.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(.\driver;.\source
+                    -) DEBUG OBJECTEXTEND CODE SYMBOLS PRINT(.\Listings\ui.lst) OBJECT(.\Objects\ui.obj)
+
+line level    source
+
+   1          #include "ui.h"
+   2          
+   3          void P0Func(void)
+   4          {
+   5   1              
+   6   1      }
+   7          
+   8          code void (*PagePointer[])(u16 pageid)={
+   9          P0Func,
+  10          };
+  11          
+  12          void PageFunction(void)
+  13          {
+  14   1              u16 pageid;
+  15   1      
+  16   1              EA = 0;
+  17   1              ADR_H = 0x00;
+  18   1              ADR_M = 0x00;
+  19   1              ADR_L = 0x0a;
+  20   1              ADR_INC = 1;
+  21   1              RAMMODE = 0xAF;         //������
+  22   1              while(!APP_ACK);
+  23   1              APP_EN = 1;
+  24   1              while(APP_EN);
+  25   1              pageid = DATA3;
+  26   1              pageid <<= 8;
+  27   1              pageid |= DATA2;
+  28   1              RAMMODE = 0;
+  29   1              EA = 1;
+  30   1              if(PagePointer[pageid] != 0)
+  31   1              {
+  32   2                      PagePointer[pageid](pageid);
+  33   2              }       
+  34   1      }
+C51 COMPILER V9.53.0.0   UI                                                                10/30/2023 15:32:53 PAGE 2   
+
+ASSEMBLY LISTING OF GENERATED OBJECT CODE
+
+
+             ; FUNCTION P0Func (BEGIN)
+                                           ; SOURCE LINE # 3
+                                           ; SOURCE LINE # 4
+                                           ; SOURCE LINE # 6
+0000 22                RET     
+             ; FUNCTION P0Func (END)
+
+             ; FUNCTION PageFunction (BEGIN)
+                                           ; SOURCE LINE # 12
+                                           ; SOURCE LINE # 13
+                                           ; SOURCE LINE # 16
+0000 C2AF              CLR     EA
+                                           ; SOURCE LINE # 17
+0002 E4                CLR     A
+0003 F5F1              MOV     ADR_H,A
+                                           ; SOURCE LINE # 18
+0005 F5F2              MOV     ADR_M,A
+                                           ; SOURCE LINE # 19
+0007 75F30A            MOV     ADR_L,#0AH
+                                           ; SOURCE LINE # 20
+000A 75F401            MOV     ADR_INC,#01H
+                                           ; SOURCE LINE # 21
+000D 75F8AF            MOV     RAMMODE,#0AFH
+0010         ?C0002:
+                                           ; SOURCE LINE # 22
+0010 30FCFD            JNB     APP_ACK,?C0002
+0013         ?C0003:
+                                           ; SOURCE LINE # 23
+0013 D2FE              SETB    APP_EN
+0015         ?C0004:
+                                           ; SOURCE LINE # 24
+0015 20FEFD            JB      APP_EN,?C0004
+0018         ?C0005:
+                                           ; SOURCE LINE # 25
+0018 AFFA              MOV     R7,DATA3
+001A 900000      R     MOV     DPTR,#pageid
+001D E4                CLR     A
+001E F0                MOVX    @DPTR,A
+001F A3                INC     DPTR
+0020 EF                MOV     A,R7
+0021 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 26
+0022 E0                MOVX    A,@DPTR
+0023 7F00              MOV     R7,#00H
+0025 FE                MOV     R6,A
+0026 900000      R     MOV     DPTR,#pageid
+0029 F0                MOVX    @DPTR,A
+002A A3                INC     DPTR
+002B EF                MOV     A,R7
+002C F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 27
+002D ADFB              MOV     R5,DATA2
+002F ED                MOV     A,R5
+0030 FF                MOV     R7,A
+0031 900000      R     MOV     DPTR,#pageid
+0034 EE                MOV     A,R6
+0035 F0                MOVX    @DPTR,A
+0036 A3                INC     DPTR
+0037 EF                MOV     A,R7
+C51 COMPILER V9.53.0.0   UI                                                                10/30/2023 15:32:53 PAGE 3   
+
+0038 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 28
+0039 E4                CLR     A
+003A F5F8              MOV     RAMMODE,A
+                                           ; SOURCE LINE # 29
+003C D2AF              SETB    EA
+                                           ; SOURCE LINE # 30
+003E 900000      R     MOV     DPTR,#pageid
+0041 E0                MOVX    A,@DPTR
+0042 FE                MOV     R6,A
+0043 A3                INC     DPTR
+0044 E0                MOVX    A,@DPTR
+0045 FF                MOV     R7,A
+0046 900000      R     MOV     DPTR,#_PagePointer
+0049 75F003            MOV     B,#03H
+004C 120000      E     LCALL   ?C?OFFXADD
+004F EE                MOV     A,R6
+0050 75F003            MOV     B,#03H
+0053 A4                MUL     AB
+0054 2583              ADD     A,DPH
+0056 F583              MOV     DPH,A
+0058 E4                CLR     A
+0059 93                MOVC    A,@A+DPTR
+005A FB                MOV     R3,A
+005B 7401              MOV     A,#01H
+005D 93                MOVC    A,@A+DPTR
+005E FA                MOV     R2,A
+005F 7402              MOV     A,#02H
+0061 93                MOVC    A,@A+DPTR
+0062 F9                MOV     R1,A
+0063 4A                ORL     A,R2
+0064 6007              JZ      ?C0007
+                                           ; SOURCE LINE # 31
+                                           ; SOURCE LINE # 32
+0066 8982              MOV     DPL,R1
+0068 8A83              MOV     DPH,R2
+006A 120000      E     LCALL   ?C?ICALL2
+                                           ; SOURCE LINE # 33
+                                           ; SOURCE LINE # 34
+006D         ?C0007:
+006D 22                RET     
+             ; FUNCTION PageFunction (END)
+
+C51 COMPILER V9.53.0.0   UI                                                                10/30/2023 15:32:53 PAGE 4   
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+ADR_H. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F1H  1
+ADR_L. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F3H  1
+ADR_M. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F2H  1
+EA . . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00AFH  1
+RAMMODE. . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F8H  1
+P0Func . . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+APP_ACK. . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00FCH  1
+ADR_INC. . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00F4H  1
+MSPIFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  16
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0001H  2
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0003H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0009H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      000BH  3
+  Delay. . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    000EH  2
+_mSPIFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  16
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0001H  2
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0003H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0009H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      000BH  3
+  Delay. . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    000EH  2
+s8 . . . . . . . . . . . . . . . . . .  TYPEDEF  -----  CHAR     -----  1
+u8 . . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_CHAR   -----  1
+MNORFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  12
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
+_mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
+  Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
+  VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
+  Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
+  Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
+PageFunction . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  pageid . . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0000H  2
+DATA2. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00FBH  1
+DATA3. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00FAH  1
+MMUSIC . . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  35
+  IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
+  PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
+  PlayHead . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0021H  1
+  PlayInterrupt. . . . . . . . . . . .  MEMBER   -----  U_CHAR   0022H  1
+_mMUSIC. . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  35
+  IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
+  PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
+  PlayHead . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0021H  1
+  PlayInterrupt. . . . . . . . . . . .  MEMBER   -----  U_CHAR   0022H  1
+APP_EN . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00FEH  1
+s32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  LONG     -----  4
+u32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_LONG   -----  4
+s16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  INT      -----  2
+u16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
+C51 COMPILER V9.53.0.0   UI                                                                10/30/2023 15:32:53 PAGE 5   
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
+_PagePointer . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0000H  3
+T2CON. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C8H  1
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    111    ----
+   CONSTANT SIZE    =      3    ----
+   XDATA SIZE       =   ----       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
