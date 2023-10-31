@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 C51 COMPILER V9.53.0.0   UI                                                                10/31/2023 18:53:27 PAGE 1   
+=======
+C51 COMPILER V9.53.0.0   UI                                                                10/31/2023 14:52:43 PAGE 1   
+>>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE UI
@@ -42,7 +46,11 @@ line level    source
   32   2                      PagePointer[pageid](pageid);
   33   2              }       
   34   1      }
+<<<<<<< HEAD
 C51 COMPILER V9.53.0.0   UI                                                                10/31/2023 18:53:27 PAGE 2   
+=======
+C51 COMPILER V9.53.0.0   UI                                                                10/31/2023 14:52:43 PAGE 2   
+>>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
 
 ASSEMBLY LISTING OF GENERATED OBJECT CODE
 
@@ -106,7 +114,11 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0035 F0                MOVX    @DPTR,A
 0036 A3                INC     DPTR
 0037 EF                MOV     A,R7
+<<<<<<< HEAD
 C51 COMPILER V9.53.0.0   UI                                                                10/31/2023 18:53:27 PAGE 3   
+=======
+C51 COMPILER V9.53.0.0   UI                                                                10/31/2023 14:52:43 PAGE 3   
+>>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
 
 0038 F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 28
@@ -151,7 +163,11 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 006D 22                RET     
              ; FUNCTION PageFunction (END)
 
+<<<<<<< HEAD
 C51 COMPILER V9.53.0.0   UI                                                                10/31/2023 18:53:27 PAGE 4   
+=======
+C51 COMPILER V9.53.0.0   UI                                                                10/31/2023 14:52:43 PAGE 4   
+>>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -214,7 +230,11 @@ s32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  LONG     -----  4
 u32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_LONG   -----  4
 s16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  INT      -----  2
 u16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
+<<<<<<< HEAD
 C51 COMPILER V9.53.0.0   UI                                                                10/31/2023 18:53:27 PAGE 5   
+=======
+C51 COMPILER V9.53.0.0   UI                                                                10/31/2023 14:52:43 PAGE 5   
+>>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====

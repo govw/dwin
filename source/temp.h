@@ -27,7 +27,11 @@ typedef enum {
     EIID_H2O_OFF,
     EIID_H2O_ON,
     EIID_NO_ICON,
+<<<<<<< HEAD
 }icon_id;
+=======
+}ICON_ID;
+>>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
 
 
 typedef struct {
@@ -38,14 +42,23 @@ typedef struct {
 }trect_t;
 
 typedef struct {
+<<<<<<< HEAD
     trect_t r;
     icon_id ico;
+=======
+    trect_t t_rect;
+    ICON_ID icon;
+>>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
 }menu_item_t;
 
 typedef struct {
     u8 size;
     u8 active;//битовое поле
+<<<<<<< HEAD
     menu_item_t *items;
+=======
+    menu_item_t *p_items;
+>>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
     void (code *func) (void); 
 }menu_t;
 

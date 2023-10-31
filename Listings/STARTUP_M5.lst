@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 A51 MACRO ASSEMBLER  STARTUP_M5                                                           10/31/2023 18:53:27 PAGE     1
+=======
+A51 MACRO ASSEMBLER  STARTUP_M5                                                           10/31/2023 14:52:42 PAGE     1
+>>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
 
 
 MACRO ASSEMBLER A51 V8.02b
@@ -42,7 +46,11 @@ LOC  OBJ            LINE     SOURCE
                       31     
                       32                     END
                              
+<<<<<<< HEAD
 A51 MACRO ASSEMBLER  STARTUP_M5                                                           10/31/2023 18:53:27 PAGE     2
+=======
+A51 MACRO ASSEMBLER  STARTUP_M5                                                           10/31/2023 14:52:42 PAGE     2
+>>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
 
 SYMBOL TABLE LISTING
 ------ ----- -------
