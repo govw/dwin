@@ -1,4 +1,4 @@
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 1   
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE TEMP
@@ -62,7 +62,7 @@ line level    source
   49              {400, 500, EIID_PULSE_ON},     
   50          };
   51          code MENU_T pulse_state_menu = {sizeof(pulse_state) / sizeof(pulse_state[0]), pulse_state, do_nothing};
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 2   
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 2   
 
   52          
   53          
@@ -126,7 +126,7 @@ line level    source
  110          { 
  111   1          u16 tmp = 0x0000;
  112   1          write_dgus_vp(0x9500, (u8*)&tmp, 1); //clear vertical menu
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 3   
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 3   
 
  113   1          bottom_menu.p_items[prev_menu_item].icon.id = p_cur_menu->p_items[last_selected_menu_item].icon.id;
  114   1          draw_bottom_menu();    
@@ -190,7 +190,7 @@ line level    source
  171              //         11,//icon cnt
  172              //         {
  173              //             {0,   700, EIID_TIG},
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 4   
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 4   
 
  174              //             {100, 700, EIID_MMA},
  175              //             {200, 700, 2},
@@ -207,7 +207,7 @@ line level    source
  186              //     };   
  187                  
  188              //     write_dgus_vp(0x9000, (u8*) &temp, sizeof(temp) / 2); 
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 5   
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 5   
 
 ASSEMBLY LISTING OF GENERATED OBJECT CODE
 
@@ -271,7 +271,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0013 F0                MOVX    @DPTR,A
 0014 7F00              MOV     R7,#00H
 0016 7E95              MOV     R6,#095H
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 6   
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 6   
 
 0018 120000      E     LCALL   _write_dgus_vp
                                            ; SOURCE LINE # 113
@@ -335,7 +335,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0006 F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 121
 0007 7B01              MOV     R3,#01H
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 7   
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 7   
 
 0009 7A00        R     MOV     R2,#HIGH tmp
 000B 7900        R     MOV     R1,#LOW tmp
@@ -399,7 +399,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0026 F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 139
 0027 900000      R     MOV     DPTR,#j
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 8   
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 8   
 
 002A 7402              MOV     A,#02H
 002C F0                MOVX    @DPTR,A
@@ -463,7 +463,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0085 E0                MOVX    A,@DPTR
 0086 FA                MOV     R2,A
 0087 A3                INC     DPTR
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 9   
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 9   
 
 0088 E0                MOVX    A,@DPTR
 0089 F9                MOV     R1,A
@@ -527,7 +527,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00E7 25E0              ADD     A,ACC
 00E9 2400        R     ADD     A,#LOW cmd
 00EB F582              MOV     DPL,A
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 10  
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 10  
 
 00ED E4                CLR     A
 00EE 3400        R     ADDC    A,#HIGH cmd
@@ -591,7 +591,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0139 FF                MOV     R7,A
 013A 7B01              MOV     R3,#01H
 013C 7A00        R     MOV     R2,#HIGH cmd
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 11  
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 11  
 
 013E 7900        R     MOV     R1,#LOW cmd
 0140 900000      E     MOV     DPTR,#?_write_dgus_vp?BYTE+05H
@@ -603,7 +603,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0148 020000      E     LJMP    _write_dgus_vp
              ; FUNCTION _draw_menu (END)
 
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 12  
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 12  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -666,7 +666,7 @@ _mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
   Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
 do_nothing . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
   tmp. . . . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0000H  2
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 13  
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 13  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -729,7 +729,7 @@ EIID_DC_MINUS. . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 draw_sub_menu. . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
   array_of_menus . . . . . . . . . . .  AUTO     XDATA  ARRAY    0000H  21
 polarity . . . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0030H  18
-C51 COMPILER V9.53.0.0   TEMP                                                              10/30/2023 15:32:53 PAGE 14  
+C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 07:48:34 PAGE 14  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====

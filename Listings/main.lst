@@ -1,4 +1,4 @@
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 1   
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   49          
   50          u8  my_text[100];
   51          u8 counter = 0;
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 2   
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 2   
 
   52          
   53          
@@ -126,7 +126,7 @@ line level    source
  110   1          draw_rect_cmd[13] = y + 2;       //y0
  111   1          draw_rect_cmd[14] = 1023 - 2;    //x1
  112   1          draw_rect_cmd[15] = y + 100 - 2; //y1
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 3   
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 3   
 
  113   1          draw_rect_cmd[16] = 0xFFFF;  //color
  114   1          draw_rect_cmd[17] = 0xFF00;
@@ -190,7 +190,7 @@ line level    source
  171          {
  172   1          draw_string("string 4");
  173   1          write_dgus_vp(0x1200, "F5\x00", sizeof("F5\x00"));
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 4   
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 4   
 
  174   1      }
  175          void btn_5(void)
@@ -254,7 +254,7 @@ line level    source
  231   1              UART_INIT //MARCROS
  232   1              
  233   1          draw_bottom_menu();
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 5   
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 5   
 
  234   1        
  235   1      while(1)    
@@ -318,7 +318,7 @@ line level    source
  289   7                              level_back(); 
  290   7                          }   
  291   6                         
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 6   
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 6   
 
  292   6                         break;
  293   6                     }
@@ -382,7 +382,7 @@ line level    source
              - area
  350   1          //                 if(touch_data.x >= rect[i].x && touch_data.x <= rect[i].x + 100 &&
  351   1          //                    touch_data.y >= rect[i].y && touch_data.y <= rect[i].y + 100) {
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 7   
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 7   
 
  352   1                                                                                                        
  353   1          //                        write_dgus_vp(0x5200, (u8*) &touch_data.x, 2); //show coords of touch point
@@ -446,7 +446,7 @@ line level    source
  411   1      //      }          
  412   1            
  413   1              
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 8   
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 8   
 
  414   1        
  415   1           
@@ -510,7 +510,7 @@ line level    source
  473   4                      //     } 
  474   4                      //     temp_buf[i] = 0x0000;
  475   4                          
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 9   
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 9   
 
  476   4                          
  477   4                      //     write_dgus_vp(0x1200, (u8*) &temp_buf, (buf_idx * 2) + 2);
@@ -574,7 +574,7 @@ line level    source
  535   5      
  536   5                                      case 10:
  537   5                                              if(byte == 0x5A) {
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 10  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 10  
 
  538   6                              state = 11; 
  539   6                                                      break;
@@ -638,7 +638,7 @@ line level    source
  597   4                              
  598   4                              
  599   4                              EA = 1;                
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 11  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 11  
 
  600   4                  }
  601   3                 
@@ -655,7 +655,7 @@ line level    source
 *** WARNING C280 IN LINE 454 OF source\main.c: 'buf_idx': unreferenced local variable
 *** WARNING C290 IN LINE 204 OF source\main.c: missing return value
 *** WARNING C294 IN LINE 435 OF source\main.c: unreachable code
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 12  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 12  
 
 ASSEMBLY LISTING OF GENERATED OBJECT CODE
 
@@ -719,7 +719,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0000 900000      R     MOV     DPTR,#x
 0003 EE                MOV     A,R6
 0004 F0                MOVX    @DPTR,A
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 13  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 13  
 
 0005 A3                INC     DPTR
 0006 EF                MOV     A,R7
@@ -783,7 +783,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 003C F0                MOVX    @DPTR,A
 003D A3                INC     DPTR
 003E 04                INC     A
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 14  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 14  
 
 003F F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 105
@@ -847,7 +847,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 112
 007A ED                MOV     A,R5
 007B 2462              ADD     A,#062H
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 15  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 15  
 
 007D FE                MOV     R6,A
 007E E4                CLR     A
@@ -911,7 +911,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0015 9F                SUBB    A,R7
 0016 5028              JNC     ?C0007
                                            ; SOURCE LINE # 125
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 16  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 16  
 
                                            ; SOURCE LINE # 126
 0018 900000      R     MOV     DPTR,#s
@@ -975,7 +975,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 000F A3                INC     DPTR
 0010 E0                MOVX    A,@DPTR
 0011 9400              SUBB    A,#00H
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 17  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 17  
 
 0013 900000      R     MOV     DPTR,#rect_y_pos
 0016 E0                MOVX    A,@DPTR
@@ -1039,7 +1039,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0028 FE                MOV     R6,A
 0029 120000      R     LCALL   _draw_rectangle
                                            ; SOURCE LINE # 151
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 18  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 18  
 
 002C 7BFF              MOV     R3,#0FFH
 002E 7A00        R     MOV     R2,#HIGH ?SC_0
@@ -1103,7 +1103,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0026 A3                INC     DPTR
 0027 EF                MOV     A,R7
 0028 F0                MOVX    @DPTR,A
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 19  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 19  
 
 0029 7B01              MOV     R3,#01H
 002B 7A00        R     MOV     R2,#HIGH temp
@@ -1167,7 +1167,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 175
                                            ; SOURCE LINE # 176
                                            ; SOURCE LINE # 177
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 20  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 20  
 
 0000 7BFF              MOV     R3,#0FFH
 0002 7A00        R     MOV     R2,#HIGH ?SC_51
@@ -1231,7 +1231,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 002E 120000      E     LCALL   ?C?CLDOPTR
 0031 FD                MOV     R5,A
 0032 EE                MOV     A,R6
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 21  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 21  
 
 0033 25E0              ADD     A,ACC
 0035 2400        R     ADD     A,#LOW out_str
@@ -1295,7 +1295,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0021 F0                MOVX    @DPTR,A
 0022 900000      R     MOV     DPTR,#state
 0025 F0                MOVX    @DPTR,A
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 22  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 22  
 
 0026 900000      R     MOV     DPTR,#endfl
 0029 F0                MOVX    @DPTR,A
@@ -1359,7 +1359,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0077 900000      E     MOV     DPTR,#?_write_dgus_vp?BYTE+05H
 007A E4                CLR     A
 007B F0                MOVX    @DPTR,A
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 23  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 23  
 
 007C A3                INC     DPTR
 007D 04                INC     A
@@ -1423,7 +1423,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00D0 85F083            MOV     DPH,B
 00D3 120000      E     LCALL   ?C?ILDOPTR
 00D6 FF                MOV     R7,A
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 24  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 24  
 
 00D7 AEF0              MOV     R6,B
 00D9 900000      R     MOV     DPTR,#touch_data+02H
@@ -1487,7 +1487,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0131 2464              ADD     A,#064H
 0133 FF                MOV     R7,A
 0134 E4                CLR     A
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 25  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 25  
 
 0135 3E                ADDC    A,R6
 0136 FE                MOV     R6,A
@@ -1551,7 +1551,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 287
 0185         ?C0031:
 0185 900000      R     MOV     DPTR,#i
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 26  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 26  
 
 0188 E0                MOVX    A,@DPTR
 0189 04                INC     A
@@ -1582,7 +1582,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 01AA 020000      R     LJMP    ?C0024
              ; FUNCTION main (END)
 
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 27  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 27  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -1645,7 +1645,7 @@ _print_utf_str . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
   len. . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
 temp_offset. . . . . . . . . . . . . .  PUBLIC   XDATA  U_CHAR   016BH  1
 state. . . . . . . . . . . . . . . . .  PUBLIC   XDATA  U_CHAR   016CH  1
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 28  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 28  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -1708,7 +1708,7 @@ _mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
   VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
   Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
   Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 29  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 29  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -1771,7 +1771,7 @@ MMUSIC . . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  35
 _mMUSIC. . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  35
   IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
   PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 30  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 30  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -1835,7 +1835,7 @@ _read_dgus_vp. . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-C51 COMPILER V9.53.0.0   MAIN                                                              10/30/2023 15:32:53 PAGE 31  
+C51 COMPILER V9.53.0.0   MAIN                                                              10/31/2023 07:48:33 PAGE 31  
 
    CODE SIZE        =   1113    ----
    CONSTANT SIZE    =    124    ----
