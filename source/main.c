@@ -21,7 +21,6 @@ data u16 some_rus_string[] = {0x0422, 0x0031, 0x0020, 0x0432, 0x0440, 0x0435, 0x
 
               
 
-        
 
 
 struct text_field
@@ -273,21 +272,20 @@ while(1)
                case ETPS_RELEASE:
                {
                    u8 i;
-                   for(i = 0; i < p_cur_menu->size; i++) { //if touch coords in recatnle area
-                        if(touch_data.x >= p_cur_menu->p_items[i].icon.x && touch_data.x <= p_cur_menu->p_items[i].icon.x + 100 &&  
-                            touch_data.y >= p_cur_menu->p_items[i].icon.y && touch_data.y <= p_cur_menu->p_items[i].icon.y + 100) {
-                                last_selected_menu_item = i;
-                                p_cur_menu->func();//вызов функции соответсвующей прямоугольной области
-                                {
-                                    u16 dummy = last_selected_menu_item;
-                                    write_dgus_vp(0x2500, (u8*) &dummy, 1); //отобразить код выбранной функции
-                                }
+                   for(i = 0; i < cur_menu->size; i++) { //if touch coords in recatnle area
+                        if( ((cur_menu->active & (0x01 << i)) != 0) &&
+                            touch_data.x >= cur_menu->items[i].r.x0 && touch_data.x <= cur_menu.items[i].r.x1 &&  
+                            touch_data.y >= cur_menu.items[i].r.y0 && touch_data.y <= cur_menu.items[i].r.y1 ) {
+                                //вызов функции соответсвующей прямоугольной области
                                 break;
                             }
                         }
-                    if(i == p_cur_menu->size) {
-                        level_back(); 
-                    }   
+                    {
+                        u16 dummy = i;
+                        write_dgus_vp(0x2500, (u8*) &dummy, 1); //отобразить код выбранной функции
+                    }
+                    last_selected_menu_item = i;
+                    cur_menu->func(); 
                    
                    break;
                }
