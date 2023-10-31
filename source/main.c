@@ -272,16 +272,10 @@ while(1)
                case ETPS_RELEASE:
                {
                    u8 i;
-<<<<<<< HEAD
                    for(i = 0; i < cur_menu->size; i++) { //if touch coords in recatnle area
                         if( ((cur_menu->active & (0x01 << i)) != 0) &&
                             touch_data.x >= cur_menu->items[i].r.x0 && touch_data.x <= cur_menu.items[i].r.x1 &&  
                             touch_data.y >= cur_menu.items[i].r.y0 && touch_data.y <= cur_menu.items[i].r.y1 ) {
-=======
-                   for(i = 0; i < cur_menu.size; i++) { //if touch coords in recatnle area
-                        if(touch_data.x >= cur_menu.p_items[i].t_rect.x0 && touch_data.x <= cur_menu.p_items[i].t_rect.x1 &&  
-                            touch_data.y >= cur_menu.p_items[i].t_rect.y0 && touch_data.y <= cur_menu.p_items[i].t_rect.y1 ) {
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
                                 //вызов функции соответсвующей прямоугольной области
                                 break;
                             }
@@ -291,11 +285,7 @@ while(1)
                         write_dgus_vp(0x2500, (u8*) &dummy, 1); //отобразить код выбранной функции
                     }
                     last_selected_menu_item = i;
-<<<<<<< HEAD
                     cur_menu->func(); 
-=======
-                    cur_menu.func(); 
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
                    
                    break;
                }
