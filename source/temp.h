@@ -26,33 +26,36 @@ typedef enum {
     EIID_TRIG,
     EIID_H2O_OFF,
     EIID_H2O_ON,
+    EIID_NO_ICON,
 }ICON_ID;
 
-typedef struct {
-	u16 x;
-	u16 y;
-	u16 id;
-}ICON_T;
-
 
 typedef struct {
-    ICON_T icon;
-    
-}MENU_ITEM_T;
+    u16 x0;
+    u16 y0;
+    u16 x1;
+    u16 y1;
+}trect_t;
+
+typedef struct {
+    trect_t t_rect;
+    ICON_ID icon;
+}menu_item_t;
 
 typedef struct {
     u8 size;
-    MENU_ITEM_T *p_items;
-    void (code *func) (void);
-}MENU_T;
+    u8 active;//битовое поле
+    menu_item_t *p_items;
+    void (code *func) (void); 
+}menu_t;
 
 void draw_bottom_menu(void);
 
-void draw_menu(u16 vp, MENU_T menu[]);
+void draw_menu(u16 vp, menu_t menu[]);
 void level_back(void);
 
 
-extern MENU_T *p_cur_menu;
+extern menu_t cur_menu;
 extern u8 last_selected_menu_item;
 
 #endif //TEMP_H

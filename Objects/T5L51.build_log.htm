@@ -33,9 +33,93 @@ compiling uart.c...
 compiling canbus.c...
 compiling main.c...
 source\ssd2828.h(76): warning C235: parameter 1: different types
-source\main.c(85): warning C206: 'draw_vertical_menu': missing function-prototype
-source\main.c(94): warning C280: 'x': unreferenced local variable
-source\main.c(247): warning C280: 'tp_state': unreferenced local variable
-source\main.c(454): warning C280: 'buf_idx': unreferenced local variable
-source\main.c(204): warning C290: missing return value
-sou
+source\main.c(84): warning C206: 'draw_vertical_menu': missing function-prototype
+source\main.c(93): warning C280: 'x': unreferenced local variable
+source\main.c(246): warning C280: 'tp_state': unreferenced local variable
+source\main.c(451): warning C280: 'buf_idx': unreferenced local variable
+source\main.c(203): warning C290: missing return value
+source\main.c(432): warning C294: unreachable code
+compiling const.c...
+compiling ui.c...
+compiling dwin8283.c...
+compiling ssd2828.c...
+source\ssd2828.h(76): warning C235: parameter 1: different types
+compiling temp.c...
+linking...
+*** WARNING L13: RECURSIVE CALL TO SEGMENT
+    SEGMENT: ?PR?MAKE_LAYER_TIG?TEMP
+    CALLER:  ?PR?TIG_LAYER_RESPONSE_?TEMP
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?RESETT5L?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_TOUCHSWITCH?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_MUSICPLAY?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?NORFLASH_ACTION?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SPIFLASH_ACTION?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?GETPAGEID?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PAGE_CHANGE?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_GETPININ?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_GETTOUCHANCTION?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_STARTTIMER?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_KILLTIMER?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_GETTIMEOUTFLAG?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?INIT_RTC?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_IBCD?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CLOCK?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CANERRORRESET?CANBUS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PRINT_UTF_STR?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?PAGEFUNCTION?UI
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?PRO8283INIT?DWIN8283
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?PRO8283DEAL?DWIN8283
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SSD2828_READID?SSD2828
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SSD2828_READREG?SSD2828
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DRAW_SUB_MENU?TEMP
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?LEVEL_BACK?TEMP
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  DRAW_VERTICAL_MENU
+    MODULE:  .\Objects\main.obj (MAIN)
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  DRAW_VERTICAL_MENU
+    MODULE:  .\Objects\main.obj (MAIN)
+    ADDRESS: 4163H
+Program Size: data=127.2 xdata=17427 code=17357
+creating hex file from ".\Objects\T5L51"...
+User command #1: 1.bat
+C:\Users\OGK5-7\Desktop\dwin>cd objects 
+C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
+srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
+    (expected >= 0x4393, got 0x3AA3)
+C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
+".\Objects\T5L51" - 0 Error(s), 35 Warning(s).
+</pre>
+</body>
+</html>
+nd #1: 1.bat
+C:\Users\OGK5-7\Desktop\dwin>cd objects 
+C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
+srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
+    (expected >= 0x434C, got 0x3A00)
+C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
+".\Objects\T5L51" - 0 Error(s), 40 Warning(s).
