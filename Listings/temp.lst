@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 18:53:27 PAGE 1   
-=======
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 1   
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE TEMP
@@ -17,471 +13,369 @@ line level    source
    3          #include "string.h"
    4          
    5          
-   6          void draw_bottom_menu(void);
-   7          void level_back(void);
-   8          void do_nothing(void);
-   9          
-  10          menu_item_t cur_menu_items[40];
-  11          menu_t cur_menu;
-  12          
-  13          
-  14          u8 last_selected_menu_item;
-  15          u8 prev_menu_item;
-  16          
-<<<<<<< HEAD
-  17          code icon_id tig_icons[]       = {EIID_TIG, EIID_DC_PLUS, EIID_TRIG, EIID_PULSE_OFF, EIID_D_10, EIID_2T, E
-             -IID_H2O_OFF}; //иконки раежимов на главной панели
-  18          code icon_id welding_mod_sel[] = {EIID_TIG, EIID_MMA, EIID_MIX};
-  19          code icon_id weld_button_mod[] = {EIID_2T, EIID_4T, EIID_4T_PLUS};
-  20          code icon_id polarity[] =        {EIID_DC_MINUS, EIID_DC_PLUS, EIID_AC};
-  21          code icon_id ignition_type[] =   {EIID_HF, EIID_LIFT};
-  22          code icon_id pulse_state[] =     {EIID_PULSE_OFF, EIID_PULSE_ON};
-  23          code icon_id electrode_d[] =     {EIID_D_10, EIID_D_16, EIID_D_20, EIID_D_40};
-  24          code icon_id flow_sensor[] =     {EIID_H2O_OFF, EIID_H2O_ON};
-  25          
-  26          
-  27          idata menu_t bottom_menu = {0xff, }
-  28          
-  29          
+   6          #define ARR_SIZE(x) (sizeof(x) / sizeof(x[0]))
+   7          
+   8          
+   9          void draw_bottom_menu(void);
+  10          void level_back(void);
+  11          void do_nothing(u8 select);
+  12          void gui_init(void);
+  13          void bottom_level_controls(u8 select);
+  14          void welding_mode_controls(u8 select);
+  15          
+  16          menu_t *cur_menu;
+  17          u8 last_selected_menu_item;
+  18          u8 prev_menu_item;
+  19          
+  20          
+  21          enum{
+  22              MEN_MOD,
+  23              MEN_BTN_MOD,
+  24              MEN_POL_MOD,
+  25              MEN_IGN_MOD,
+  26              MEN_PLS_MOD,
+  27              MEN_D_MOD,
+  28              MEN_FLOW_MOD,
+  29          };
   30          
   31          
   32          
-  33          
-  34          
-  35          
-  36          
-  37          void draw_icons(u16 vp, menu_t *p_menu)
-*** ERROR C141 IN LINE 37 OF source\temp.c: syntax error near 'void'
-  38          {
-*** ERROR C134 IN LINE 38 OF source\temp.c: '_draw_icons': mspace on function not permitted
-*** ERROR C141 IN LINE 38 OF source\temp.c: syntax error near '{'
-  39              u8 i, j;
-  40              u16 cmd[100];
-  41              cmd[0] = 0x2407; //icon_write_instruction      
-*** ERROR C136 IN LINE 41 OF source\temp.c: invalid dimension size: [0]
-*** ERROR C231 IN LINE 41 OF source\temp.c: 'cmd': redefinition
-  42              cmd[1] = p_menu->size; //display_icon_cnt
-*** ERROR C279 IN LINE 42 OF source\temp.c: 'cmd': multiple initialization
-*** ERROR C202 IN LINE 42 OF source\temp.c: 'p_menu': undefined identifier
-  43              j = 2;
-*** ERROR C231 IN LINE 43 OF source\temp.c: 'j': redefinition
-*** ERROR C231 IN LINE 43 OF source\temp.c: 'j': redefinition
-  44              for(i = 0; i < p_menu->size; i++) {
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 18:53:27 PAGE 2   
+  33          //code icon_id tig_icons[]       = {EIID_TIG, EIID_DC_PLUS, EIID_TRIG, EIID_PULSE_OFF, EIID_D_10, EIID_2T,
+             - EIID_H2O_OFF}; //иконки раежимов на главной панели
+  34          code icon_id bottom[]=            {0, 1, 2, 3, 4, 5 ,6, 7, 8, 9, 10};
+  35          code icon_id welding_mode[] =     {EIID_TIG, EIID_MMA, EIID_MIX};
+  36          code icon_id tig_button_mod[] =   {EIID_2T, EIID_4T, EIID_4T_PLUS};
+  37          code icon_id polarity[] =         {EIID_DC_MINUS, EIID_DC_PLUS, EIID_AC};
+  38          code icon_id ignition_type[] =    {EIID_HF, EIID_LIFT};
+  39          code icon_id pulse_state[] =      {EIID_PULSE_OFF, EIID_PULSE_ON};
+  40          code icon_id electrode_d[] =      {EIID_D_10, EIID_D_16, EIID_D_20, EIID_D_40};
+  41          code icon_id flow_sensor[] =      {EIID_H2O_OFF, EIID_H2O_ON};
+  42          
+  43          
+  44          
+  45          
+  46          
+  47          
+  48          
+  49          
+  50          
+  51          menu_item_t bottom_items         [ARR_SIZE(bottom)];
+  52          menu_item_t welding_mode_items   [ARR_SIZE(welding_mode)];
+  53          menu_item_t tig_button_mod_items [ARR_SIZE(tig_button_mod)];
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 2   
 
-*** ERROR C141 IN LINE 44 OF source\temp.c: syntax error near 'for'
-*** ERROR C141 IN LINE 44 OF source\temp.c: syntax error near '=', expected ')'
-*** ERROR C129 IN LINE 44 OF source\temp.c: missing ';' before '<'
-  45                  if(p_menu->p_items[i].icon == EIID_NO_ICON) { //если нет картинки недобавл�
-             -�ть ее к отображению
-  46                      continue;
-  47                  }
-  48                  cmd[j] = p_menu->p_items[i].t_rect.x0;
-  49                  j++;
-  50                  cmd[j] = p_menu->p_items[i].t_rect.y0;
-  51                  j++;
-  52                  cmd[j] = p_menu->p_items[i].icon;
-  53                  j++;
-  54              }
-  55              cmd[j] = 0xFF00;
-  56              write_dgus_vp(vp, (u8*)&cmd, j);
-  57          }
-  58          
-  59          
-  60          void make_layer_tig(void);
-  61          
-  62          void tig_layer_response_(void)
-  63          {
-  64              
-  65              switch (expression)
-  66              {
-  67              case /* constant-expression */:
-  68                  /* code */
-  69                  break;
-  70              
-  71              default:
-  72                  break;
-  73              }
-  74              
-  75              tig_icons[prev_menu_item] =  cur_menu_items[last_selected_menu_item].icon;
-  76              make_layer_tig(); 
-  77          }
-  78          
-  79          void tig_layer_response(void)
-  80          {
-  81              code icon_id *all_icons[] = {welding_mod_sel, weld_button_mod, polarity, ignition_type, pulse_state, e
-             -lectrode_d, flow_sensor};
-  82          
-  83              const u16 icon_rect_sz = 100;
-  84              u16 start_x = 0;
-  85              u16 start_y = 600;
-  86              u8 i;
-  87              icon_id *p_icons;
-  88          
-  89          
-  90              if(last_selected_menu_item == 7) {
-  91                  return;
-  92              }
-  93          
-  94              prev_menu_item = last_selected_menu_item;
-  95          
-  96              cur_menu.size = all_icons[last_selected_menu_item][0]; 
-  97              p_icons = &all_icons[last_selected_menu_item][1];
-  98          
-  99              start_x = 100 * last_selected_menu_item;
- 100          
- 101              cur_menu.func = tig_layer_response_;
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 18:53:27 PAGE 3   
-
- 102              for(i = 0; i < cur_menu.size; i++) {
- 103                  cur_menu_items[i].icon = p_icons[i];
- 104                  cur_menu_items[i].t_rect.x0 = start_x;
- 105                  cur_menu_items[i].t_rect.y0 = start_y;
- 106                  cur_menu_items[i].t_rect.x1 = start_x + icon_rect_sz;
- 107                  cur_menu_items[i].t_rect.y1 = start_y + icon_rect_sz;
- 108                  start_y -= 100;
- 109              }
- 110          
- 111              draw_icons(0x9500, &cur_menu);   
- 112          }
- 113          
- 114          void make_layer_tig(void)
- 115          {    
- 116              u8 i;
- 117              
- 118              const u16 icon_rect_sz = 100;
- 119              
- 120              u16 start_x = 0;
- 121              u16 start_y = 700;
- 122              
- 123              {//clear vertical menu
- 124                  u16 tmp = 0x0000;
- 125                  write_dgus_vp(0x9500, (u8*)&tmp, 1); 
- 126              }
- 127          
- 128              for(i = 0; i < cur_menu.size; i++) {
- 129                  if((bit_mask & 0x01) == 0x01) {
- 130                          cur_menu_items[i].icon = tig_icons[i];
- 131                          cur_menu_items[i].t_rect.x0 = start_x;
- 132                          cur_menu_items[i].t_rect.y0 = start_y;
- 133                          cur_menu_items[i].t_rect.x1 = start_x + icon_rect_sz;
- 134                          cur_menu_items[i].t_rect.y1 = start_y + icon_rect_sz;
- 135                  }
- 136          
- 137             
- 138                  start_x += 100;
- 139              }
- 140          
- 141              draw_icons(0x9000, &cur_menu);        
- 142          }
- 143          void draw_bottom_menu(void)
- 144          {   
- 145              //draw_menu(0x9000, &bottom_menu);
- 146              make_layer_tig();      
- 147          }
- 148          
-=======
-  17          idata ICON_ID tig_icons[]       = {7, EIID_TIG, EIID_DC_PLUS, EIID_TRIG, EIID_PULSE_OFF, EIID_D_10, EIID_2
-             -T, EIID_H2O_OFF};
-  18          idata ICON_ID welding_mod_sel[] = {3, EIID_TIG, EIID_MMA, EIID_MIX};
-  19          idata ICON_ID weld_button_mod[] = {3, EIID_2T, EIID_4T, EIID_4T_PLUS};
-  20          idata ICON_ID polarity[] =        {3, EIID_DC_MINUS, EIID_DC_PLUS, EIID_AC};
-  21          idata ICON_ID ignition_type[] =   {2, EIID_HF, EIID_LIFT};
-  22          idata ICON_ID pulse_state[] =     {2, EIID_PULSE_OFF, EIID_PULSE_ON};
-  23          idata ICON_ID electrode_d[] =     {4, EIID_D_10, EIID_D_16, EIID_D_20, EIID_D_40};
-  24          idata ICON_ID flow_sensor[] =     {2, EIID_H2O_OFF, EIID_H2O_ON};
-  25          
-  26          
-  27          
-  28          
-  29          
-  30          void draw_icons(u16 vp, menu_t *p_menu)
-  31          {
-  32   1          u8 i, j;
-  33   1          u16 cmd[100];
-  34   1          cmd[0] = 0x2407; //icon_write_instruction      
-  35   1          cmd[1] = p_menu->size; //display_icon_cnt
-  36   1          j = 2;
-  37   1          for(i = 0; i < p_menu->size; i++) {
-  38   2              if(p_menu->p_items[i].icon == EIID_NO_ICON) { //если нет картинки недобавл�
-             -�ть ее к отображению
-  39   3                  continue;
-  40   3              }
-  41   2              cmd[j] = p_menu->p_items[i].t_rect.x0;
-  42   2              j++;
-  43   2              cmd[j] = p_menu->p_items[i].t_rect.y0;
-  44   2              j++;
-  45   2              cmd[j] = p_menu->p_items[i].icon;
-  46   2              j++;
-  47   2          }
-  48   1          cmd[j] = 0xFF00;
-  49   1          write_dgus_vp(vp, (u8*)&cmd, j);
-  50   1      }
-  51          
-  52          
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 2   
-
-  53          
-  54          
-  55          
-  56          
-  57          
-  58          
+  54          menu_item_t polarity_items       [ARR_SIZE(polarity)];
+  55          menu_item_t ignition_type_items  [ARR_SIZE(ignition_type)];
+  56          menu_item_t pulse_state_items    [ARR_SIZE(pulse_state)];
+  57          menu_item_t electrode_d_items    [ARR_SIZE(electrode_d)];
+  58          menu_item_t flow_sensor_items    [ARR_SIZE(flow_sensor)];
   59          
   60          
-  61          
-  62          
-  63          
-  64          
-  65          
-  66          
-  67          
-  68          
-  69          
-  70          
-  71          void make_layer_tig(void);
-  72          
-  73          
-  74          void tig_layer_response_(void)
-  75          {
-  76   1          tig_icons[prev_menu_item] =  cur_menu_items[last_selected_menu_item].icon;
-  77   1          make_layer_tig(); 
-  78   1      }
-  79          
-  80          void tig_layer_response(void)
-  81          {
-  82   1          code ICON_ID *all_icons[] = {welding_mod_sel, weld_button_mod, polarity, ignition_type, pulse_state, e
-             -lectrode_d, flow_sensor};
-  83   1      
-  84   1          const u16 icon_rect_sz = 100;
-  85   1          u16 start_x = 0;
-  86   1          u16 start_y = 600;
-  87   1          u8 i;
-  88   1          ICON_ID *p_icons;
-  89   1      
-  90   1      
-  91   1          if(last_selected_menu_item == 7) {
-  92   2              return;
-  93   2          }
-  94   1      
-  95   1          prev_menu_item = last_selected_menu_item;
-  96   1      
-  97   1          cur_menu.size = all_icons[last_selected_menu_item][0]; 
-  98   1          p_icons = &all_icons[last_selected_menu_item][1];
-  99   1      
- 100   1          start_x = 100 * last_selected_menu_item;
- 101   1      
- 102   1          cur_menu.func = tig_layer_response_;
- 103   1          for(i = 0; i < cur_menu.size; i++) {
- 104   2              cur_menu_items[i].icon = p_icons[i];
- 105   2              cur_menu_items[i].t_rect.x0 = start_x;
- 106   2              cur_menu_items[i].t_rect.y0 = start_y;
- 107   2              cur_menu_items[i].t_rect.x1 = start_x + icon_rect_sz;
- 108   2              cur_menu_items[i].t_rect.y1 = start_y + icon_rect_sz;
- 109   2              start_y -= 100;
- 110   2          }
- 111   1      
- 112   1          draw_icons(0x9500, &cur_menu);   
- 113   1      }
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 3   
+  61          idata menu_t arr_of_menus[] = {
+  62              { ARR_SIZE(bottom_items),             0xffff,     bottom_items,            bottom_level_controls},
+  63              { ARR_SIZE(welding_mode_items),       0xffff,     welding_mode_items,      welding_mode_controls}, 
+  64              { ARR_SIZE(tig_button_mod_items),     0xffff,     tig_button_mod_items,    welding_mode_controls},
+  65              { ARR_SIZE(polarity_items),           0xffff,     polarity_items,          welding_mode_controls},
+  66              { ARR_SIZE(ignition_type_items),      0xffff,     ignition_type_items,     welding_mode_controls},
+  67              { ARR_SIZE(pulse_state_items),        0xffff,     pulse_state_items,       welding_mode_controls},
+  68              { ARR_SIZE(electrode_d_items),        0xffff,     electrode_d_items,       welding_mode_controls},
+  69              { ARR_SIZE(flow_sensor_items),        0xffff,     flow_sensor_items,       welding_mode_controls},
+  70          };
+  71          
+  72          void gui_init(void)
+  73          {
+  74   1          u8 i, j;
+  75   1          code icon_id *icon_ids[] = {
+  76   1              bottom, welding_mode, tig_button_mod, polarity, ignition_type, pulse_state, electrode_d,  flow_sen
+             -sor, 
+  77   1          };
+  78   1      
+  79   1          for(i = 0; i < ARR_SIZE(icon_ids); i++) {
+  80   2              for (j = 0; j < arr_of_menus[i].size; j++) {
+  81   3                  arr_of_menus[i].items[j].ico = icon_ids[i][j]; 
+  82   3              }
+  83   2              
+  84   2          }
+  85   1      }
+  86          
+  87          void draw_icons(u16 vp, menu_t *p_menu)
+  88          {
+  89   1          u8 i, j;
+  90   1          u8 size;
+  91   1          u16 cmd[100];
+  92   1          cmd[0] = 0x2407; //icon_write_instruction      
+  93   1          
+  94   1          j = 2;
+  95   1          size = 0;
+  96   1          for(i = 0; i < p_menu->size; i++) {
+  97   2              if(p_menu->items[i].ico == EIID_NO_ICON) { //если нет картинки недобавлят
+             -ь ее к отображению
+  98   3                  continue;
+  99   3              }
+ 100   2              cmd[j] = p_menu->items[i].r.x0;
+ 101   2              j++;
+ 102   2              cmd[j] = p_menu->items[i].r.y0;
+ 103   2              j++;
+ 104   2              cmd[j] = p_menu->items[i].ico;
+ 105   2              j++;
+ 106   2              size++;
+ 107   2          }
+ 108   1          cmd[1] = size; //display_icon_cnt
+ 109   1          cmd[j] = 0xFF00;
+ 110   1          write_dgus_vp(vp, (u8*)&cmd, j);
+ 111   1      }
+ 112          
+ 113          void toggle_menu(menu_t *p_menu)
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 3   
 
- 114          
- 115          void make_layer_tig(void)
- 116          {    
- 117   1          u8 i;
- 118   1          
- 119   1          const u16 icon_rect_sz = 100;
- 120   1          
- 121   1          u16 start_x = 0;
- 122   1          u16 start_y = 700;
- 123   1          
- 124   1          {
- 125   2              u16 tmp = 0x0000;
- 126   2              write_dgus_vp(0x9500, (u8*)&tmp, 1); //clear vertical menu
- 127   2          }
- 128   1      
- 129   1          cur_menu.func = tig_layer_response;
- 130   1          cur_menu.p_items = cur_menu_items;
- 131   1          cur_menu.size = sizeof(tig_icons) / sizeof(tig_icons[0]);
- 132   1      
- 133   1          for(i = 0; i < cur_menu.size; i++) {
- 134   2              cur_menu_items[i].icon = tig_icons[i];
- 135   2              cur_menu_items[i].t_rect.x0 = start_x;
- 136   2              cur_menu_items[i].t_rect.y0 = start_y;
- 137   2              cur_menu_items[i].t_rect.x1 = start_x + icon_rect_sz;
- 138   2              cur_menu_items[i].t_rect.y1 = start_y + icon_rect_sz;
- 139   2              start_x += 100;
- 140   2          }
- 141   1      
- 142   1          draw_icons(0x9000, &cur_menu);        
- 143   1      }
- 144          void draw_bottom_menu(void)
- 145          {   
- 146   1          //draw_menu(0x9000, &bottom_menu);
- 147   1          make_layer_tig();      
- 148   1      }
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+ 114          {    
+ 115   1        
+ 116   1          
+ 117   1          {
+ 118   2              u8 i;
+ 119   2              const u16 icon_rect_sz = 100;
+ 120   2              u16 start_x = 0;
+ 121   2              u16 start_y = 700;
+ 122   2              for(i = 0; i < p_menu->size; i++) {
+ 123   3                  if((p_menu->active & (0x01 << i)) != 0) {
+ 124   4                      p_menu->items[i].r.x0 = start_x;
+ 125   4                      p_menu->items[i].r.y0 = start_y;
+ 126   4                      p_menu->items[i].r.x1 = start_x + icon_rect_sz;
+ 127   4                      p_menu->items[i].r.y1 = start_y + icon_rect_sz;
+ 128   4                      start_x += 100;
+ 129   4                  }
+ 130   3                  
+ 131   3              }
+ 132   2          }
+ 133   1          
+ 134   1          cur_menu = p_menu; // make this menu as main
+ 135   1          draw_icons(0x9000, p_menu);        
+ 136   1      }
+ 137          
+ 138          
+ 139          
+ 140          void draw_bottom_menu(void)
+ 141          {   
+ 142   1          gui_init();
+ 143   1          toggle_menu(&arr_of_menus[0]);
+ 144   1          //draw_menu(0x9000, &bottom_menu);
+ 145   1                
+ 146   1      }
+ 147          
+ 148          
  149          
- 150          
- 151          
- 152          
- 153          
- 154          
-<<<<<<< HEAD
- 155          void draw_sub_menu(void)
- 156          {
- 157              // prev_menu_item = last_selected_menu_item;
- 158              // draw_menu(0x9500, array_of_menus[last_selected_menu_item]);  
- 159          }
- 160          
- 161          // void do_nothing(void)
- 162          // { 
- 163          //     u16 tmp = 0x0000;
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 18:53:27 PAGE 4   
+ 150          void bottom_level_controls(u8 select)
+ 151          { 
+ 152   1          menu_t *p_menu;
+ 153   1          if(select >= p_menu->size) 
+ 154   1              return;
+ 155   1          
+ 156   1          p_menu = &arr_of_menus[select + 1];
+ 157   1          
+ 158   1          {
+ 159   2              u8 i;
+ 160   2              const u16 icon_rect_sz = 100;
+ 161   2              u16 start_x = 0;
+ 162   2              u16 start_y = 600;
+ 163   2              for(i = 0; i < p_menu->size; i++) {
+ 164   3                  if((p_menu->active & (0x01 << i)) != 0) {
+ 165   4                      p_menu->items[i].r.x0 = start_x;
+ 166   4                      p_menu->items[i].r.y0 = start_y;
+ 167   4                      p_menu->items[i].r.x1 = start_x + icon_rect_sz;
+ 168   4                      p_menu->items[i].r.y1 = start_y + icon_rect_sz;
+ 169   4                      start_y -= 100;
+ 170   4                  }
+ 171   3              }
+ 172   2          }   
+ 173   1          cur_menu = p_menu; // make this menu as main
+ 174   1          draw_icons(0x9500, p_menu);        
+ 175   1      }
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 4   
 
- 164          //     write_dgus_vp(0x9500, (u8*)&tmp, 1); //clear vertical menu
- 165          //     bottom_menu.p_items[prev_menu_item].icon.id = p_cur_menu->p_items[last_selected_menu_item].icon.id;
- 166          //     draw_bottom_menu();    
- 167          // }
- 168          
- 169          
- 170          void level_back(void)
- 171          {
- 172              // u16 tmp = 0x0000;
- 173              // write_dgus_vp(0x9500, (u8*)&tmp, 1); //clear vertical menu
- 174              // draw_bottom_menu();
- 175          }
  176          
-=======
- 155          
- 156          void draw_sub_menu(void)
- 157          {
- 158   1          // prev_menu_item = last_selected_menu_item;
- 159   1          // draw_menu(0x9500, array_of_menus[last_selected_menu_item]);  
- 160   1      }
- 161          
- 162          // void do_nothing(void)
- 163          // { 
- 164          //     u16 tmp = 0x0000;
- 165          //     write_dgus_vp(0x9500, (u8*)&tmp, 1); //clear vertical menu
- 166          //     bottom_menu.p_items[prev_menu_item].icon.id = p_cur_menu->p_items[last_selected_menu_item].icon.id;
- 167          //     draw_bottom_menu();    
- 168          // }
- 169          
- 170          
- 171          void level_back(void)
- 172          {
- 173   1          // u16 tmp = 0x0000;
- 174   1          // write_dgus_vp(0x9500, (u8*)&tmp, 1); //clear vertical menu
- 175   1          // draw_bottom_menu();
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 4   
-
- 176   1      }
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
- 177          
- 178          
- 179          
- 180          
- 181          
-<<<<<<< HEAD
- 182          //mma menu
- 183          
-=======
- 182          
- 183          //mma menu
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
- 184          
- 185          
+ 177          void welding_mode_controls(u8 select)
+ 178          {
+ 179   1          select = 0;
+ 180   1          {//clear vertical menu
+ 181   2              u16 tmp = 0x0000;
+ 182   2              write_dgus_vp(0x9500, (u8*)&tmp, 1); 
+ 183   2          }
+ 184   1          toggle_menu(&arr_of_menus[0]);
+ 185   1      }
  186          
  187          
  188          
  189          
- 190          
- 191          
- 192          
- 193          
- 194          
+ 190          void draw_sub_menu(void)
+ 191          {
+ 192   1          // prev_menu_item = last_selected_menu_item;
+ 193   1          // draw_menu(0x9500, array_of_menus[last_selected_menu_item]);  
+ 194   1      }
  195          
- 196          
- 197          
- 198          
- 199          
- 200          
- 201          
- 202          
+ 196          void do_nothing(u8 select)
+ 197          { 
+ 198   1          // u16 tmp = 0x0000;
+ 199   1          // write_dgus_vp(0x9500, (u8*)&tmp, 1); //clear vertical menu
+ 200   1          // bottom_menu.items[prev_menu_item].ico.id = p_cur_menu->items[last_selected_menu_item].ico.id;
+ 201   1          // draw_bottom_menu();    
+ 202   1      }
+*** WARNING C280 IN LINE 196 OF source\temp.c: 'select': unreferenced local variable
  203          
  204          
- 205          
- 206          
- 207          
-<<<<<<< HEAD
- 208          //    struct{
- 209              //         u8 icon_library;
- 210              //         u8 icon_write_instruction;
- 211              //         u16 display_icon_cnt;
- 212              //         ICON_T bottom_icons[11];
- 213              //         u16 terminator;
- 214              //     } temp = {
- 215              //         36,
- 216              //         0x07,
- 217              //         11,//icon cnt
- 218              //         {
- 219              //             {0,   700, EIID_TIG},
- 220              //             {100, 700, EIID_MMA},
- 221              //             {200, 700, 2},
- 222              //             {300, 700, EIID_MIX},
- 223              //             {400, 700, EIID_2T},
- 224              //             {500, 700, EIID_4T},
- 225              //             {600, 700, EIID_4T_PLUS},
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 18:53:27 PAGE 5   
+ 205          void level_back(void)
+ 206          {
+ 207   1          // u16 tmp = 0x0000;
+ 208   1          // write_dgus_vp(0x9500, (u8*)&tmp, 1); //clear vertical menu
+ 209   1          // draw_bottom_menu();
+ 210   1      }
+ 211          
+ 212          
+ 213          
+ 214          
+ 215          
+ 216          
+ 217          //mma menu
+ 218          
+ 219          
+ 220          
+ 221          
+ 222          
+ 223          
+ 224          
+ 225          
+ 226          
+ 227          
+ 228          
+ 229          
+ 230          
+ 231          
+ 232          
+ 233          
+ 234          
+ 235          
+ 236          
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 5   
 
- 226              //             {700, 700, EIID_TRAP},
- 227              //             {800, 700, EIID_SIN},
- 228              //             {900, 700, EIID_4T_PLUS},
- 229              //             {100, 700, EIID_DC_MINUS},
- 230              //         },   
- 231              //         0xFF00,
- 232              //     };   
- 233                  
- 234              //     write_dgus_vp(0x9000, (u8*) &temp, sizeof(temp) / 2); 
-
-C51 COMPILATION COMPLETE.  0 WARNING(S),  12 ERROR(S)
-=======
- 208          
- 209          //    struct{
- 210              //         u8 icon_library;
- 211              //         u8 icon_write_instruction;
- 212              //         u16 display_icon_cnt;
- 213              //         ICON_T bottom_icons[11];
- 214              //         u16 terminator;
- 215              //     } temp = {
- 216              //         36,
- 217              //         0x07,
- 218              //         11,//icon cnt
- 219              //         {
- 220              //             {0,   700, EIID_TIG},
- 221              //             {100, 700, EIID_MMA},
- 222              //             {200, 700, 2},
- 223              //             {300, 700, EIID_MIX},
- 224              //             {400, 700, EIID_2T},
- 225              //             {500, 700, EIID_4T},
- 226              //             {600, 700, EIID_4T_PLUS},
- 227              //             {700, 700, EIID_TRAP},
- 228              //             {800, 700, EIID_SIN},
- 229              //             {900, 700, EIID_4T_PLUS},
- 230              //             {100, 700, EIID_DC_MINUS},
- 231              //         },   
- 232              //         0xFF00,
- 233              //     };   
- 234                  
- 235              //     write_dgus_vp(0x9000, (u8*) &temp, sizeof(temp) / 2); 
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 5   
+ 237          
+ 238          
+ 239          
+ 240          
+ 241          
+ 242          
+ 243          //    struct{
+ 244              //         u8 icon_library;
+ 245              //         u8 icon_write_instruction;
+ 246              //         u16 display_icon_cnt;
+ 247              //         ICON_T bottom_icons[11];
+ 248              //         u16 terminator;
+ 249              //     } temp = {
+ 250              //         36,
+ 251              //         0x07,
+ 252              //         11,//ico cnt
+ 253              //         {
+ 254              //             {0,   700, EIID_TIG},
+ 255              //             {100, 700, EIID_MMA},
+ 256              //             {200, 700, 2},
+ 257              //             {300, 700, EIID_MIX},
+ 258              //             {400, 700, EIID_2T},
+ 259              //             {500, 700, EIID_4T},
+ 260              //             {600, 700, EIID_4T_PLUS},
+ 261              //             {700, 700, EIID_TRAP},
+ 262              //             {800, 700, EIID_SIN},
+ 263              //             {900, 700, EIID_4T_PLUS},
+ 264              //             {100, 700, EIID_DC_MINUS},
+ 265              //         },   
+ 266              //         0xFF00,
+ 267              //     };   
+ 268                  
+ 269              //     write_dgus_vp(0x9000, (u8*) &temp, sizeof(temp) / 2); 
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 6   
 
 ASSEMBLY LISTING OF GENERATED OBJECT CODE
 
 
+             ; FUNCTION gui_init (BEGIN)
+                                           ; SOURCE LINE # 72
+                                           ; SOURCE LINE # 73
+                                           ; SOURCE LINE # 79
+;---- Variable 'i' assigned to Register 'R7' ----
+0000 E4                CLR     A
+0001 FF                MOV     R7,A
+0002         ?C0001:
+                                           ; SOURCE LINE # 80
+;---- Variable 'j' assigned to Register 'R6' ----
+0002 E4                CLR     A
+0003 FE                MOV     R6,A
+0004         ?C0004:
+0004 EF                MOV     A,R7
+0005 75F008            MOV     B,#08H
+0008 A4                MUL     AB
+0009 2400        R     ADD     A,#LOW arr_of_menus
+000B F8                MOV     R0,A
+000C E6                MOV     A,@R0
+000D FD                MOV     R5,A
+000E EE                MOV     A,R6
+000F C3                CLR     C
+0010 9D                SUBB    A,R5
+0011 5043              JNC     ?C0003
+                                           ; SOURCE LINE # 81
+0013 EF                MOV     A,R7
+0014 75F003            MOV     B,#03H
+0017 A4                MUL     AB
+0018 2400        R     ADD     A,#LOW icon_ids
+001A F582              MOV     DPL,A
+001C E4                CLR     A
+001D 3400        R     ADDC    A,#HIGH icon_ids
+001F F583              MOV     DPH,A
+0021 E4                CLR     A
+0022 93                MOVC    A,@A+DPTR
+0023 FB                MOV     R3,A
+0024 7401              MOV     A,#01H
+0026 93                MOVC    A,@A+DPTR
+0027 FA                MOV     R2,A
+0028 7402              MOV     A,#02H
+002A 93                MOVC    A,@A+DPTR
+002B F9                MOV     R1,A
+002C 8E82              MOV     DPL,R6
+002E 758300            MOV     DPH,#00H
+0031 120000      E     LCALL   ?C?CLDOPTR
+0034 FD                MOV     R5,A
+0035 EF                MOV     A,R7
+0036 75F008            MOV     B,#08H
+0039 A4                MUL     AB
+003A 2400        R     ADD     A,#LOW arr_of_menus+03H
+003C F8                MOV     R0,A
+003D 8603              MOV     AR3,@R0
+003F 08                INC     R0
+0040 E6                MOV     A,@R0
+0041 FA                MOV     R2,A
+0042 08                INC     R0
+0043 E6                MOV     A,@R0
+0044 F9                MOV     R1,A
+0045 75F009            MOV     B,#09H
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 7   
+
+0048 EE                MOV     A,R6
+0049 A4                MUL     AB
+004A F582              MOV     DPL,A
+004C 85F083            MOV     DPH,B
+004F ED                MOV     A,R5
+0050 120000      E     LCALL   ?C?CSTOPTR
+                                           ; SOURCE LINE # 82
+0053 0E                INC     R6
+0054 80AE              SJMP    ?C0004
+                                           ; SOURCE LINE # 84
+0056         ?C0003:
+0056 0F                INC     R7
+0057 EF                MOV     A,R7
+0058 B408A7            CJNE    A,#08H,?C0001
+                                           ; SOURCE LINE # 85
+005B         ?C0007:
+005B 22                RET     
+             ; FUNCTION gui_init (END)
+
              ; FUNCTION _draw_icons (BEGIN)
-                                           ; SOURCE LINE # 30
+                                           ; SOURCE LINE # 87
 0000 900000      R     MOV     DPTR,#vp
 0003 EE                MOV     A,R6
 0004 F0                MOVX    @DPTR,A
@@ -497,792 +391,898 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 000E A3                INC     DPTR
 000F E9                MOV     A,R1
 0010 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 31
-                                           ; SOURCE LINE # 34
+                                           ; SOURCE LINE # 88
+                                           ; SOURCE LINE # 92
 0011 900000      R     MOV     DPTR,#cmd
 0014 7424              MOV     A,#024H
 0016 F0                MOVX    @DPTR,A
 0017 A3                INC     DPTR
 0018 7407              MOV     A,#07H
 001A F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 35
-001B 120000      E     LCALL   ?C?CLDPTR
-001E FF                MOV     R7,A
-001F 900000      R     MOV     DPTR,#cmd+02H
-0022 E4                CLR     A
+                                           ; SOURCE LINE # 94
+001B 900000      R     MOV     DPTR,#j
+001E 7402              MOV     A,#02H
+0020 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 95
+0021 E4                CLR     A
+0022 A3                INC     DPTR
 0023 F0                MOVX    @DPTR,A
-0024 A3                INC     DPTR
-0025 EF                MOV     A,R7
-0026 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 36
-0027 900000      R     MOV     DPTR,#j
-002A 7402              MOV     A,#02H
-002C F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 37
-002D E4                CLR     A
-002E 900000      R     MOV     DPTR,#i
-0031 F0                MOVX    @DPTR,A
-0032         ?C0001:
-0032 900000      R     MOV     DPTR,#p_menu
-0035 E0                MOVX    A,@DPTR
-0036 FB                MOV     R3,A
-0037 A3                INC     DPTR
-0038 E0                MOVX    A,@DPTR
-0039 FA                MOV     R2,A
-003A A3                INC     DPTR
-003B E0                MOVX    A,@DPTR
-003C F9                MOV     R1,A
-003D 120000      E     LCALL   ?C?CLDPTR
-0040 FF                MOV     R7,A
-0041 900000      R     MOV     DPTR,#i
-0044 E0                MOVX    A,@DPTR
-0045 FE                MOV     R6,A
-0046 C3                CLR     C
-0047 9F                SUBB    A,R7
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 6   
+                                           ; SOURCE LINE # 96
+0024 900000      R     MOV     DPTR,#i
+0027 F0                MOVX    @DPTR,A
+0028         ?C0008:
+0028 900000      R     MOV     DPTR,#p_menu
+002B E0                MOVX    A,@DPTR
+002C FB                MOV     R3,A
+002D A3                INC     DPTR
+002E E0                MOVX    A,@DPTR
+002F FA                MOV     R2,A
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 8   
 
-0048 4003              JC      $ + 5H
-004A 020000      R     LJMP    ?C0002
-                                           ; SOURCE LINE # 38
-004D 900001            MOV     DPTR,#01H
-0050 120000      E     LCALL   ?C?PLDOPTR
-0053 EE                MOV     A,R6
-0054 75F009            MOV     B,#09H
-0057 A4                MUL     AB
-0058 29                ADD     A,R1
-0059 F9                MOV     R1,A
-005A EA                MOV     A,R2
-005B 35F0              ADDC    A,B
-005D FA                MOV     R2,A
-005E 900008            MOV     DPTR,#08H
-0061 120000      E     LCALL   ?C?CLDOPTR
-0064 6417              XRL     A,#017H
-0066 7003              JNZ     $ + 5H
-0068 020000      R     LJMP    ?C0003
-                                           ; SOURCE LINE # 39
-                                           ; SOURCE LINE # 40
-006B         ?C0004:
-                                           ; SOURCE LINE # 41
-006B 900000      R     MOV     DPTR,#p_menu
-006E E0                MOVX    A,@DPTR
-006F FB                MOV     R3,A
-0070 A3                INC     DPTR
+0030 A3                INC     DPTR
+0031 E0                MOVX    A,@DPTR
+0032 F9                MOV     R1,A
+0033 120000      E     LCALL   ?C?CLDPTR
+0036 FF                MOV     R7,A
+0037 900000      R     MOV     DPTR,#i
+003A E0                MOVX    A,@DPTR
+003B FE                MOV     R6,A
+003C C3                CLR     C
+003D 9F                SUBB    A,R7
+003E 4003              JC      $ + 5H
+0040 020000      R     LJMP    ?C0009
+                                           ; SOURCE LINE # 97
+0043 900003            MOV     DPTR,#03H
+0046 120000      E     LCALL   ?C?PLDOPTR
+0049 75F009            MOV     B,#09H
+004C EE                MOV     A,R6
+004D A4                MUL     AB
+004E F582              MOV     DPL,A
+0050 85F083            MOV     DPH,B
+0053 120000      E     LCALL   ?C?CLDOPTR
+0056 6417              XRL     A,#017H
+0058 7003              JNZ     $ + 5H
+005A 020000      R     LJMP    ?C0010
+                                           ; SOURCE LINE # 98
+                                           ; SOURCE LINE # 99
+005D         ?C0011:
+                                           ; SOURCE LINE # 100
+005D 900000      R     MOV     DPTR,#p_menu
+0060 E0                MOVX    A,@DPTR
+0061 FB                MOV     R3,A
+0062 A3                INC     DPTR
+0063 E0                MOVX    A,@DPTR
+0064 FA                MOV     R2,A
+0065 A3                INC     DPTR
+0066 E0                MOVX    A,@DPTR
+0067 F9                MOV     R1,A
+0068 900003            MOV     DPTR,#03H
+006B 120000      E     LCALL   ?C?PLDOPTR
+006E 900000      R     MOV     DPTR,#i
 0071 E0                MOVX    A,@DPTR
-0072 FA                MOV     R2,A
-0073 A3                INC     DPTR
-0074 E0                MOVX    A,@DPTR
-0075 F9                MOV     R1,A
-0076 900001            MOV     DPTR,#01H
-0079 120000      E     LCALL   ?C?PLDOPTR
-007C 900000      R     MOV     DPTR,#i
-007F E0                MOVX    A,@DPTR
-0080 FF                MOV     R7,A
-0081 75F009            MOV     B,#09H
-0084 A4                MUL     AB
-0085 F582              MOV     DPL,A
-0087 85F083            MOV     DPH,B
-008A 120000      E     LCALL   ?C?ILDOPTR
-008D FD                MOV     R5,A
-008E 900000      R     MOV     DPTR,#j
-0091 E0                MOVX    A,@DPTR
-0092 25E0              ADD     A,ACC
-0094 2400        R     ADD     A,#LOW cmd
-0096 F582              MOV     DPL,A
-0098 E4                CLR     A
-0099 3400        R     ADDC    A,#HIGH cmd
-009B F583              MOV     DPH,A
-009D E5F0              MOV     A,B
-009F F0                MOVX    @DPTR,A
-00A0 A3                INC     DPTR
-00A1 ED                MOV     A,R5
-00A2 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 42
-00A3 900000      R     MOV     DPTR,#j
-00A6 E0                MOVX    A,@DPTR
-00A7 04                INC     A
-00A8 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 43
-00A9 900000      R     MOV     DPTR,#p_menu
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 7   
+0072 75F009            MOV     B,#09H
+0075 A4                MUL     AB
+0076 29                ADD     A,R1
+0077 F9                MOV     R1,A
+0078 EA                MOV     A,R2
+0079 35F0              ADDC    A,B
+007B FA                MOV     R2,A
+007C 900001            MOV     DPTR,#01H
+007F 120000      E     LCALL   ?C?ILDOPTR
+0082 FF                MOV     R7,A
+0083 900000      R     MOV     DPTR,#j
+0086 E0                MOVX    A,@DPTR
+0087 25E0              ADD     A,ACC
+0089 2400        R     ADD     A,#LOW cmd
+008B F582              MOV     DPL,A
+008D E4                CLR     A
+008E 3400        R     ADDC    A,#HIGH cmd
+0090 F583              MOV     DPH,A
+0092 E5F0              MOV     A,B
+0094 F0                MOVX    @DPTR,A
+0095 A3                INC     DPTR
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 9   
 
-00AC E0                MOVX    A,@DPTR
-00AD FB                MOV     R3,A
-00AE A3                INC     DPTR
-00AF E0                MOVX    A,@DPTR
-00B0 FA                MOV     R2,A
-00B1 A3                INC     DPTR
+0096 EF                MOV     A,R7
+0097 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 101
+0098 900000      R     MOV     DPTR,#j
+009B E0                MOVX    A,@DPTR
+009C 04                INC     A
+009D F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 102
+009E 900000      R     MOV     DPTR,#p_menu
+00A1 E0                MOVX    A,@DPTR
+00A2 FB                MOV     R3,A
+00A3 A3                INC     DPTR
+00A4 E0                MOVX    A,@DPTR
+00A5 FA                MOV     R2,A
+00A6 A3                INC     DPTR
+00A7 E0                MOVX    A,@DPTR
+00A8 F9                MOV     R1,A
+00A9 900003            MOV     DPTR,#03H
+00AC 120000      E     LCALL   ?C?PLDOPTR
+00AF 900000      R     MOV     DPTR,#i
 00B2 E0                MOVX    A,@DPTR
-00B3 F9                MOV     R1,A
-00B4 900001            MOV     DPTR,#01H
-00B7 120000      E     LCALL   ?C?PLDOPTR
-00BA EF                MOV     A,R7
-00BB 75F009            MOV     B,#09H
-00BE A4                MUL     AB
-00BF 29                ADD     A,R1
-00C0 F9                MOV     R1,A
-00C1 EA                MOV     A,R2
-00C2 35F0              ADDC    A,B
-00C4 FA                MOV     R2,A
-00C5 900002            MOV     DPTR,#02H
-00C8 120000      E     LCALL   ?C?ILDOPTR
-00CB FF                MOV     R7,A
-00CC 900000      R     MOV     DPTR,#j
-00CF E0                MOVX    A,@DPTR
-00D0 25E0              ADD     A,ACC
-00D2 2400        R     ADD     A,#LOW cmd
-00D4 F582              MOV     DPL,A
-00D6 E4                CLR     A
-00D7 3400        R     ADDC    A,#HIGH cmd
-00D9 F583              MOV     DPH,A
-00DB E5F0              MOV     A,B
-00DD F0                MOVX    @DPTR,A
-00DE A3                INC     DPTR
-00DF EF                MOV     A,R7
-00E0 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 44
-00E1 900000      R     MOV     DPTR,#j
-00E4 E0                MOVX    A,@DPTR
-00E5 04                INC     A
-00E6 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 45
-00E7 900000      R     MOV     DPTR,#p_menu
-00EA E0                MOVX    A,@DPTR
-00EB FB                MOV     R3,A
-00EC A3                INC     DPTR
-00ED E0                MOVX    A,@DPTR
-00EE FA                MOV     R2,A
-00EF A3                INC     DPTR
-00F0 E0                MOVX    A,@DPTR
-00F1 F9                MOV     R1,A
-00F2 900001            MOV     DPTR,#01H
-00F5 120000      E     LCALL   ?C?PLDOPTR
-00F8 900000      R     MOV     DPTR,#i
-00FB E0                MOVX    A,@DPTR
-00FC 75F009            MOV     B,#09H
-00FF A4                MUL     AB
-0100 29                ADD     A,R1
-0101 F9                MOV     R1,A
-0102 EA                MOV     A,R2
-0103 35F0              ADDC    A,B
-0105 FA                MOV     R2,A
-0106 900008            MOV     DPTR,#08H
-0109 120000      E     LCALL   ?C?CLDOPTR
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 8   
+00B3 75F009            MOV     B,#09H
+00B6 A4                MUL     AB
+00B7 29                ADD     A,R1
+00B8 F9                MOV     R1,A
+00B9 EA                MOV     A,R2
+00BA 35F0              ADDC    A,B
+00BC FA                MOV     R2,A
+00BD 900003            MOV     DPTR,#03H
+00C0 120000      E     LCALL   ?C?ILDOPTR
+00C3 FF                MOV     R7,A
+00C4 900000      R     MOV     DPTR,#j
+00C7 E0                MOVX    A,@DPTR
+00C8 25E0              ADD     A,ACC
+00CA 2400        R     ADD     A,#LOW cmd
+00CC F582              MOV     DPL,A
+00CE E4                CLR     A
+00CF 3400        R     ADDC    A,#HIGH cmd
+00D1 F583              MOV     DPH,A
+00D3 E5F0              MOV     A,B
+00D5 F0                MOVX    @DPTR,A
+00D6 A3                INC     DPTR
+00D7 EF                MOV     A,R7
+00D8 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 103
+00D9 900000      R     MOV     DPTR,#j
+00DC E0                MOVX    A,@DPTR
+00DD 04                INC     A
+00DE F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 104
+00DF 900000      R     MOV     DPTR,#p_menu
+00E2 E0                MOVX    A,@DPTR
+00E3 FB                MOV     R3,A
+00E4 A3                INC     DPTR
+00E5 E0                MOVX    A,@DPTR
+00E6 FA                MOV     R2,A
+00E7 A3                INC     DPTR
+00E8 E0                MOVX    A,@DPTR
+00E9 F9                MOV     R1,A
+00EA 900003            MOV     DPTR,#03H
+00ED 120000      E     LCALL   ?C?PLDOPTR
+00F0 900000      R     MOV     DPTR,#i
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 10  
 
-010C FF                MOV     R7,A
-010D 900000      R     MOV     DPTR,#j
-0110 E0                MOVX    A,@DPTR
-0111 25E0              ADD     A,ACC
-0113 2400        R     ADD     A,#LOW cmd
-0115 F582              MOV     DPL,A
-0117 E4                CLR     A
-0118 3400        R     ADDC    A,#HIGH cmd
-011A F583              MOV     DPH,A
-011C E4                CLR     A
-011D F0                MOVX    @DPTR,A
-011E A3                INC     DPTR
-011F EF                MOV     A,R7
-0120 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 46
-0121 900000      R     MOV     DPTR,#j
-0124 E0                MOVX    A,@DPTR
-0125 04                INC     A
-0126 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 47
-0127         ?C0003:
-0127 900000      R     MOV     DPTR,#i
-012A E0                MOVX    A,@DPTR
-012B 04                INC     A
-012C F0                MOVX    @DPTR,A
-012D 020000      R     LJMP    ?C0001
-0130         ?C0002:
-                                           ; SOURCE LINE # 48
-0130 900000      R     MOV     DPTR,#j
-0133 E0                MOVX    A,@DPTR
-0134 FD                MOV     R5,A
-0135 25E0              ADD     A,ACC
-0137 2400        R     ADD     A,#LOW cmd
-0139 F582              MOV     DPL,A
-013B E4                CLR     A
-013C 3400        R     ADDC    A,#HIGH cmd
-013E F583              MOV     DPH,A
-0140 74FF              MOV     A,#0FFH
-0142 F0                MOVX    @DPTR,A
-0143 A3                INC     DPTR
-0144 E4                CLR     A
-0145 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 49
-0146 900000      R     MOV     DPTR,#vp
-0149 E0                MOVX    A,@DPTR
-014A FE                MOV     R6,A
-014B A3                INC     DPTR
-014C E0                MOVX    A,@DPTR
-014D FF                MOV     R7,A
-014E 7B01              MOV     R3,#01H
-0150 7A00        R     MOV     R2,#HIGH cmd
-0152 7900        R     MOV     R1,#LOW cmd
-0154 900000      E     MOV     DPTR,#?_write_dgus_vp?BYTE+05H
-0157 E4                CLR     A
-0158 F0                MOVX    @DPTR,A
-0159 A3                INC     DPTR
-015A ED                MOV     A,R5
-015B F0                MOVX    @DPTR,A
-015C 020000      E     LJMP    _write_dgus_vp
+00F3 E0                MOVX    A,@DPTR
+00F4 75F009            MOV     B,#09H
+00F7 A4                MUL     AB
+00F8 F582              MOV     DPL,A
+00FA 85F083            MOV     DPH,B
+00FD 120000      E     LCALL   ?C?CLDOPTR
+0100 FF                MOV     R7,A
+0101 900000      R     MOV     DPTR,#j
+0104 E0                MOVX    A,@DPTR
+0105 25E0              ADD     A,ACC
+0107 2400        R     ADD     A,#LOW cmd
+0109 F582              MOV     DPL,A
+010B E4                CLR     A
+010C 3400        R     ADDC    A,#HIGH cmd
+010E F583              MOV     DPH,A
+0110 E4                CLR     A
+0111 F0                MOVX    @DPTR,A
+0112 A3                INC     DPTR
+0113 EF                MOV     A,R7
+0114 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 105
+0115 900000      R     MOV     DPTR,#j
+0118 E0                MOVX    A,@DPTR
+0119 04                INC     A
+011A F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 106
+011B A3                INC     DPTR
+011C E0                MOVX    A,@DPTR
+011D 04                INC     A
+011E F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 107
+011F         ?C0010:
+011F 900000      R     MOV     DPTR,#i
+0122 E0                MOVX    A,@DPTR
+0123 04                INC     A
+0124 F0                MOVX    @DPTR,A
+0125 020000      R     LJMP    ?C0008
+0128         ?C0009:
+                                           ; SOURCE LINE # 108
+0128 900000      R     MOV     DPTR,#size
+012B E0                MOVX    A,@DPTR
+012C FF                MOV     R7,A
+012D 900000      R     MOV     DPTR,#cmd+02H
+0130 E4                CLR     A
+0131 F0                MOVX    @DPTR,A
+0132 A3                INC     DPTR
+0133 EF                MOV     A,R7
+0134 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 109
+0135 900000      R     MOV     DPTR,#j
+0138 E0                MOVX    A,@DPTR
+0139 FD                MOV     R5,A
+013A 25E0              ADD     A,ACC
+013C 2400        R     ADD     A,#LOW cmd
+013E F582              MOV     DPL,A
+0140 E4                CLR     A
+0141 3400        R     ADDC    A,#HIGH cmd
+0143 F583              MOV     DPH,A
+0145 74FF              MOV     A,#0FFH
+0147 F0                MOVX    @DPTR,A
+0148 A3                INC     DPTR
+0149 E4                CLR     A
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 11  
+
+014A F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 110
+014B 900000      R     MOV     DPTR,#vp
+014E E0                MOVX    A,@DPTR
+014F FE                MOV     R6,A
+0150 A3                INC     DPTR
+0151 E0                MOVX    A,@DPTR
+0152 FF                MOV     R7,A
+0153 7B01              MOV     R3,#01H
+0155 7A00        R     MOV     R2,#HIGH cmd
+0157 7900        R     MOV     R1,#LOW cmd
+0159 900000      E     MOV     DPTR,#?_write_dgus_vp?BYTE+05H
+015C E4                CLR     A
+015D F0                MOVX    @DPTR,A
+015E A3                INC     DPTR
+015F ED                MOV     A,R5
+0160 F0                MOVX    @DPTR,A
+0161 020000      E     LJMP    _write_dgus_vp
              ; FUNCTION _draw_icons (END)
 
-             ; FUNCTION tig_layer_response_ (BEGIN)
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 9   
-
-                                           ; SOURCE LINE # 74
-                                           ; SOURCE LINE # 75
-                                           ; SOURCE LINE # 76
-0000 900000      R     MOV     DPTR,#last_selected_menu_item
-0003 E0                MOVX    A,@DPTR
-0004 75F009            MOV     B,#09H
-0007 A4                MUL     AB
-0008 2400        R     ADD     A,#LOW cur_menu_items+08H
-000A F582              MOV     DPL,A
-000C E5F0              MOV     A,B
-000E 3400        R     ADDC    A,#HIGH cur_menu_items+08H
-0010 F583              MOV     DPH,A
-0012 E0                MOVX    A,@DPTR
-0013 FF                MOV     R7,A
-0014 900000      R     MOV     DPTR,#prev_menu_item
-0017 E0                MOVX    A,@DPTR
-0018 2400        R     ADD     A,#LOW tig_icons
-001A F8                MOV     R0,A
-001B A607              MOV     @R0,AR7
-                                           ; SOURCE LINE # 77
-001D 020000      R     LJMP    make_layer_tig
-             ; FUNCTION tig_layer_response_ (END)
-
-             ; FUNCTION tig_layer_response (BEGIN)
-                                           ; SOURCE LINE # 80
-                                           ; SOURCE LINE # 81
-                                           ; SOURCE LINE # 84
-0000 900000      R     MOV     DPTR,#icon_rect_sz
-0003 E4                CLR     A
-0004 F0                MOVX    @DPTR,A
-0005 A3                INC     DPTR
-0006 7464              MOV     A,#064H
-0008 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 85
-0009 E4                CLR     A
-000A A3                INC     DPTR
-000B F0                MOVX    @DPTR,A
-000C A3                INC     DPTR
-000D F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 86
-000E A3                INC     DPTR
-000F 7402              MOV     A,#02H
-0011 F0                MOVX    @DPTR,A
-0012 A3                INC     DPTR
-0013 7458              MOV     A,#058H
-0015 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 91
-0016 900000      R     MOV     DPTR,#last_selected_menu_item
-0019 E0                MOVX    A,@DPTR
-001A 6407              XRL     A,#07H
-001C 7003              JNZ     $ + 5H
-001E 020000      R     LJMP    ?C0008
-                                           ; SOURCE LINE # 93
-0021         ?C0007:
-                                           ; SOURCE LINE # 95
-0021 900000      R     MOV     DPTR,#last_selected_menu_item
-0024 E0                MOVX    A,@DPTR
-0025 900000      R     MOV     DPTR,#prev_menu_item
-0028 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 97
-0029 75F003            MOV     B,#03H
-002C A4                MUL     AB
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 10  
-
-002D 2400        R     ADD     A,#LOW all_icons
-002F F582              MOV     DPL,A
-0031 E4                CLR     A
-0032 3400        R     ADDC    A,#HIGH all_icons
-0034 F583              MOV     DPH,A
-0036 E4                CLR     A
-0037 93                MOVC    A,@A+DPTR
-0038 FB                MOV     R3,A
-0039 7401              MOV     A,#01H
-003B 93                MOVC    A,@A+DPTR
-003C FA                MOV     R2,A
-003D 7402              MOV     A,#02H
-003F 93                MOVC    A,@A+DPTR
-0040 F9                MOV     R1,A
-0041 120000      E     LCALL   ?C?CLDPTR
-0044 900000      R     MOV     DPTR,#cur_menu
-0047 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 98
-0048 900000      R     MOV     DPTR,#last_selected_menu_item
-004B E0                MOVX    A,@DPTR
-004C FF                MOV     R7,A
-004D 75F003            MOV     B,#03H
-0050 A4                MUL     AB
-0051 2400        R     ADD     A,#LOW all_icons
-0053 F582              MOV     DPL,A
-0055 E4                CLR     A
-0056 3400        R     ADDC    A,#HIGH all_icons
-0058 F583              MOV     DPH,A
-005A E4                CLR     A
-005B 93                MOVC    A,@A+DPTR
-005C FB                MOV     R3,A
-005D 7401              MOV     A,#01H
-005F 93                MOVC    A,@A+DPTR
-0060 FA                MOV     R2,A
-0061 7402              MOV     A,#02H
-0063 93                MOVC    A,@A+DPTR
-0064 2401              ADD     A,#01H
-0066 F9                MOV     R1,A
-0067 E4                CLR     A
-0068 3A                ADDC    A,R2
-0069 FA                MOV     R2,A
-006A 900000      R     MOV     DPTR,#p_icons
-006D EB                MOV     A,R3
-006E F0                MOVX    @DPTR,A
-006F A3                INC     DPTR
-0070 EA                MOV     A,R2
-0071 F0                MOVX    @DPTR,A
-0072 A3                INC     DPTR
-0073 E9                MOV     A,R1
-0074 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 100
-0075 EF                MOV     A,R7
-0076 75F064            MOV     B,#064H
-0079 A4                MUL     AB
-007A FF                MOV     R7,A
-007B 900000      R     MOV     DPTR,#start_x
-007E E5F0              MOV     A,B
-0080 F0                MOVX    @DPTR,A
-0081 A3                INC     DPTR
-0082 EF                MOV     A,R7
-0083 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 102
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 11  
-
-0084 900000      R     MOV     DPTR,#cur_menu+04H
-0087 7400        R     MOV     A,#HIGH tig_layer_response_
-0089 F0                MOVX    @DPTR,A
-008A A3                INC     DPTR
-008B 7400        R     MOV     A,#LOW tig_layer_response_
-008D F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 103
-008E E4                CLR     A
-008F 900000      R     MOV     DPTR,#i
-0092 F0                MOVX    @DPTR,A
-0093         ?C0009:
-0093 900000      R     MOV     DPTR,#cur_menu
-0096 E0                MOVX    A,@DPTR
-0097 FF                MOV     R7,A
-0098 900000      R     MOV     DPTR,#i
-009B E0                MOVX    A,@DPTR
-009C FE                MOV     R6,A
-009D C3                CLR     C
-009E 9F                SUBB    A,R7
-009F 4003              JC      $ + 5H
-00A1 020000      R     LJMP    ?C0010
-                                           ; SOURCE LINE # 104
-00A4 A3                INC     DPTR
-00A5 E0                MOVX    A,@DPTR
-00A6 FB                MOV     R3,A
-00A7 A3                INC     DPTR
-00A8 E0                MOVX    A,@DPTR
-00A9 FA                MOV     R2,A
-00AA A3                INC     DPTR
-00AB E0                MOVX    A,@DPTR
-00AC F9                MOV     R1,A
-00AD 8E82              MOV     DPL,R6
-00AF 758300            MOV     DPH,#00H
-00B2 120000      E     LCALL   ?C?CLDOPTR
-00B5 FF                MOV     R7,A
-00B6 75F009            MOV     B,#09H
-00B9 EE                MOV     A,R6
-00BA A4                MUL     AB
-00BB 2400        R     ADD     A,#LOW cur_menu_items+08H
-00BD F582              MOV     DPL,A
-00BF E5F0              MOV     A,B
-00C1 3400        R     ADDC    A,#HIGH cur_menu_items+08H
-00C3 F583              MOV     DPH,A
-00C5 EF                MOV     A,R7
-00C6 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 105
-00C7 900000      R     MOV     DPTR,#start_x
-00CA E0                MOVX    A,@DPTR
-00CB FE                MOV     R6,A
-00CC A3                INC     DPTR
-00CD E0                MOVX    A,@DPTR
-00CE FF                MOV     R7,A
-00CF 900000      R     MOV     DPTR,#i
-00D2 E0                MOVX    A,@DPTR
-00D3 FD                MOV     R5,A
-00D4 75F009            MOV     B,#09H
-00D7 A4                MUL     AB
-00D8 2400        R     ADD     A,#LOW cur_menu_items
-00DA F582              MOV     DPL,A
-00DC E5F0              MOV     A,B
-00DE 3400        R     ADDC    A,#HIGH cur_menu_items
-00E0 F583              MOV     DPH,A
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 12  
-
-00E2 EE                MOV     A,R6
-00E3 F0                MOVX    @DPTR,A
-00E4 A3                INC     DPTR
-00E5 EF                MOV     A,R7
-00E6 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 106
-00E7 900000      R     MOV     DPTR,#start_y
-00EA E0                MOVX    A,@DPTR
-00EB FA                MOV     R2,A
-00EC A3                INC     DPTR
-00ED E0                MOVX    A,@DPTR
-00EE FB                MOV     R3,A
-00EF 75F009            MOV     B,#09H
-00F2 ED                MOV     A,R5
-00F3 A4                MUL     AB
-00F4 2400        R     ADD     A,#LOW cur_menu_items+02H
-00F6 F582              MOV     DPL,A
-00F8 E5F0              MOV     A,B
-00FA 3400        R     ADDC    A,#HIGH cur_menu_items+02H
-00FC F583              MOV     DPH,A
-00FE EA                MOV     A,R2
-00FF F0                MOVX    @DPTR,A
-0100 A3                INC     DPTR
-0101 EB                MOV     A,R3
-0102 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 107
-0103 900000      R     MOV     DPTR,#icon_rect_sz
-0106 E0                MOVX    A,@DPTR
-0107 FC                MOV     R4,A
-0108 A3                INC     DPTR
-0109 E0                MOVX    A,@DPTR
-010A FD                MOV     R5,A
-010B EF                MOV     A,R7
-010C 2D                ADD     A,R5
-010D FF                MOV     R7,A
-010E EE                MOV     A,R6
-010F 3C                ADDC    A,R4
-0110 FE                MOV     R6,A
-0111 900000      R     MOV     DPTR,#i
-0114 E0                MOVX    A,@DPTR
-0115 FD                MOV     R5,A
-0116 75F009            MOV     B,#09H
-0119 A4                MUL     AB
-011A 2400        R     ADD     A,#LOW cur_menu_items+04H
-011C F582              MOV     DPL,A
-011E E5F0              MOV     A,B
-0120 3400        R     ADDC    A,#HIGH cur_menu_items+04H
-0122 F583              MOV     DPH,A
-0124 EE                MOV     A,R6
-0125 F0                MOVX    @DPTR,A
-0126 A3                INC     DPTR
-0127 EF                MOV     A,R7
-0128 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 108
-0129 900000      R     MOV     DPTR,#icon_rect_sz
-012C E0                MOVX    A,@DPTR
-012D FE                MOV     R6,A
-012E A3                INC     DPTR
-012F E0                MOVX    A,@DPTR
-0130 FF                MOV     R7,A
-0131 900000      R     MOV     DPTR,#start_y+01H
-0134 E0                MOVX    A,@DPTR
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 13  
-
-0135 2F                ADD     A,R7
-0136 FF                MOV     R7,A
-0137 900000      R     MOV     DPTR,#start_y
-013A E0                MOVX    A,@DPTR
-013B 3E                ADDC    A,R6
-013C FE                MOV     R6,A
-013D 75F009            MOV     B,#09H
-0140 ED                MOV     A,R5
-0141 A4                MUL     AB
-0142 2400        R     ADD     A,#LOW cur_menu_items+06H
-0144 F582              MOV     DPL,A
-0146 E5F0              MOV     A,B
-0148 3400        R     ADDC    A,#HIGH cur_menu_items+06H
-014A F583              MOV     DPH,A
-014C EE                MOV     A,R6
-014D F0                MOVX    @DPTR,A
-014E A3                INC     DPTR
-014F EF                MOV     A,R7
-0150 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 109
-0151 900000      R     MOV     DPTR,#start_y+01H
-0154 E0                MOVX    A,@DPTR
-0155 249C              ADD     A,#09CH
-0157 F0                MOVX    @DPTR,A
-0158 900000      R     MOV     DPTR,#start_y
-015B E0                MOVX    A,@DPTR
-015C 34FF              ADDC    A,#0FFH
-015E F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 110
-015F 900000      R     MOV     DPTR,#i
-0162 E0                MOVX    A,@DPTR
-0163 04                INC     A
-0164 F0                MOVX    @DPTR,A
-0165 020000      R     LJMP    ?C0009
-0168         ?C0010:
-                                           ; SOURCE LINE # 112
-0168 7B01              MOV     R3,#01H
-016A 7A00        R     MOV     R2,#HIGH cur_menu
-016C 7900        R     MOV     R1,#LOW cur_menu
-016E 7F00              MOV     R7,#00H
-0170 7E95              MOV     R6,#095H
-0172 120000      R     LCALL   _draw_icons
+             ; FUNCTION _toggle_menu (BEGIN)
                                            ; SOURCE LINE # 113
-0175         ?C0008:
-0175 22                RET     
-             ; FUNCTION tig_layer_response (END)
-
-             ; FUNCTION make_layer_tig (BEGIN)
-                                           ; SOURCE LINE # 115
-                                           ; SOURCE LINE # 116
-                                           ; SOURCE LINE # 119
-0000 900000      R     MOV     DPTR,#icon_rect_sz
-0003 E4                CLR     A
+0000 900000      R     MOV     DPTR,#p_menu
+0003 EB                MOV     A,R3
 0004 F0                MOVX    @DPTR,A
 0005 A3                INC     DPTR
-0006 7464              MOV     A,#064H
-0008 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 121
-0009 E4                CLR     A
-000A A3                INC     DPTR
-000B F0                MOVX    @DPTR,A
-000C A3                INC     DPTR
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 14  
-
-000D F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 122
-000E A3                INC     DPTR
-000F 7402              MOV     A,#02H
-0011 F0                MOVX    @DPTR,A
-0012 A3                INC     DPTR
-0013 74BC              MOV     A,#0BCH
-0015 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 125
-0016 E4                CLR     A
+0006 EA                MOV     A,R2
+0007 F0                MOVX    @DPTR,A
+0008 A3                INC     DPTR
+0009 E9                MOV     A,R1
+000A F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 114
+                                           ; SOURCE LINE # 117
+                                           ; SOURCE LINE # 119
+000B 900000      R     MOV     DPTR,#icon_rect_sz
+000E E4                CLR     A
+000F F0                MOVX    @DPTR,A
+0010 A3                INC     DPTR
+0011 7464              MOV     A,#064H
+0013 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 120
+0014 E4                CLR     A
+0015 A3                INC     DPTR
+0016 F0                MOVX    @DPTR,A
 0017 A3                INC     DPTR
 0018 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 121
 0019 A3                INC     DPTR
-001A F0                MOVX    @DPTR,A
+001A 7402              MOV     A,#02H
+001C F0                MOVX    @DPTR,A
+001D A3                INC     DPTR
+001E 74BC              MOV     A,#0BCH
+0020 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 122
+0021 E4                CLR     A
+0022 900000      R     MOV     DPTR,#i
+0025 F0                MOVX    @DPTR,A
+0026         ?C0013:
+0026 900000      R     MOV     DPTR,#p_menu
+0029 E0                MOVX    A,@DPTR
+002A FB                MOV     R3,A
+002B A3                INC     DPTR
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 12  
+
+002C E0                MOVX    A,@DPTR
+002D FA                MOV     R2,A
+002E A3                INC     DPTR
+002F E0                MOVX    A,@DPTR
+0030 F9                MOV     R1,A
+0031 120000      E     LCALL   ?C?CLDPTR
+0034 FF                MOV     R7,A
+0035 900000      R     MOV     DPTR,#i
+0038 E0                MOVX    A,@DPTR
+0039 FE                MOV     R6,A
+003A C3                CLR     C
+003B 9F                SUBB    A,R7
+003C 4003              JC      $ + 5H
+003E 020000      R     LJMP    ?C0014
+                                           ; SOURCE LINE # 123
+0041 900001            MOV     DPTR,#01H
+0044 120000      E     LCALL   ?C?ILDOPTR
+0047 FD                MOV     R5,A
+0048 ACF0              MOV     R4,B
+004A A806              MOV     R0,AR6
+004C 7401              MOV     A,#01H
+004E 7E00              MOV     R6,#00H
+0050 08                INC     R0
+0051 8005              SJMP    ?C0030
+0053         ?C0029:
+0053 C3                CLR     C
+0054 33                RLC     A
+0055 CE                XCH     A,R6
+0056 33                RLC     A
+0057 CE                XCH     A,R6
+0058         ?C0030:
+0058 D8F9              DJNZ    R0,?C0029
+005A FF                MOV     R7,A
+005B EE                MOV     A,R6
+005C 5C                ANL     A,R4
+005D FE                MOV     R6,A
+005E EF                MOV     A,R7
+005F 5D                ANL     A,R5
+0060 4E                ORL     A,R6
+0061 7003              JNZ     $ + 5H
+0063 020000      R     LJMP    ?C0015
+                                           ; SOURCE LINE # 124
+0066 900000      R     MOV     DPTR,#start_x
+0069 E0                MOVX    A,@DPTR
+006A FC                MOV     R4,A
+006B A3                INC     DPTR
+006C E0                MOVX    A,@DPTR
+006D FD                MOV     R5,A
+006E 900003            MOV     DPTR,#03H
+0071 120000      E     LCALL   ?C?PLDOPTR
+0074 900000      R     MOV     DPTR,#i
+0077 E0                MOVX    A,@DPTR
+0078 75F009            MOV     B,#09H
+007B A4                MUL     AB
+007C FF                MOV     R7,A
+007D AEF0              MOV     R6,B
+007F 29                ADD     A,R1
+0080 F9                MOV     R1,A
+0081 EA                MOV     A,R2
+0082 3E                ADDC    A,R6
+0083 FA                MOV     R2,A
+0084 900001            MOV     DPTR,#01H
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 13  
+
+0087 EC                MOV     A,R4
+0088 8DF0              MOV     B,R5
+008A 120000      E     LCALL   ?C?ISTOPTR
+                                           ; SOURCE LINE # 125
+008D 900000      R     MOV     DPTR,#start_y
+0090 E0                MOVX    A,@DPTR
+0091 FC                MOV     R4,A
+0092 A3                INC     DPTR
+0093 E0                MOVX    A,@DPTR
+0094 FD                MOV     R5,A
+0095 900000      R     MOV     DPTR,#p_menu
+0098 E0                MOVX    A,@DPTR
+0099 FB                MOV     R3,A
+009A A3                INC     DPTR
+009B E0                MOVX    A,@DPTR
+009C FA                MOV     R2,A
+009D A3                INC     DPTR
+009E E0                MOVX    A,@DPTR
+009F F9                MOV     R1,A
+00A0 900003            MOV     DPTR,#03H
+00A3 120000      E     LCALL   ?C?PLDOPTR
+00A6 E9                MOV     A,R1
+00A7 2F                ADD     A,R7
+00A8 F9                MOV     R1,A
+00A9 EA                MOV     A,R2
+00AA 3E                ADDC    A,R6
+00AB FA                MOV     R2,A
+00AC 900003            MOV     DPTR,#03H
+00AF EC                MOV     A,R4
+00B0 8DF0              MOV     B,R5
+00B2 120000      E     LCALL   ?C?ISTOPTR
                                            ; SOURCE LINE # 126
-001B 7B01              MOV     R3,#01H
-001D 7A00        R     MOV     R2,#HIGH tmp
-001F 7900        R     MOV     R1,#LOW tmp
-0021 900000      E     MOV     DPTR,#?_write_dgus_vp?BYTE+05H
-0024 F0                MOVX    @DPTR,A
-0025 A3                INC     DPTR
-0026 04                INC     A
-0027 F0                MOVX    @DPTR,A
-0028 7F00              MOV     R7,#00H
-002A 7E95              MOV     R6,#095H
-002C 120000      E     LCALL   _write_dgus_vp
+00B5 900000      R     MOV     DPTR,#icon_rect_sz
+00B8 E0                MOVX    A,@DPTR
+00B9 FE                MOV     R6,A
+00BA A3                INC     DPTR
+00BB E0                MOVX    A,@DPTR
+00BC FF                MOV     R7,A
+00BD 900000      R     MOV     DPTR,#start_x+01H
+00C0 E0                MOVX    A,@DPTR
+00C1 2F                ADD     A,R7
+00C2 FD                MOV     R5,A
+00C3 900000      R     MOV     DPTR,#start_x
+00C6 E0                MOVX    A,@DPTR
+00C7 3E                ADDC    A,R6
+00C8 FC                MOV     R4,A
+00C9 900000      R     MOV     DPTR,#p_menu
+00CC E0                MOVX    A,@DPTR
+00CD FB                MOV     R3,A
+00CE A3                INC     DPTR
+00CF E0                MOVX    A,@DPTR
+00D0 FA                MOV     R2,A
+00D1 A3                INC     DPTR
+00D2 E0                MOVX    A,@DPTR
+00D3 F9                MOV     R1,A
+00D4 900003            MOV     DPTR,#03H
+00D7 120000      E     LCALL   ?C?PLDOPTR
+00DA 900000      R     MOV     DPTR,#i
+00DD E0                MOVX    A,@DPTR
+00DE 75F009            MOV     B,#09H
+00E1 A4                MUL     AB
+00E2 29                ADD     A,R1
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 14  
+
+00E3 F9                MOV     R1,A
+00E4 EA                MOV     A,R2
+00E5 35F0              ADDC    A,B
+00E7 FA                MOV     R2,A
+00E8 900005            MOV     DPTR,#05H
+00EB EC                MOV     A,R4
+00EC 8DF0              MOV     B,R5
+00EE 120000      E     LCALL   ?C?ISTOPTR
                                            ; SOURCE LINE # 127
+00F1 900000      R     MOV     DPTR,#icon_rect_sz
+00F4 E0                MOVX    A,@DPTR
+00F5 FE                MOV     R6,A
+00F6 A3                INC     DPTR
+00F7 E0                MOVX    A,@DPTR
+00F8 FF                MOV     R7,A
+00F9 900000      R     MOV     DPTR,#start_y+01H
+00FC E0                MOVX    A,@DPTR
+00FD 2F                ADD     A,R7
+00FE FD                MOV     R5,A
+00FF 900000      R     MOV     DPTR,#start_y
+0102 E0                MOVX    A,@DPTR
+0103 3E                ADDC    A,R6
+0104 FC                MOV     R4,A
+0105 900000      R     MOV     DPTR,#p_menu
+0108 E0                MOVX    A,@DPTR
+0109 FB                MOV     R3,A
+010A A3                INC     DPTR
+010B E0                MOVX    A,@DPTR
+010C FA                MOV     R2,A
+010D A3                INC     DPTR
+010E E0                MOVX    A,@DPTR
+010F F9                MOV     R1,A
+0110 900003            MOV     DPTR,#03H
+0113 120000      E     LCALL   ?C?PLDOPTR
+0116 900000      R     MOV     DPTR,#i
+0119 E0                MOVX    A,@DPTR
+011A 75F009            MOV     B,#09H
+011D A4                MUL     AB
+011E 29                ADD     A,R1
+011F F9                MOV     R1,A
+0120 EA                MOV     A,R2
+0121 35F0              ADDC    A,B
+0123 FA                MOV     R2,A
+0124 900007            MOV     DPTR,#07H
+0127 EC                MOV     A,R4
+0128 8DF0              MOV     B,R5
+012A 120000      E     LCALL   ?C?ISTOPTR
+                                           ; SOURCE LINE # 128
+012D 900000      R     MOV     DPTR,#start_x+01H
+0130 E0                MOVX    A,@DPTR
+0131 2464              ADD     A,#064H
+0133 F0                MOVX    @DPTR,A
+0134 900000      R     MOV     DPTR,#start_x
+0137 E0                MOVX    A,@DPTR
+0138 3400              ADDC    A,#00H
+013A F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 129
-002F 900000      R     MOV     DPTR,#cur_menu+04H
-0032 7400        R     MOV     A,#HIGH tig_layer_response
-0034 F0                MOVX    @DPTR,A
-0035 A3                INC     DPTR
-0036 7400        R     MOV     A,#LOW tig_layer_response
-0038 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 130
-0039 900000      R     MOV     DPTR,#cur_menu+01H
-003C 7401              MOV     A,#01H
-003E F0                MOVX    @DPTR,A
-003F A3                INC     DPTR
-0040 7400        R     MOV     A,#HIGH cur_menu_items
-0042 F0                MOVX    @DPTR,A
-0043 A3                INC     DPTR
-0044 7400        R     MOV     A,#LOW cur_menu_items
-0046 F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 131
-0047 900000      R     MOV     DPTR,#cur_menu
-004A 7408              MOV     A,#08H
-004C F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 133
-;---- Variable 'i' assigned to Register 'R7' ----
-004D E4                CLR     A
-004E FF                MOV     R7,A
-004F         ?C0012:
-004F 900000      R     MOV     DPTR,#cur_menu
-0052 E0                MOVX    A,@DPTR
-0053 FE                MOV     R6,A
-0054 EF                MOV     A,R7
-0055 C3                CLR     C
-0056 9E                SUBB    A,R6
-0057 4003              JC      $ + 5H
-0059 020000      R     LJMP    ?C0013
+013B         ?C0015:
+013B 900000      R     MOV     DPTR,#i
+013E E0                MOVX    A,@DPTR
+013F 04                INC     A
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 15  
+
+0140 F0                MOVX    @DPTR,A
+0141 020000      R     LJMP    ?C0013
+0144         ?C0014:
+                                           ; SOURCE LINE # 132
                                            ; SOURCE LINE # 134
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 15  
-
-005C 7400        R     MOV     A,#LOW tig_icons
-005E 2F                ADD     A,R7
-005F F8                MOV     R0,A
-0060 E6                MOV     A,@R0
-0061 FE                MOV     R6,A
-0062 75F009            MOV     B,#09H
-0065 EF                MOV     A,R7
-0066 A4                MUL     AB
-0067 2400        R     ADD     A,#LOW cur_menu_items+08H
-0069 F582              MOV     DPL,A
-006B E5F0              MOV     A,B
-006D 3400        R     ADDC    A,#HIGH cur_menu_items+08H
-006F F583              MOV     DPH,A
-0071 EE                MOV     A,R6
-0072 F0                MOVX    @DPTR,A
+0144 900000      R     MOV     DPTR,#p_menu
+0147 E0                MOVX    A,@DPTR
+0148 F9                MOV     R1,A
+0149 A3                INC     DPTR
+014A E0                MOVX    A,@DPTR
+014B FA                MOV     R2,A
+014C A3                INC     DPTR
+014D E0                MOVX    A,@DPTR
+014E 900000      R     MOV     DPTR,#cur_menu
+0151 C9                XCH     A,R1
+0152 F0                MOVX    @DPTR,A
+0153 A3                INC     DPTR
+0154 EA                MOV     A,R2
+0155 F0                MOVX    @DPTR,A
+0156 A3                INC     DPTR
+0157 E9                MOV     A,R1
+0158 F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 135
-0073 900000      R     MOV     DPTR,#start_x
-0076 E0                MOVX    A,@DPTR
-0077 FC                MOV     R4,A
-0078 A3                INC     DPTR
-0079 E0                MOVX    A,@DPTR
-007A FD                MOV     R5,A
-007B 75F009            MOV     B,#09H
-007E EF                MOV     A,R7
-007F A4                MUL     AB
-0080 2400        R     ADD     A,#LOW cur_menu_items
-0082 F582              MOV     DPL,A
-0084 E5F0              MOV     A,B
-0086 3400        R     ADDC    A,#HIGH cur_menu_items
-0088 F583              MOV     DPH,A
-008A EC                MOV     A,R4
-008B F0                MOVX    @DPTR,A
-008C A3                INC     DPTR
-008D ED                MOV     A,R5
-008E F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 136
-008F 900000      R     MOV     DPTR,#start_y
-0092 E0                MOVX    A,@DPTR
-0093 FC                MOV     R4,A
-0094 A3                INC     DPTR
-0095 E0                MOVX    A,@DPTR
-0096 FD                MOV     R5,A
-0097 75F009            MOV     B,#09H
-009A EF                MOV     A,R7
-009B A4                MUL     AB
-009C 2400        R     ADD     A,#LOW cur_menu_items+02H
-009E F582              MOV     DPL,A
-00A0 E5F0              MOV     A,B
-00A2 3400        R     ADDC    A,#HIGH cur_menu_items+02H
-00A4 F583              MOV     DPH,A
-00A6 EC                MOV     A,R4
-00A7 F0                MOVX    @DPTR,A
-00A8 A3                INC     DPTR
-00A9 ED                MOV     A,R5
-00AA F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 137
-00AB 900000      R     MOV     DPTR,#icon_rect_sz
-00AE E0                MOVX    A,@DPTR
-00AF FC                MOV     R4,A
-00B0 A3                INC     DPTR
-00B1 E0                MOVX    A,@DPTR
-00B2 FD                MOV     R5,A
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 16  
-
-00B3 900000      R     MOV     DPTR,#start_x+01H
-00B6 E0                MOVX    A,@DPTR
-00B7 2D                ADD     A,R5
-00B8 FD                MOV     R5,A
-00B9 900000      R     MOV     DPTR,#start_x
-00BC E0                MOVX    A,@DPTR
-00BD 3C                ADDC    A,R4
-00BE FC                MOV     R4,A
-00BF 75F009            MOV     B,#09H
-00C2 EF                MOV     A,R7
-00C3 A4                MUL     AB
-00C4 2400        R     ADD     A,#LOW cur_menu_items+04H
-00C6 F582              MOV     DPL,A
-00C8 E5F0              MOV     A,B
-00CA 3400        R     ADDC    A,#HIGH cur_menu_items+04H
-00CC F583              MOV     DPH,A
-00CE EC                MOV     A,R4
-00CF F0                MOVX    @DPTR,A
-00D0 A3                INC     DPTR
-00D1 ED                MOV     A,R5
-00D2 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 138
-00D3 900000      R     MOV     DPTR,#icon_rect_sz
-00D6 E0                MOVX    A,@DPTR
-00D7 FC                MOV     R4,A
-00D8 A3                INC     DPTR
-00D9 E0                MOVX    A,@DPTR
-00DA FD                MOV     R5,A
-00DB 900000      R     MOV     DPTR,#start_y+01H
-00DE E0                MOVX    A,@DPTR
-00DF 2D                ADD     A,R5
-00E0 FD                MOV     R5,A
-00E1 900000      R     MOV     DPTR,#start_y
-00E4 E0                MOVX    A,@DPTR
-00E5 3C                ADDC    A,R4
-00E6 FC                MOV     R4,A
-00E7 75F009            MOV     B,#09H
-00EA EF                MOV     A,R7
-00EB A4                MUL     AB
-00EC 2400        R     ADD     A,#LOW cur_menu_items+06H
-00EE F582              MOV     DPL,A
-00F0 E5F0              MOV     A,B
-00F2 3400        R     ADDC    A,#HIGH cur_menu_items+06H
-00F4 F583              MOV     DPH,A
-00F6 EC                MOV     A,R4
-00F7 F0                MOVX    @DPTR,A
-00F8 A3                INC     DPTR
-00F9 ED                MOV     A,R5
-00FA F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 139
-00FB 900000      R     MOV     DPTR,#start_x+01H
-00FE E0                MOVX    A,@DPTR
-00FF 2464              ADD     A,#064H
-0101 F0                MOVX    @DPTR,A
-0102 900000      R     MOV     DPTR,#start_x
-0105 E0                MOVX    A,@DPTR
-0106 3400              ADDC    A,#00H
-0108 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 140
-0109 0F                INC     R7
-010A 020000      R     LJMP    ?C0012
-010D         ?C0013:
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 17  
-
-                                           ; SOURCE LINE # 142
-010D 7B01              MOV     R3,#01H
-010F 7A00        R     MOV     R2,#HIGH cur_menu
-0111 7900        R     MOV     R1,#LOW cur_menu
-0113 7F00              MOV     R7,#00H
-0115 7E90              MOV     R6,#090H
-0117 020000      R     LJMP    _draw_icons
-             ; FUNCTION make_layer_tig (END)
+0159 900000      R     MOV     DPTR,#p_menu
+015C E0                MOVX    A,@DPTR
+015D FB                MOV     R3,A
+015E A3                INC     DPTR
+015F A3                INC     DPTR
+0160 E0                MOVX    A,@DPTR
+0161 F9                MOV     R1,A
+0162 7F00              MOV     R7,#00H
+0164 7E90              MOV     R6,#090H
+0166 020000      R     LJMP    _draw_icons
+             ; FUNCTION _toggle_menu (END)
 
              ; FUNCTION draw_bottom_menu (BEGIN)
-                                           ; SOURCE LINE # 144
-                                           ; SOURCE LINE # 145
-                                           ; SOURCE LINE # 147
-0000 020000      R     LJMP    make_layer_tig
+                                           ; SOURCE LINE # 140
+                                           ; SOURCE LINE # 141
+                                           ; SOURCE LINE # 142
+0000 120000      R     LCALL   gui_init
+                                           ; SOURCE LINE # 143
+0003 7B00              MOV     R3,#00H
+0005 7A00        R     MOV     R2,#HIGH arr_of_menus
+0007 7900        R     MOV     R1,#LOW arr_of_menus
+0009 020000      R     LJMP    _toggle_menu
              ; FUNCTION draw_bottom_menu (END)
 
-             ; FUNCTION draw_sub_menu (BEGIN)
+             ; FUNCTION _bottom_level_controls (BEGIN)
+                                           ; SOURCE LINE # 150
+;---- Variable 'select' assigned to Register 'R7' ----
+                                           ; SOURCE LINE # 151
+                                           ; SOURCE LINE # 153
+0000 900000      R     MOV     DPTR,#p_menu
+0003 E0                MOVX    A,@DPTR
+0004 FB                MOV     R3,A
+0005 A3                INC     DPTR
+0006 E0                MOVX    A,@DPTR
+0007 FA                MOV     R2,A
+0008 A3                INC     DPTR
+0009 E0                MOVX    A,@DPTR
+000A F9                MOV     R1,A
+000B 120000      E     LCALL   ?C?CLDPTR
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 16  
+
+000E FE                MOV     R6,A
+000F EF                MOV     A,R7
+0010 C3                CLR     C
+0011 9E                SUBB    A,R6
+0012 4003              JC      $ + 5H
+0014 020000      R     LJMP    ?C0020
+0017         ?C0019:
                                            ; SOURCE LINE # 156
-                                           ; SOURCE LINE # 157
+0017 EF                MOV     A,R7
+0018 75F008            MOV     B,#08H
+001B A4                MUL     AB
+001C 2400        R     ADD     A,#LOW arr_of_menus+08H
+001E F9                MOV     R1,A
+001F E4                CLR     A
+0020 FB                MOV     R3,A
+0021 900000      R     MOV     DPTR,#p_menu
+0024 F0                MOVX    @DPTR,A
+0025 A3                INC     DPTR
+0026 CB                XCH     A,R3
+0027 F0                MOVX    @DPTR,A
+0028 A3                INC     DPTR
+0029 E9                MOV     A,R1
+002A F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 158
                                            ; SOURCE LINE # 160
+002B 900000      R     MOV     DPTR,#icon_rect_sz
+002E E4                CLR     A
+002F F0                MOVX    @DPTR,A
+0030 A3                INC     DPTR
+0031 7464              MOV     A,#064H
+0033 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 161
+0034 E4                CLR     A
+0035 A3                INC     DPTR
+0036 F0                MOVX    @DPTR,A
+0037 A3                INC     DPTR
+0038 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 162
+0039 A3                INC     DPTR
+003A 7402              MOV     A,#02H
+003C F0                MOVX    @DPTR,A
+003D A3                INC     DPTR
+003E 7458              MOV     A,#058H
+0040 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 163
+0041 E4                CLR     A
+0042 900000      R     MOV     DPTR,#i
+0045 F0                MOVX    @DPTR,A
+0046         ?C0021:
+0046 900000      R     MOV     DPTR,#p_menu
+0049 E0                MOVX    A,@DPTR
+004A FB                MOV     R3,A
+004B A3                INC     DPTR
+004C E0                MOVX    A,@DPTR
+004D FA                MOV     R2,A
+004E A3                INC     DPTR
+004F E0                MOVX    A,@DPTR
+0050 F9                MOV     R1,A
+0051 120000      E     LCALL   ?C?CLDPTR
+0054 FF                MOV     R7,A
+0055 900000      R     MOV     DPTR,#i
+0058 E0                MOVX    A,@DPTR
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 17  
+
+0059 FE                MOV     R6,A
+005A C3                CLR     C
+005B 9F                SUBB    A,R7
+005C 4003              JC      $ + 5H
+005E 020000      R     LJMP    ?C0022
+                                           ; SOURCE LINE # 164
+0061 900001            MOV     DPTR,#01H
+0064 120000      E     LCALL   ?C?ILDOPTR
+0067 FD                MOV     R5,A
+0068 ACF0              MOV     R4,B
+006A A806              MOV     R0,AR6
+006C 7401              MOV     A,#01H
+006E 7E00              MOV     R6,#00H
+0070 08                INC     R0
+0071 8005              SJMP    ?C0032
+0073         ?C0031:
+0073 C3                CLR     C
+0074 33                RLC     A
+0075 CE                XCH     A,R6
+0076 33                RLC     A
+0077 CE                XCH     A,R6
+0078         ?C0032:
+0078 D8F9              DJNZ    R0,?C0031
+007A FF                MOV     R7,A
+007B EE                MOV     A,R6
+007C 5C                ANL     A,R4
+007D FE                MOV     R6,A
+007E EF                MOV     A,R7
+007F 5D                ANL     A,R5
+0080 4E                ORL     A,R6
+0081 7003              JNZ     $ + 5H
+0083 020000      R     LJMP    ?C0023
+                                           ; SOURCE LINE # 165
+0086 900000      R     MOV     DPTR,#start_x
+0089 E0                MOVX    A,@DPTR
+008A FC                MOV     R4,A
+008B A3                INC     DPTR
+008C E0                MOVX    A,@DPTR
+008D FD                MOV     R5,A
+008E 900003            MOV     DPTR,#03H
+0091 120000      E     LCALL   ?C?PLDOPTR
+0094 900000      R     MOV     DPTR,#i
+0097 E0                MOVX    A,@DPTR
+0098 75F009            MOV     B,#09H
+009B A4                MUL     AB
+009C FF                MOV     R7,A
+009D AEF0              MOV     R6,B
+009F 29                ADD     A,R1
+00A0 F9                MOV     R1,A
+00A1 EA                MOV     A,R2
+00A2 3E                ADDC    A,R6
+00A3 FA                MOV     R2,A
+00A4 900001            MOV     DPTR,#01H
+00A7 EC                MOV     A,R4
+00A8 8DF0              MOV     B,R5
+00AA 120000      E     LCALL   ?C?ISTOPTR
+                                           ; SOURCE LINE # 166
+00AD 900000      R     MOV     DPTR,#start_y
+00B0 E0                MOVX    A,@DPTR
+00B1 FC                MOV     R4,A
+00B2 A3                INC     DPTR
+00B3 E0                MOVX    A,@DPTR
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 18  
+
+00B4 FD                MOV     R5,A
+00B5 900000      R     MOV     DPTR,#p_menu
+00B8 E0                MOVX    A,@DPTR
+00B9 FB                MOV     R3,A
+00BA A3                INC     DPTR
+00BB E0                MOVX    A,@DPTR
+00BC FA                MOV     R2,A
+00BD A3                INC     DPTR
+00BE E0                MOVX    A,@DPTR
+00BF F9                MOV     R1,A
+00C0 900003            MOV     DPTR,#03H
+00C3 120000      E     LCALL   ?C?PLDOPTR
+00C6 E9                MOV     A,R1
+00C7 2F                ADD     A,R7
+00C8 F9                MOV     R1,A
+00C9 EA                MOV     A,R2
+00CA 3E                ADDC    A,R6
+00CB FA                MOV     R2,A
+00CC 900003            MOV     DPTR,#03H
+00CF EC                MOV     A,R4
+00D0 8DF0              MOV     B,R5
+00D2 120000      E     LCALL   ?C?ISTOPTR
+                                           ; SOURCE LINE # 167
+00D5 900000      R     MOV     DPTR,#icon_rect_sz
+00D8 E0                MOVX    A,@DPTR
+00D9 FE                MOV     R6,A
+00DA A3                INC     DPTR
+00DB E0                MOVX    A,@DPTR
+00DC FF                MOV     R7,A
+00DD 900000      R     MOV     DPTR,#start_x+01H
+00E0 E0                MOVX    A,@DPTR
+00E1 2F                ADD     A,R7
+00E2 FD                MOV     R5,A
+00E3 900000      R     MOV     DPTR,#start_x
+00E6 E0                MOVX    A,@DPTR
+00E7 3E                ADDC    A,R6
+00E8 FC                MOV     R4,A
+00E9 900000      R     MOV     DPTR,#p_menu
+00EC E0                MOVX    A,@DPTR
+00ED FB                MOV     R3,A
+00EE A3                INC     DPTR
+00EF E0                MOVX    A,@DPTR
+00F0 FA                MOV     R2,A
+00F1 A3                INC     DPTR
+00F2 E0                MOVX    A,@DPTR
+00F3 F9                MOV     R1,A
+00F4 900003            MOV     DPTR,#03H
+00F7 120000      E     LCALL   ?C?PLDOPTR
+00FA 900000      R     MOV     DPTR,#i
+00FD E0                MOVX    A,@DPTR
+00FE 75F009            MOV     B,#09H
+0101 A4                MUL     AB
+0102 29                ADD     A,R1
+0103 F9                MOV     R1,A
+0104 EA                MOV     A,R2
+0105 35F0              ADDC    A,B
+0107 FA                MOV     R2,A
+0108 900005            MOV     DPTR,#05H
+010B EC                MOV     A,R4
+010C 8DF0              MOV     B,R5
+010E 120000      E     LCALL   ?C?ISTOPTR
+                                           ; SOURCE LINE # 168
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 19  
+
+0111 900000      R     MOV     DPTR,#icon_rect_sz
+0114 E0                MOVX    A,@DPTR
+0115 FE                MOV     R6,A
+0116 A3                INC     DPTR
+0117 E0                MOVX    A,@DPTR
+0118 FF                MOV     R7,A
+0119 900000      R     MOV     DPTR,#start_y+01H
+011C E0                MOVX    A,@DPTR
+011D 2F                ADD     A,R7
+011E FD                MOV     R5,A
+011F 900000      R     MOV     DPTR,#start_y
+0122 E0                MOVX    A,@DPTR
+0123 3E                ADDC    A,R6
+0124 FC                MOV     R4,A
+0125 900000      R     MOV     DPTR,#p_menu
+0128 E0                MOVX    A,@DPTR
+0129 FB                MOV     R3,A
+012A A3                INC     DPTR
+012B E0                MOVX    A,@DPTR
+012C FA                MOV     R2,A
+012D A3                INC     DPTR
+012E E0                MOVX    A,@DPTR
+012F F9                MOV     R1,A
+0130 900003            MOV     DPTR,#03H
+0133 120000      E     LCALL   ?C?PLDOPTR
+0136 900000      R     MOV     DPTR,#i
+0139 E0                MOVX    A,@DPTR
+013A 75F009            MOV     B,#09H
+013D A4                MUL     AB
+013E 29                ADD     A,R1
+013F F9                MOV     R1,A
+0140 EA                MOV     A,R2
+0141 35F0              ADDC    A,B
+0143 FA                MOV     R2,A
+0144 900007            MOV     DPTR,#07H
+0147 EC                MOV     A,R4
+0148 8DF0              MOV     B,R5
+014A 120000      E     LCALL   ?C?ISTOPTR
+                                           ; SOURCE LINE # 169
+014D 900000      R     MOV     DPTR,#start_y+01H
+0150 E0                MOVX    A,@DPTR
+0151 249C              ADD     A,#09CH
+0153 F0                MOVX    @DPTR,A
+0154 900000      R     MOV     DPTR,#start_y
+0157 E0                MOVX    A,@DPTR
+0158 34FF              ADDC    A,#0FFH
+015A F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 170
+                                           ; SOURCE LINE # 171
+015B         ?C0023:
+015B 900000      R     MOV     DPTR,#i
+015E E0                MOVX    A,@DPTR
+015F 04                INC     A
+0160 F0                MOVX    @DPTR,A
+0161 020000      R     LJMP    ?C0021
+0164         ?C0022:
+                                           ; SOURCE LINE # 172
+                                           ; SOURCE LINE # 173
+0164 900000      R     MOV     DPTR,#p_menu
+0167 E0                MOVX    A,@DPTR
+0168 F9                MOV     R1,A
+0169 A3                INC     DPTR
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 20  
+
+016A E0                MOVX    A,@DPTR
+016B FA                MOV     R2,A
+016C A3                INC     DPTR
+016D E0                MOVX    A,@DPTR
+016E 900000      R     MOV     DPTR,#cur_menu
+0171 C9                XCH     A,R1
+0172 F0                MOVX    @DPTR,A
+0173 A3                INC     DPTR
+0174 EA                MOV     A,R2
+0175 F0                MOVX    @DPTR,A
+0176 A3                INC     DPTR
+0177 E9                MOV     A,R1
+0178 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 174
+0179 900000      R     MOV     DPTR,#p_menu
+017C E0                MOVX    A,@DPTR
+017D FB                MOV     R3,A
+017E A3                INC     DPTR
+017F A3                INC     DPTR
+0180 E0                MOVX    A,@DPTR
+0181 F9                MOV     R1,A
+0182 7F00              MOV     R7,#00H
+0184 7E95              MOV     R6,#095H
+0186 120000      R     LCALL   _draw_icons
+                                           ; SOURCE LINE # 175
+0189         ?C0020:
+0189 22                RET     
+             ; FUNCTION _bottom_level_controls (END)
+
+             ; FUNCTION _welding_mode_controls (BEGIN)
+                                           ; SOURCE LINE # 177
+;---- Variable 'select' assigned to Register 'R7' ----
+                                           ; SOURCE LINE # 178
+                                           ; SOURCE LINE # 179
+0000 E4                CLR     A
+0001 FF                MOV     R7,A
+                                           ; SOURCE LINE # 180
+                                           ; SOURCE LINE # 181
+0002 900000      R     MOV     DPTR,#tmp
+0005 F0                MOVX    @DPTR,A
+0006 A3                INC     DPTR
+0007 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 182
+0008 7B01              MOV     R3,#01H
+000A 7A00        R     MOV     R2,#HIGH tmp
+000C 7900        R     MOV     R1,#LOW tmp
+000E 900000      E     MOV     DPTR,#?_write_dgus_vp?BYTE+05H
+0011 F0                MOVX    @DPTR,A
+0012 A3                INC     DPTR
+0013 04                INC     A
+0014 F0                MOVX    @DPTR,A
+0015 7E95              MOV     R6,#095H
+0017 120000      E     LCALL   _write_dgus_vp
+                                           ; SOURCE LINE # 183
+                                           ; SOURCE LINE # 184
+001A 7B00              MOV     R3,#00H
+001C 7A00        R     MOV     R2,#HIGH arr_of_menus
+001E 7900        R     MOV     R1,#LOW arr_of_menus
+0020 020000      R     LJMP    _toggle_menu
+             ; FUNCTION _welding_mode_controls (END)
+
+             ; FUNCTION draw_sub_menu (BEGIN)
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 21  
+
+                                           ; SOURCE LINE # 190
+                                           ; SOURCE LINE # 191
+                                           ; SOURCE LINE # 194
 0000 22                RET     
              ; FUNCTION draw_sub_menu (END)
 
+             ; FUNCTION _do_nothing (BEGIN)
+                                           ; SOURCE LINE # 196
+0000 900000      R     MOV     DPTR,#select
+0003 EF                MOV     A,R7
+0004 F0                MOVX    @DPTR,A
+                                           ; SOURCE LINE # 197
+                                           ; SOURCE LINE # 202
+0005 22                RET     
+             ; FUNCTION _do_nothing (END)
+
              ; FUNCTION level_back (BEGIN)
-                                           ; SOURCE LINE # 171
-                                           ; SOURCE LINE # 172
-                                           ; SOURCE LINE # 176
+                                           ; SOURCE LINE # 205
+                                           ; SOURCE LINE # 206
+                                           ; SOURCE LINE # 210
 0000 22                RET     
              ; FUNCTION level_back (END)
 
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 18  
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 22  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
 
 
+polarity_items . . . . . . . . . . . .  PUBLIC   XDATA  ARRAY    0000H  27
 EIID_AC. . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-electrode_d. . . . . . . . . . . . . .  PUBLIC   IDATA  ARRAY    0000H  5
+electrode_d. . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0018H  4
 EIID_D_10. . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_H2O_OFF . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_D_20. . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
@@ -1290,28 +1290,33 @@ EIID_2T. . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_D_40. . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_4T. . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_PULSE_ON. . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+electrode_d_items. . . . . . . . . . .  PUBLIC   XDATA  ARRAY    001BH  36
 EIID_D_16. . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+arr_of_menus . . . . . . . . . . . . .  PUBLIC   IDATA  ARRAY    0000H  64
 EIID_HF. . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-ignition_type. . . . . . . . . . . . .  PUBLIC   IDATA  ARRAY    0005H  3
-menu_t . . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  6
+ignition_type. . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0014H  2
+menu_t . . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  8
   size . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
-  p_items. . . . . . . . . . . . . . .  MEMBER   -----  PTR      0001H  3
-  func . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0004H  2
+  active . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0001H  2
+  items. . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0003H  3
+  func . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0006H  2
 _write_dgus_vp . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
 level_back . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
-last_selected_menu_item. . . . . . . .  PUBLIC   XDATA  U_CHAR   0000H  1
+last_selected_menu_item. . . . . . . .  PUBLIC   XDATA  U_CHAR   003FH  1
+ignition_type_items. . . . . . . . . .  PUBLIC   XDATA  ARRAY    0040H  18
 size_t . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
-ICON_ID. . . . . . . . . . . . . . . .  TYPEDEF  -----  U_CHAR   -----  1
-tig_layer_response . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
-  all_icons. . . . . . . . . . . . . .  STATIC   CODE   ARRAY    0000H  21
-  icon_rect_sz . . . . . . . . . . . .  AUTO     XDATA  U_INT    0000H  2
-  start_x. . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0002H  2
-  start_y. . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0004H  2
-  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0006H  1
-  p_icons. . . . . . . . . . . . . . .  AUTO     XDATA  PTR      0007H  3
+bottom . . . . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0000H  11
+_toggle_menu . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  p_menu . . . . . . . . . . . . . . .  AUTO     XDATA  PTR      0000H  3
+  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0003H  1
+  icon_rect_sz . . . . . . . . . . . .  AUTO     XDATA  U_INT    0004H  2
+  start_x. . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0006H  2
+  start_y. . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0008H  2
 menu_item_t. . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  9
-  t_rect . . . . . . . . . . . . . . .  MEMBER   -----  STRUCT   0000H  8
-  icon . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0008H  1
+  ico. . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
+  r. . . . . . . . . . . . . . . . . .  MEMBER   -----  STRUCT   0001H  8
+bottom_items . . . . . . . . . . . . .  PUBLIC   XDATA  ARRAY    0052H  99
+MEN_MOD. . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_NO_ICON . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_DC_PLUS . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_4T_PLUS . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
@@ -1332,18 +1337,18 @@ _mSPIFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  16
   Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      000BH  3
   Delay. . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    000EH  2
 s8 . . . . . . . . . . . . . . . . . .  TYPEDEF  -----  CHAR     -----  1
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 23  
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
 EIID_RECT. . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_LIFT. . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 u8 . . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_CHAR   -----  1
 MNORFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  12
   Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
   FLAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 19  
-
-NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
-====                                    =====   ======  ====    ======  ====
-
-
   VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
   Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
   Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
@@ -1358,22 +1363,21 @@ _draw_icons. . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
   p_menu . . . . . . . . . . . . . . .  AUTO     XDATA  PTR      0002H  3
   i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0005H  1
   j. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0006H  1
-  cmd. . . . . . . . . . . . . . . . .  AUTO     XDATA  ARRAY    0007H  200
-pulse_state. . . . . . . . . . . . . .  PUBLIC   IDATA  ARRAY    0008H  3
+  size . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0007H  1
+  cmd. . . . . . . . . . . . . . . . .  AUTO     XDATA  ARRAY    0008H  200
+_do_nothing. . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  select . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0000H  1
+pulse_state. . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0016H  2
 EIID_TRIG. . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_TRAP. . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-welding_mod_sel. . . . . . . . . . . .  PUBLIC   IDATA  ARRAY    000BH  4
-flow_sensor. . . . . . . . . . . . . .  PUBLIC   IDATA  ARRAY    000FH  3
+pulse_state_items. . . . . . . . . . .  PUBLIC   XDATA  ARRAY    00B5H  18
+flow_sensor. . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    001CH  2
+MEN_FLOW_MOD . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+flow_sensor_items. . . . . . . . . . .  PUBLIC   XDATA  ARRAY    00C7H  18
 draw_bottom_menu . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
 EIID_H2O_ON. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_PULSE_OFF . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-tig_icons. . . . . . . . . . . . . . .  PUBLIC   IDATA  ARRAY    0012H  8
-make_layer_tig . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
-  tmp. . . . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0006H  2
-  i. . . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
-  icon_rect_sz . . . . . . . . . . . .  AUTO     XDATA  U_INT    0000H  2
-  start_x. . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0002H  2
-  start_y. . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0004H  2
+MEN_D_MOD. . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 MMUSIC . . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  35
   IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
   PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
@@ -1384,46 +1388,65 @@ _mMUSIC. . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  35
   PlayTail . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0020H  1
   PlayHead . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0021H  1
   PlayInterrupt. . . . . . . . . . . .  MEMBER   -----  U_CHAR   0022H  1
-weld_button_mod. . . . . . . . . . . .  PUBLIC   IDATA  ARRAY    001AH  4
+_welding_mode_controls . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  select . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+  tmp. . . . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0000H  2
 EIID_MMA . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 s32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  LONG     -----  4
+icon_id. . . . . . . . . . . . . . . .  TYPEDEF  -----  U_CHAR   -----  1
 u32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_LONG   -----  4
 s16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  INT      -----  2
 u16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
-EIID_TIG . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-cur_menu . . . . . . . . . . . . . . .  PUBLIC   XDATA  STRUCT   0001H  6
-EIID_SIN . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-T2CON. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C8H  1
-prev_menu_item . . . . . . . . . . . .  PUBLIC   XDATA  U_CHAR   0007H  1
-cur_menu_items . . . . . . . . . . . .  PUBLIC   XDATA  ARRAY    0008H  360
-EIID_MIX . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-EIID_DC_MINUS. . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-draw_sub_menu. . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
-polarity . . . . . . . . . . . . . . .  PUBLIC   IDATA  ARRAY    001EH  4
-trect_t. . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  8
-C51 COMPILER V9.53.0.0   TEMP                                                              10/31/2023 14:52:43 PAGE 20  
+gui_init . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  i. . . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+  j. . . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0006H  1
+C51 COMPILER V9.53.0.0   TEMP                                                              11/01/2023 15:46:08 PAGE 24  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
 
 
+  icon_ids . . . . . . . . . . . . . .  STATIC   CODE   ARRAY    001EH  24
+MEN_IGN_MOD. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+EIID_TIG . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+cur_menu . . . . . . . . . . . . . . .  PUBLIC   XDATA  PTR      00D9H  3
+MEN_BTN_MOD. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+EIID_SIN . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+T2CON. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C8H  1
+tig_button_mod . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    000EH  3
+prev_menu_item . . . . . . . . . . . .  PUBLIC   XDATA  U_CHAR   00DCH  1
+EIID_MIX . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+tig_button_mod_items . . . . . . . . .  PUBLIC   XDATA  ARRAY    00DDH  27
+MEN_POL_MOD. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+_bottom_level_controls . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+  select . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
+  i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0003H  1
+  icon_rect_sz . . . . . . . . . . . .  AUTO     XDATA  U_INT    0004H  2
+  start_x. . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0006H  2
+  start_y. . . . . . . . . . . . . . .  AUTO     XDATA  U_INT    0008H  2
+  p_menu . . . . . . . . . . . . . . .  AUTO     XDATA  PTR      0000H  3
+MEN_PLS_MOD. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+EIID_DC_MINUS. . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+draw_sub_menu. . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+welding_mode . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    000BH  3
+polarity . . . . . . . . . . . . . . .  PUBLIC   CODE   ARRAY    0011H  3
+trect_t. . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  8
   x0 . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0000H  2
   y0 . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0002H  2
   x1 . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0004H  2
   y1 . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0006H  2
-tig_layer_response_. . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+welding_mode_items . . . . . . . . . .  PUBLIC   XDATA  ARRAY    00F8H  27
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1044    ----
-   CONSTANT SIZE    =     21    ----
-   XDATA SIZE       =    368     225
+   CODE SIZE        =   1258    ----
+   CONSTANT SIZE    =     54    ----
+   XDATA SIZE       =    275     231
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
-   IDATA SIZE       =     34    ----
+   IDATA SIZE       =     64    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
 
 
-C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

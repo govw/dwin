@@ -5,26 +5,146 @@
 <h2>Tool Versions:</h2>
 IDE-Version: µVision V5.11.2.0
 Copyright (C) 2014 ARM Ltd and ARM Germany GmbH. All rights reserved.
-License Information: no no, no, LIC=AT28G-VD6PN-94YS2-9T3PI-GX9RS-CXUYD
+License Information: no no, no, LIC=14RJ7-EZQYV-E5UT7-EP70R-A9NMD-W2GKT
  
 Tool Versions:
-Toolchain:       PK51 Prof. Developers Kit  Version: <unknown>
-Toolchain Path:  
-C Compiler:      C51.exe
-Assembler:       A51.exe
-Linker/Locator:  BL51.exe
-Library Manager: LIB51.exe
-Hex Converter:   OH51.exe
-CPU DLL:         S8051.DLL
-Dialog DLL:      DCore51.DLL
+Toolchain:       PK51 Prof. Developers Kit  Version: 9.53.0.0
+Toolchain Path:  D:\DWIN\Keil_v5\C51\BIN
+C Compiler:      C51.exe V9.53.0.0
+Assembler:       A51.exe V8.02b
+Linker/Locator:  BL51.exe V6.22
+Library Manager: LIB51.exe V4.30.0.2
+Hex Converter:   OH51.exe V2.7.0.0
+CPU DLL:         S8051.DLL V3.95.0.0
+Dialog DLL:      DCore51.DLL V2.81.4.0
     Target DLL: DWIN\BIN\ag8051.dll
-Dialog DLL:      TCore51.DLL
+Dialog DLL:      TCore51.DLL V2.66.2.1
  
 <h2>Project:</h2>
-D:\Desktop\dwin\dwin\T5L51.uvproj
-Project File Date:  10/26/2023
+C:\Users\OGK5-7\Desktop\dwin\T5L51.uvproj
+Project File Date:  11/01/2023
 
 <h2>Output:</h2>
+Rebuild target 'Target 1'
+assembling STARTUP_M5.A51...
+compiling sys.c...
+compiling timer.c...
+compiling uart.c...
+compiling canbus.c...
+compiling main.c...
+source\ssd2828.h(76): warning C235: parameter 1: different types
+source\main.c(86): warning C280: 'x': unreferenced local variable
+source\main.c(239): warning C280: 'tp_state': unreferenced local variable
+source\main.c(445): warning C280: 'buf_idx': unreferenced local variable
+source\main.c(196): warning C290: missing return value
+source\main.c(426): warning C294: unreachable code
+compiling const.c...
+compiling ui.c...
+compiling dwin8283.c...
+compiling ssd2828.c...
+source\ssd2828.h(76): warning C235: parameter 1: different types
+compiling temp.c...
+source\temp.c(196): warning C280: 'select': unreferenced local variable
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?RESETT5L?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_TOUCHSWITCH?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_MUSICPLAY?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?NORFLASH_ACTION?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SPIFLASH_ACTION?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?GETPAGEID?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PAGE_CHANGE?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_GETPININ?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_GETTOUCHANCTION?SYS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_STARTTIMER?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_KILLTIMER?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_GETTIMEOUTFLAG?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?INIT_RTC?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_IBCD?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CLOCK?TIMER
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CANERRORRESET?CANBUS
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_PRINT_UTF_STR?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?PAGEFUNCTION?UI
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?PRO8283INIT?DWIN8283
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?PRO8283DEAL?DWIN8283
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?SSD2828_READID?SSD2828
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SSD2828_READREG?SSD2828
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?DRAW_SUB_MENU?TEMP
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DO_NOTHING?TEMP
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?LEVEL_BACK?TEMP
+Program Size: data=157.2 xdata=17325 code=17692
+creating hex file from ".\Objects\T5L51"...
+User command #1: 1.bat
+C:\Users\OGK5-7\Desktop\dwin>cd objects 
+C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
+srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
+    (expected >= 0x44E7, got 0x3B90)
+C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
+".\Objects\T5L51" - 0 Error(s), 33 Warning(s).
 </pre>
 </body>
 </html>
+ULE:  .\Objects\temp.obj (TEMP)
+    ADDRESS: 338AH
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  DO_NOTHING
+    MODULE:  .\Objects\temp.obj (TEMP)
+    ADDRESS: 3392H
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  DO_NOTHING
+    MODULE:  .\Objects\temp.obj (TEMP)
+    ADDRESS: 339AH
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  DO_NOTHING
+    MODULE:  .\Objects\temp.obj (TEMP)
+    ADDRESS: 33A2H
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  DO_NOTHING
+    MODULE:  .\Objects\temp.obj (TEMP)
+    ADDRESS: 33AAH
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  DO_NOTHING
+    MODULE:  .\Objects\temp.obj (TEMP)
+    ADDRESS: 33B2H
+Program Size: data=157.2 xdata=17324 code=17253
+creating hex file from ".\Objects\T5L51"...
+User command #1: 1.bat
+C:\Users\OGK5-7\Desktop\dwin>cd objects 
+C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
+srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
+    (expected >= 0x4330, got 0x39FC)
+C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
+".\Objects\T5L51" - 0 Error(s), 42 Warning(s).
+win\Objects>echo.
+".\Objects\T5L51" - 0 Error(s), 43 Warning(s).
+T5L51" - 0 Error(s), 43 Warning(s).
+ects 
+C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
+srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
+    (expected >= 0x42AC, got 0x39DC)
+C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
+".\Objects\T5L51" - 0 Error(s), 46 Warning(s).

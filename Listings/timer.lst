@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 1   
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 1   
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE TIMER
@@ -66,11 +62,7 @@ line level    source
   52   1              
   53   1                OutTimeFlag=0;
   54   1                EnableTimer=0;
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 2   
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 2   
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 2   
 
   55   1              
   56   1          TMOD|=0x01;
@@ -134,11 +126,7 @@ line level    source
  114              作    者   : 陈美书
  115              修改内容   : 创建
  116          *****************************************************************************/
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 3   
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 3   
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 3   
 
  117          void StartTimer(u8 ID, u16 nTime)
  118          {
@@ -202,11 +190,7 @@ line level    source
                         EA=1;
               }
               
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 4   
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 4   
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 4   
 
               void StopPWM(u8 PWMID)
               {
@@ -270,11 +254,7 @@ line level    source
  238   1      
  239   1              RTC_SDA=0;
  240   1              delayus(15);
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 5   
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 5   
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 5   
 
  241   1              RTC_SCL=0;
  242   1              delayus(15);
@@ -338,11 +318,7 @@ line level    source
  300          void i2cbw(unsigned char dat)
  301          {       
  302   1              char i;
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 6   
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 6   
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 6   
 
  303   1              SDA_OUT();
  304   1              for(i=0;i<8;i++)
@@ -406,11 +382,7 @@ line level    source
  362   1              mack();
  363   1              dat1 = i2cbr();
  364   1              mnak();
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 7   
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 7   
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 7   
 
  365   1              i2cstop();
  366   1              if(dat2&0x01)
@@ -474,11 +446,7 @@ line level    source
  424   2                      i2cbw(0x64);
  425   2                      i2cbw(0x0f);
  426   2                      i2cbw(dat2);
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 8   
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 8   
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 8   
 
  427   2                      i2cstop();
  428   2              }
@@ -542,11 +510,7 @@ line level    source
  486          void rdtime(void)
  487          {       
  488   1              unsigned char rtcdata[8];
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 9   
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 9   
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 9   
 
  489   1              unsigned char i,n,m;
  490   1              i2cstart();
@@ -610,11 +574,7 @@ line level    source
  548   2                      mon = month;
  549   2                      y = year;
  550   2              }
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 10  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 10  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 10  
 
  551   1              tmp = y + (y / 4) +(((mon + 1) * 26) / 10) + day - 36;
  552   1              week = tmp % 7;
@@ -672,11 +632,7 @@ line level    source
  604          
  605          
  606          
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 11  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 11  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 11  
 
 ASSEMBLY LISTING OF GENERATED OBJECT CODE
 
@@ -740,11 +696,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0023         ?C0065:
 0023 C3                CLR     C
 0024 33                RLC     A
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 12  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 12  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 12  
 
 0025 CE                XCH     A,R6
 0026 33                RLC     A
@@ -808,11 +760,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 94
 0066 D007              POP     AR7
 0068 D006              POP     AR6
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 13  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 13  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 13  
 
 006A D000              POP     AR0
 006C D0D0              POP     PSW
@@ -876,11 +824,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 124
 0021 22                RET     
              ; FUNCTION _StartTimer (END)
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 14  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 14  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 14  
 
 
              ; FUNCTION _KillTimer (BEGIN)
@@ -944,11 +888,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0007 D2B2              SETB    RTC_SCL
 0009 7F05              MOV     R7,#05H
              ; FUNCTION _delayus (BEGIN)
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 15  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 15  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 15  
 
                                            ; SOURCE LINE # 202
 ;---- Variable 't' assigned to Register 'R7' ----
@@ -1012,11 +952,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 237
 0007 7F0F              MOV     R7,#0FH
 0009 120000      R     LCALL   _delayus
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 16  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 16  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 16  
 
                                            ; SOURCE LINE # 239
 000C C2B3              CLR     RTC_SDA
@@ -1080,11 +1016,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 269
 0000 120000      R     LCALL   SDA_OUT
                                            ; SOURCE LINE # 270
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 17  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 17  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 17  
 
                                            ; SOURCE LINE # 271
                                            ; SOURCE LINE # 272
@@ -1148,11 +1080,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 000E 7F64              MOV     R7,#064H
              ; FUNCTION _i2cbw (BEGIN)
                                            ; SOURCE LINE # 300
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 18  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 18  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 18  
 
 ;---- Variable 'dat' assigned to Register 'R5' ----
 0010 AD07              MOV     R5,AR7
@@ -1216,11 +1144,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 330
 ;---- Variable 'i' assigned to Register 'R4' ----
 0010 E4                CLR     A
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 19  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 19  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 19  
 
 0011 FC                MOV     R4,A
 0012         ?C0035:
@@ -1284,11 +1208,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 363
 000B 120000      R     LCALL   i2cbr
 ;---- Variable 'dat1' assigned to Register 'R2' ----
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 20  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 20  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 20  
 
 000E AA07              MOV     R2,AR7
                                            ; SOURCE LINE # 364
@@ -1352,11 +1272,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 004D 7F10              MOV     R7,#010H
 004F 120000      R     LCALL   _i2cbw
                                            ; SOURCE LINE # 394
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 21  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 21  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 21  
 
 0052 AF02              MOV     R7,AR2
 0054 120000      R     LCALL   _i2cbw
@@ -1420,11 +1336,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 009E 120000      R     LCALL   L?0080
                                            ; SOURCE LINE # 420
 00A1 7F10              MOV     R7,#010H
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 22  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 22  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 22  
 
 00A3 120000      R     LCALL   _i2cbw
                                            ; SOURCE LINE # 421
@@ -1488,11 +1400,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 452
 002E 900000      R     MOV     DPTR,#dat
 0031 E0                MOVX    A,@DPTR
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 23  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 23  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 23  
 
 0032 4484              ORL     A,#084H
 0034 F0                MOVX    @DPTR,A
@@ -1556,11 +1464,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0090 E0                MOVX    A,@DPTR
 0091 547F              ANL     A,#07FH
 0093 F0                MOVX    @DPTR,A
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 24  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 24  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 24  
 
                                            ; SOURCE LINE # 473
                                            ; SOURCE LINE # 474
@@ -1624,11 +1528,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0029 900000      R     MOV     DPTR,#rtcdata
 002C EF                MOV     A,R7
 002D F0                MOVX    @DPTR,A
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 25  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 25  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 25  
 
                                            ; SOURCE LINE # 501
 002E 120000      R     LCALL   mnak
@@ -1692,11 +1592,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0073 2B                ADD     A,R3
 0074 F582              MOV     DPL,A
 0076 E4                CLR     A
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 26  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 26  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 26  
 
 0077 3400        R     ADDC    A,#HIGH rtcdata
 0079 F583              MOV     DPH,A
@@ -1760,11 +1656,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0004 84                DIV     AB
 0005 C4                SWAP    A
 0006 54F0              ANL     A,#0F0H
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 27  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 27  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 27  
 
 0008 FE                MOV     R6,A
 0009 EF                MOV     A,R7
@@ -1828,11 +1720,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 001C F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 544
 001D EB                MOV     A,R3
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 28  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 28  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 28  
 
 001E 24FF              ADD     A,#0FFH
 0020 FE                MOV     R6,A
@@ -1896,11 +1784,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 006A CE                XCH     A,R6
 006B 13                RRC     A
 006C D8F9              DJNZ    R0,?C0077
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 29  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 29  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 29  
 
 006E 2B                ADD     A,R3
 006F FF                MOV     R7,A
@@ -1964,11 +1848,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0027 020000      R     LJMP    ?C0063
                                            ; SOURCE LINE # 564
                                            ; SOURCE LINE # 565
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 30  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 30  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 30  
 
 002A A3                INC     DPTR
 002B E0                MOVX    A,@DPTR
@@ -2032,11 +1912,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0083 FF                MOV     R7,A
 0084 120000      R     LCALL   _BCD
 0087 900000      R     MOV     DPTR,#rtc_set+06H
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 31  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 31  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 31  
 
 008A EF                MOV     A,R7
 008B F0                MOVX    @DPTR,A
@@ -2090,11 +1966,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0016 020000      R     LJMP    check_rtc_set
              ; FUNCTION Clock (END)
 
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 32  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 32  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 32  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -2157,11 +2029,7 @@ MNORFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  12
   Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
   Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
 _mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 33  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 33  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 33  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -2224,11 +2092,7 @@ _GetTimeOutFlag. . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
 Clock. . . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
 PWMTicks . . . . . . . . . . . . . . .  PUBLIC   XDATA  ARRAY    0021H  16
 T0_Init. . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
-<<<<<<< HEAD
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 18:53:27 PAGE 34  
-=======
-C51 COMPILER V9.53.0.0   TIMER                                                             10/31/2023 14:52:42 PAGE 34  
->>>>>>> 19b7549690ea1a51661db2aa29284ce58c68ec8b
+C51 COMPILER V9.53.0.0   TIMER                                                             11/01/2023 15:46:08 PAGE 34  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====

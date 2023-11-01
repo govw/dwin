@@ -79,14 +79,7 @@ const u16 KEY_CODE_VP = 0x2000;
 
 void nothing(void)
 {
-    static u8 cnt = 0;
-    if((cnt & 0x01) == 1) {
-        draw_vertical_menu();
-    } else {
-        u16 dummpy = 0x0000;
-        write_dgus_vp(0x9500, (u8*) &dummpy, 1);
-    }
-    cnt++; //for switch                             
+                              
     
 }
  
@@ -274,9 +267,9 @@ while(1)
                    u8 i;
                    for(i = 0; i < cur_menu->size; i++) { //if touch coords in recatnle area
                         if( ((cur_menu->active & (0x01 << i)) != 0) &&
-                            touch_data.x >= cur_menu->items[i].r.x0 && touch_data.x <= cur_menu.items[i].r.x1 &&  
-                            touch_data.y >= cur_menu.items[i].r.y0 && touch_data.y <= cur_menu.items[i].r.y1 ) {
-                                //вызов функции соответсвующей прямоугольной области
+                            touch_data.x >= cur_menu->items[i].r.x0 && touch_data.x <= cur_menu->items[i].r.x1 &&  
+                            touch_data.y >= cur_menu->items[i].r.y0 && touch_data.y <= cur_menu->items[i].r.y1 ) {
+                                //поиск из прямоуг. областей
                                 break;
                             }
                         }
@@ -285,7 +278,7 @@ while(1)
                         write_dgus_vp(0x2500, (u8*) &dummy, 1); //отобразить код выбранной функции
                     }
                     last_selected_menu_item = i;
-                    cur_menu->func(); 
+                    cur_menu->func(i); 
                    
                    break;
                }
