@@ -265,21 +265,28 @@ while(1)
                case ETPS_RELEASE:
                {
                    u8 i;
+                   last_selected_menu_item = 0;
                    for(i = 0; i < cur_menu->size; i++) { //if touch coords in recatnle area
-                        if( ((cur_menu->active & (0x01 << i)) != 0) &&
-                            touch_data.x >= cur_menu->items[i].r.x0 && touch_data.x <= cur_menu->items[i].r.x1 &&  
-                            touch_data.y >= cur_menu->items[i].r.y0 && touch_data.y <= cur_menu->items[i].r.y1 ) {
+                        
+                        if((cur_menu->active & (0x0001 << i)) != 0) {
+                            if( touch_data.x >= cur_menu->items[i].r.x0 && touch_data.x <= cur_menu->items[i].r.x1 &&  
+                                touch_data.y >= cur_menu->items[i].r.y0 && touch_data.y <= cur_menu->items[i].r.y1 ) {
                                 //поиск из прямоуг. областей
+                                cur_menu->func(i);
+                                prev_menu_item = last_selected_menu_item;
                                 break;
                             }
+                            last_selected_menu_item++;    
                         }
+                            
+                    }
+                    
+                    
                     {
-                        u16 dummy = i;
+                        u16 dummy = last_selected_menu_item;
                         write_dgus_vp(0x2500, (u8*) &dummy, 1); //отобразить код выбранной функции
                     }
-                    last_selected_menu_item = i;
-                    cur_menu->func(i); 
-                   
+                 
                    break;
                }
                    

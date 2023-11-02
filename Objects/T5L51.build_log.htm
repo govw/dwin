@@ -35,16 +35,16 @@ compiling main.c...
 source\ssd2828.h(76): warning C235: parameter 1: different types
 source\main.c(86): warning C280: 'x': unreferenced local variable
 source\main.c(239): warning C280: 'tp_state': unreferenced local variable
-source\main.c(445): warning C280: 'buf_idx': unreferenced local variable
+source\main.c(452): warning C280: 'buf_idx': unreferenced local variable
 source\main.c(196): warning C290: missing return value
-source\main.c(426): warning C294: unreachable code
+source\main.c(433): warning C294: unreachable code
 compiling const.c...
 compiling ui.c...
 compiling dwin8283.c...
 compiling ssd2828.c...
 source\ssd2828.h(76): warning C235: parameter 1: different types
 compiling temp.c...
-source\temp.c(196): warning C280: 'select': unreferenced local variable
+source\temp.c(286): warning C280: 'select': unreferenced local variable
 linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?RESETT5L?SYS
@@ -96,55 +96,16 @@ linking...
     SEGMENT: ?PR?_DO_NOTHING?TEMP
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?LEVEL_BACK?TEMP
-Program Size: data=157.2 xdata=17325 code=17692
+Program Size: data=157.2 xdata=17289 code=17801
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
 C:\Users\OGK5-7\Desktop\dwin>cd objects 
 C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x44E7, got 0x3B90)
+    (expected >= 0x4554, got 0x3C24)
 C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
 ".\Objects\T5L51" - 0 Error(s), 33 Warning(s).
 </pre>
 </body>
 </html>
-ULE:  .\Objects\temp.obj (TEMP)
-    ADDRESS: 338AH
-*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
-    SYMBOL:  DO_NOTHING
-    MODULE:  .\Objects\temp.obj (TEMP)
-    ADDRESS: 3392H
-*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
-    SYMBOL:  DO_NOTHING
-    MODULE:  .\Objects\temp.obj (TEMP)
-    ADDRESS: 339AH
-*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
-    SYMBOL:  DO_NOTHING
-    MODULE:  .\Objects\temp.obj (TEMP)
-    ADDRESS: 33A2H
-*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
-    SYMBOL:  DO_NOTHING
-    MODULE:  .\Objects\temp.obj (TEMP)
-    ADDRESS: 33AAH
-*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
-    SYMBOL:  DO_NOTHING
-    MODULE:  .\Objects\temp.obj (TEMP)
-    ADDRESS: 33B2H
-Program Size: data=157.2 xdata=17324 code=17253
-creating hex file from ".\Objects\T5L51"...
-User command #1: 1.bat
-C:\Users\OGK5-7\Desktop\dwin>cd objects 
-C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
-srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x4330, got 0x39FC)
-C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
-".\Objects\T5L51" - 0 Error(s), 42 Warning(s).
-win\Objects>echo.
-".\Objects\T5L51" - 0 Error(s), 43 Warning(s).
-T5L51" - 0 Error(s), 43 Warning(s).
-ects 
-C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
-srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x42AC, got 0x39DC)
-C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
-".\Objects\T5L51" - 0 Error(s), 46 Warning(s).
+.\Objects\T5L51" - 0 Error(s), 34 Warning(s).

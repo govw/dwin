@@ -61,5 +61,5 @@ void level_back(void);
 
 extern menu_t *cur_menu;
 extern u8 last_selected_menu_item;
-
+extern u8 prev_menu_item;
 #endif //TEMP_H
