@@ -267,20 +267,27 @@ while(1)
                    u8 i;
                    last_selected_menu_item = 0;
                    for(i = 0; i < cur_menu->size; i++) { //if touch coords in recatnle area
-                        
-                        if((cur_menu->active & (0x0001 << i)) != 0) {
+                        if(((u32)active_items_bm & (u32)((u32)0x00000001 << cur_menu->items[i].ico)) != 0) {
                             if( touch_data.x >= cur_menu->items[i].r.x0 && touch_data.x <= cur_menu->items[i].r.x1 &&  
                                 touch_data.y >= cur_menu->items[i].r.y0 && touch_data.y <= cur_menu->items[i].r.y1 ) {
                                 //поиск из прямоуг. областей
+
+                                    //Подумать как измень данный участок ///////////////////////////
+                                 if(&arr_of_menus[0] != cur_menu) {
+                                    if(arr_of_menus[0].items[prev_menu_item].ico == cur_menu->items[i].ico)
+                                    {
+                                        continue;
+                                    }
+                                }
+                                ////////////////////////////////////////////////////
                                 cur_menu->func(i);
                                 prev_menu_item = last_selected_menu_item;
                                 break;
                             }
                             last_selected_menu_item++;    
                         }
-                            
                     }
-                    
+                   
                     
                     {
                         u16 dummy = last_selected_menu_item;

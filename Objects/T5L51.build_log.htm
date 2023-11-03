@@ -35,17 +35,28 @@ compiling main.c...
 source\ssd2828.h(76): warning C235: parameter 1: different types
 source\main.c(86): warning C280: 'x': unreferenced local variable
 source\main.c(239): warning C280: 'tp_state': unreferenced local variable
-source\main.c(452): warning C280: 'buf_idx': unreferenced local variable
+source\main.c(459): warning C280: 'buf_idx': unreferenced local variable
 source\main.c(196): warning C290: missing return value
-source\main.c(433): warning C294: unreachable code
+source\main.c(440): warning C294: unreachable code
 compiling const.c...
 compiling ui.c...
 compiling dwin8283.c...
 compiling ssd2828.c...
 source\ssd2828.h(76): warning C235: parameter 1: different types
 compiling temp.c...
-source\temp.c(286): warning C280: 'select': unreferenced local variable
 linking...
+*** WARNING L13: RECURSIVE CALL TO SEGMENT
+    SEGMENT: ?CO?TEMP
+    CALLER:  ?PR?_BOTTOM_LEVEL_CONTROLS?TEMP
+*** WARNING L13: RECURSIVE CALL TO SEGMENT
+    SEGMENT: ?CO?TEMP
+    CALLER:  ?PR?_DRAW_ICONS?TEMP
+*** WARNING L13: RECURSIVE CALL TO SEGMENT
+    SEGMENT: ?CO?TEMP
+    CALLER:  ?PR?_WELDING_MODE_CONTROLS?TEMP
+*** WARNING L13: RECURSIVE CALL TO SEGMENT
+    SEGMENT: ?CO?TEMP
+    CALLER:  ?PR?_TOGGLE_MENU?TEMP
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?RESETT5L?SYS
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
@@ -90,19 +101,13 @@ linking...
     SEGMENT: ?PR?SSD2828_READID?SSD2828
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_SSD2828_READREG?SSD2828
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?DRAW_SUB_MENU?TEMP
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_DO_NOTHING?TEMP
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?LEVEL_BACK?TEMP
-Program Size: data=157.2 xdata=17289 code=17801
+Program Size: data=97.2 xdata=17361 code=18329
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
 C:\Users\OGK5-7\Desktop\dwin>cd objects 
 C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x4554, got 0x3C24)
+    (expected >= 0x476C, got 0x3ECA)
 C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
 ".\Objects\T5L51" - 0 Error(s), 33 Warning(s).
 </pre>
