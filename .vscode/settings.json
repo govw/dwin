@@ -4,6 +4,8 @@
         "bit": "c",
         "compare": "c",
         "limits": "c",
-        "new": "c"
+        "new": "c",
+        "ssd2828.h": "c",
+        "temp.h": "c"
     }
 }

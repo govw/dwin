@@ -3,10 +3,10 @@
         {
             "name": "Target 1",
             "includePath": [
-                "c:\\Users\\kmd\\Desktop\\T5L51-MIPI_CODE\\driver",
-                "c:\\Users\\kmd\\Desktop\\T5L51-MIPI_CODE\\source",
+                "..\\driver",
+                "..\\source",
                 "D:\\1-worksoft\\keil\\C51\\INC",
-                "c:\\Users\\kmd\\Desktop\\T5L51-MIPI_CODE"
+                "..\\"
             ],
             "defines": [
                 "__C51__",

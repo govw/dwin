@@ -422,6 +422,11 @@
               <FileType>1</FileType>
               <FilePath>.\source\ssd2828.c</FilePath>
             </File>
+            <File>
+              <FileName>temp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\temp.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

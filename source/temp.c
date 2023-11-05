@@ -2,227 +2,194 @@
 #include "sys.h"
 #include "string.h"
 
-
 #define ARR_SIZE(x) (sizeof(x) / sizeof(x[0]))
 
+
+// struct Flags {
+//     u32 flag1 : 1;
+//     u32 flag2 : 1;
+//     u32 flag3 : 1;
+//     u32 flag4 : 1;
+// };
+
+typedef enum {
+    EIID_TIG,       EIID_TIG_SPOT, EIID_MMA,
+    EIID_AC,        EIID_AC_MIX,   EIID_DC_MINUS, EIID_DC_PLUS,
+    EIID_2T,        EIID_4T,       EIID_4T_PLUS,
+    EIID_HF,        EIID_LIFT,
+    EIID_PULSE_OFF, EIID_PULSE_ON,
+    EIID_D_10,      EIID_D_16,     EIID_D_20,     EIID_D_24, EIID_D_32, EIID_D_40,
+    EIID_SIN,       EIID_TRIG,     EIID_RECT,     EIID_TRAP,
+    EIID_H2O_ON,    EIID_H2O_OFF,
+    EIID_NO_ICON,
+}icon_id;
+
 enum {
-    MEN_BOTTOM_MOD,
-    MEN_WELD_MOD,
+    MEN_WELD_MOD, 
     MEN_BTN_MOD,
-    MEN_POL_MOD,
+    MEN_POL_MOD, 
     MEN_IGN_MOD,
     MEN_PLS_MOD,
-    MEN_D_MOD,
+    MEN_PLS_WAVE_SHAPE_MOD,  
+    MEN_D_MOD,   
     MEN_FLOW_MOD,
 };
 
-void draw_bottom_menu(void);
-void gui_init(void);
-void bottom_level_controls(u8 select);
-void welding_mode_controls(u8 select);
-
-menu_t *cur_menu; //сделать в виде переменной ,а не указателем
-u8 last_selected_menu_item;
-u8 prev_menu_item;
-code const u16 icon_rect_sz = 128;
-
-code const icon_id bottom[]=            {EIID_TIG, EIID_2T, EIID_AC ,EIID_HF ,EIID_PULSE_OFF ,EIID_SIN ,EIID_D_10, EIID_H2O_OFF};
-code const icon_id welding_mode[] =     {EIID_TIG, EIID_TIG_SPOT, EIID_MMA};
-code const icon_id tig_button_mod[] =   {EIID_2T, EIID_4T, EIID_4T_PLUS};
-code const icon_id polarity[] =         {EIID_AC, EIID_AC_MIX , EIID_DC_MINUS, EIID_DC_PLUS};
-code const icon_id ignition_type[] =    {EIID_HF, EIID_LIFT};
-code const icon_id pulse_state[] =      {EIID_PULSE_OFF, EIID_PULSE_ON};
-code const icon_id wave_shape[]  =      {EIID_SIN, EIID_TRIG, EIID_RECT, EIID_TRAP}; 
-code const icon_id electrode_d[] =      {EIID_D_10, EIID_D_16, EIID_D_20, EIID_D_24, EIID_D_32, EIID_D_40};
-code const icon_id flow_sensor[] =      {EIID_H2O_OFF, EIID_H2O_ON};
-
-menu_item_t bottom_items         [ARR_SIZE(bottom)];
-menu_item_t welding_mode_items   [ARR_SIZE(welding_mode)];
-menu_item_t tig_button_mod_items [ARR_SIZE(tig_button_mod)];
-menu_item_t polarity_items       [ARR_SIZE(polarity)];
-menu_item_t ignition_type_items  [ARR_SIZE(ignition_type)];
-menu_item_t pulse_state_items    [ARR_SIZE(pulse_state)];
-menu_item_t wave_shape_items     [ARR_SIZE(wave_shape)];
-menu_item_t electrode_d_items    [ARR_SIZE(electrode_d)];
-menu_item_t flow_sensor_items    [ARR_SIZE(flow_sensor)];
-
-code menu_t arr_of_menus[] = {
-    { ARR_SIZE(bottom_items),          bottom_items,            bottom_level_controls},
-    { ARR_SIZE(welding_mode_items),    welding_mode_items,      welding_mode_controls}, 
-    { ARR_SIZE(tig_button_mod_items),  tig_button_mod_items,    welding_mode_controls},
-    { ARR_SIZE(polarity_items),        polarity_items,          welding_mode_controls},
-    { ARR_SIZE(ignition_type_items),   ignition_type_items,     welding_mode_controls},
-    { ARR_SIZE(pulse_state_items),     pulse_state_items,       welding_mode_controls},
-    { ARR_SIZE(wave_shape_items),      wave_shape_items,        welding_mode_controls},
-    { ARR_SIZE(electrode_d_items),     electrode_d_items,       welding_mode_controls},
-    { ARR_SIZE(flow_sensor_items),     flow_sensor_items,       welding_mode_controls},
+enum {
+    TIG,
+    TIG_SPOT,
+    MMA,
 };
 
+code const u16 ICON_RECT_SZ = 128;
+
+code const u32 active_items[] = {
+    0xffffffff, //tig
+    0xffffffff, //tig spot
+    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_TIG_SPOT) | ((u32)1 << EIID_MMA)     |
+    ((u32)1 << EIID_AC)        | ((u32)1 << EIID_DC_MINUS) | ((u32)1 << EIID_DC_PLUS) |
+    ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON),    //mma
+};
+u8 cur_active_items_id = TIG;
+
+code const u32 menu_item_bm[] = { 
+    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_TIG_SPOT) | ((u32)1 << EIID_MMA),      
+    ((u32)1 << EIID_2T)        | ((u32)1 << EIID_4T)       | ((u32)1 << EIID_4T_PLUS),    
+    ((u32)1 << EIID_AC)        | ((u32)1 << EIID_AC_MIX)   | ((u32)1 << EIID_DC_MINUS) | ((u32)1 << EIID_DC_PLUS),                                             
+    ((u32)1 << EIID_HF)        | ((u32)1 << EIID_LIFT),
+    ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON),
+    ((u32)1 << EIID_SIN)       | ((u32)1 << EIID_TRIG)     | ((u32)1 << EIID_RECT)     | ((u32)1 << EIID_TRAP),                                                
+    ((u32)1 << EIID_D_10)      | ((u32)1 << EIID_D_16)     | ((u32)1 << EIID_D_20)     | ((u32)1 << EIID_D_24) | ((u32)1 << EIID_D_32) | ((u32)1 << EIID_D_40),
+    ((u32)1 << EIID_H2O_OFF)   | ((u32)1 << EIID_H2O_ON),   
+}; 
 
 
-code const u32 active_items_bm_tig = 0xffffffff;
-code const u32 active_items_bm_tig_spot = 0xffffffff;
-code const u32 active_items_bm_mma = (((u32)1 << EIID_TIG) |
-                                ((u32)1 << EIID_TIG_SPOT) |
-                                ((u32)1 << EIID_MMA) |
-                                ((u32)1 << EIID_AC) |
-                                ((u32)1 << EIID_DC_MINUS) |
-                                ((u32)1 << EIID_DC_PLUS) |
-                                ((u32)1 << EIID_PULSE_OFF) |
-                                ((u32)1 << EIID_PULSE_ON));
-                                        
-idata u32 active_items_bm = 0xffffffff; //all items active at sturt
 
-void gui_init(void)
-{
+
+icon_t cur_menu[32];
+u32 cur_menu_active;
+u8 cur_menu_size;
+
+
+//те элементы которые будут отображены в горизонтальном меню
+idata u32 main_menu_bm; //битовая маска горизонтального меню на нижнем экране необходима первоначальная инициализация
+
+
+void (*cur_menu_fanc)(u8 item_pos);
+
+void change_mode_control(u8 item_pos);
+void dgus_draw_icons(u16 vp, icon_t *p_icon, u8 size);
+void make_menu_bar(u16 vp, u8 is_vertical, u16 start_x, u16 start_y, u32 id_bm, void (*cur_menu_fanc)(u8 item_pos));
+
+
+
+
+
+
+
+void dgus_draw_icons(u16 vp, icon_t *p_icon, u8 size)
+{//classic now change 
     u8 i, j;
-    code icon_id *icon_ids[] = {
-        bottom, welding_mode, tig_button_mod, polarity, ignition_type, pulse_state, wave_shape, electrode_d,  flow_sensor, 
-    };
-
-    for(i = 0; i < ARR_SIZE(icon_ids); i++) {
-        for (j = 0; j < arr_of_menus[i].size; j++) {
-            arr_of_menus[i].items[j].ico = icon_ids[i][j]; 
-        }
-        
-    }
-}
-
-void draw_icons(u16 vp, menu_t *p_menu)
-{
-    u8 i, j;
-    u8 size;
     u16 cmd[100];
     cmd[0] = 0x2407; //icon_write_instruction      
-    
-    j = 2;
-    size = 0;
-    for(i = 0; i < p_menu->size; i++) {
-        //Подумать как измень данный участок ///////////////////////////
-        if(&arr_of_menus[0] != p_menu) {
-            if(arr_of_menus[0].items[last_selected_menu_item].ico == p_menu->items[i].ico)
-            {
-                continue;
-            }
-        }
-        ///////////////////////////////////////////
-        if((u32)(active_items_bm & (u32)((u32)0x00000001 << p_menu->items[i].ico)) != 0) {
-            cmd[j] = p_menu->items[i].r.x0;
-            j++;
-            cmd[j] = p_menu->items[i].r.y0;
-            j++;
-            cmd[j] = p_menu->items[i].ico;
-            j++;
-            size++;
-        }
-    }
     cmd[1] = size; //display_icon_cnt
+    j = 2;
+    for(i = 0; i < size; i++) {
+        cmd[j] = p_icon[i].r.x0;
+        j++;
+        cmd[j] = p_icon[i].r.y0;
+        j++;
+        cmd[j] = p_icon[i].ico;
+        j++;
+    }
     cmd[j] = 0xFF00;
     write_dgus_vp(vp, (u8*)&cmd, j);
 }
 
 
+void make_menu_bar(u16 vp, u8 is_vertical, u16 start_x, u16 start_y, u32 id_bm, void (*cur_menu_fanc)(u8 item_pos))
+{
+    u8 i;
+    s16 shift_x;
+    s16 shift_y;
 
-void toggle_menu(menu_t *p_menu)
-{//отображение горизонтального меню   
-    {
-        u8 i;
-        u16 start_x = 0;
-        u16 start_y = 800-128;
-        for(i = 0; i < p_menu->size; i++) {
-            if(((u32)active_items_bm & (u32)((u32)0x00000001 << p_menu->items[i].ico)) != 0) {
-                p_menu->items[i].r.x0 = start_x;
-                p_menu->items[i].r.y0 = start_y;
-                p_menu->items[i].r.x1 = start_x + icon_rect_sz;
-                p_menu->items[i].r.y1 = start_y + icon_rect_sz;
-                start_x += 128;
-            }
-            
+    if(is_vertical)
+        shift_y = -ICON_RECT_SZ;
+    else
+        shift_x = ICON_RECT_SZ;
+
+    i = 0;
+    cur_menu_size = 0;
+    while (id_bm != 0) {
+        if((u32)id_bm & (u32)1) {
+            cur_menu[cur_menu_size].ico = i;
+            cur_menu[cur_menu_size].r.x0 = start_x;
+            cur_menu[cur_menu_size].r.y0 = start_y;
+            cur_menu[cur_menu_size].r.x1 = start_x + ICON_RECT_SZ;
+            cur_menu[cur_menu_size].r.y1 = start_y + ICON_RECT_SZ;
+            start_x += shift_x;
+            start_y += shift_y;
+            cur_menu_size++;        
+        }
+        id_bm >>= 1;
+        i++;
+    }
+
+    cur_menu_fanc = cur_menu_fanc;
+    dgus_draw_icons(vp, cur_menu, cur_menu_size);
+}
+
+void bottom_level_controls(u8 item_pos)
+{ //вызовется после выбора элемента в горизонтальном меню
+    u32 bm;
+    u8 i;
+    //получить индекс типа меню 
+    for(i = 0; i < ARR_SIZE(menu_item_bm); i++) {
+        if(menu_item_bm[i] & (u32)1 << cur_menu[item_pos].ico) {
+            bm = active_items[cur_active_items_id] & menu_item_bm[i];
+            bm &= ~((u32)1 << cur_menu[item_pos].ico); //убрать из отборажения элемент который уже высвечен в нижнем меню
+            make_menu_bar(0x9500, 1, ICON_RECT_SZ * item_pos, 0, bm, change_mode_control);     
+            break;
         }
     }
-    
-    cur_menu = p_menu; // make this menu as main
-    draw_icons(0x9000, p_menu);        
 }
+
+void change_mode_control(u8 item_pos) 
+{//вызовется после выбора эелемента в вертикальном меню
+    u8 i;
+    for(i = 0; i < ARR_SIZE(menu_item_bm); i++) {
+        if(menu_item_bm[i] & (u32)1 << cur_menu[item_pos].ico) {
+            main_menu_bm &= ~menu_item_bm[i]; //очисть область связанную с этим подменю в гавном меню
+            main_menu_bm |= ((u32)1 << cur_menu[item_pos].ico); //вставить текущий выбранный элемент в главное меню            
+            draw_bottom_menu();
+            break;
+        }
+    }
+
+    
+    switch (cur_menu[item_pos].ico)
+    {
+        case EIID_TIG:
+            cur_active_items_id = TIG;
+            break;
+        
+        case EIID_TIG_SPOT:
+            cur_active_items_id = TIG_SPOT;
+            break;
+
+        case EIID_MMA:
+            cur_active_items_id = MMA;
+            break;
+
+    }
+}
+
 
 
 void draw_bottom_menu(void)
 {   
-    gui_init();
-    toggle_menu(&arr_of_menus[0]);  
+    make_menu_bar(0x9000, 0, 0, 800 - ICON_RECT_SZ, main_menu_bm, bottom_level_controls);   
 }
-
-void bottom_level_controls(u8 select)
-{ //отображение вертикального меню
-    menu_t *p_menu;
-    p_menu = &arr_of_menus[select + 1]; //+1 значит пропусть bottom_menu
-    {
-        u8 i;
-        u16 start_x = (u16)last_selected_menu_item * 128;
-        u16 start_y = 800-256;
-        for(i = 0; i < p_menu->size; i++) {
-            if(((u32)active_items_bm & (u32)((u32)0x00000001 << p_menu->items[i].ico)) != 0) {
-                 //Подумать как измень данный участок ///////////////////////////
-                if(arr_of_menus[0].items[select].ico == p_menu->items[i].ico)
-                {
-                ////////////////////////////////    
-                    continue;   
-                }
-                p_menu->items[i].r.x0 = start_x;
-                p_menu->items[i].r.y0 = start_y;
-                p_menu->items[i].r.x1 = start_x + icon_rect_sz;
-                p_menu->items[i].r.y1 = start_y + icon_rect_sz;
-                start_y -= 128; 
-            }
-               
-            
-        } 
-    cur_menu = p_menu; // make this menu as main
-    draw_icons(0x9500, p_menu);        
-    }
-}
-
-
-
-
-// реакция на нажатие кнопки в горизонтальном меню
-void welding_mode_controls(u8 select) 
-{
-    {//убрать вертикальное меню
-        u16 tmp = 0x0000;
-        write_dgus_vp(0x9500, (u8*)&tmp, 1); 
-    }
-
-    switch (cur_menu->items[select].ico)
-    {
-        case EIID_TIG:
-        {
-            active_items_bm = active_items_bm_tig; 
-            break;
-        }    
-        case EIID_MMA:
-        { 
-            active_items_bm = active_items_bm_mma;
-            break;
-        }
-        case EIID_TIG_SPOT:
-        {
-            active_items_bm = active_items_bm_tig_spot;
-            break;   
-        }
-        
-        default:
-            break;
-    }
-    
-    arr_of_menus[0].items[prev_menu_item].ico = cur_menu->items[select].ico; //поменять иконку нижнего меню на выбранную
-    toggle_menu(&arr_of_menus[0]); //отобразить горизонтальное меню
-}
-
-
-
-
-
 
 
 

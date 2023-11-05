@@ -5,7 +5,7 @@
 <h2>Tool Versions:</h2>
 IDE-Version: µVision V5.11.2.0
 Copyright (C) 2014 ARM Ltd and ARM Germany GmbH. All rights reserved.
-License Information: no no, no, LIC=14RJ7-EZQYV-E5UT7-EP70R-A9NMD-W2GKT
+License Information: no no, no, LIC=AT28G-VD6PN-94YS2-9T3PI-GX9RS-CXUYD
  
 Tool Versions:
 Toolchain:       PK51 Prof. Developers Kit  Version: 9.53.0.0
@@ -21,8 +21,8 @@ Dialog DLL:      DCore51.DLL V2.81.4.0
 Dialog DLL:      TCore51.DLL V2.66.2.1
  
 <h2>Project:</h2>
-C:\Users\OGK5-7\Desktop\dwin\T5L51.uvproj
-Project File Date:  11/01/2023
+D:\Desktop\dwin\T5L51.uvproj
+Project File Date:  11/03/2023
 
 <h2>Output:</h2>
 Rebuild target 'Target 1'
@@ -33,11 +33,9 @@ compiling uart.c...
 compiling canbus.c...
 compiling main.c...
 source\ssd2828.h(76): warning C235: parameter 1: different types
-source\main.c(86): warning C280: 'x': unreferenced local variable
-source\main.c(239): warning C280: 'tp_state': unreferenced local variable
-source\main.c(459): warning C280: 'buf_idx': unreferenced local variable
-source\main.c(196): warning C290: missing return value
-source\main.c(440): warning C294: unreachable code
+source\main.c(103): warning C280: 'tp_state': unreferenced local variable
+source\main.c(185): warning C280: 'buf_idx': unreferenced local variable
+source\main.c(66): warning C290: missing return value
 compiling const.c...
 compiling ui.c...
 compiling dwin8283.c...
@@ -46,17 +44,8 @@ source\ssd2828.h(76): warning C235: parameter 1: different types
 compiling temp.c...
 linking...
 *** WARNING L13: RECURSIVE CALL TO SEGMENT
-    SEGMENT: ?CO?TEMP
-    CALLER:  ?PR?_BOTTOM_LEVEL_CONTROLS?TEMP
-*** WARNING L13: RECURSIVE CALL TO SEGMENT
-    SEGMENT: ?CO?TEMP
-    CALLER:  ?PR?_DRAW_ICONS?TEMP
-*** WARNING L13: RECURSIVE CALL TO SEGMENT
-    SEGMENT: ?CO?TEMP
-    CALLER:  ?PR?_WELDING_MODE_CONTROLS?TEMP
-*** WARNING L13: RECURSIVE CALL TO SEGMENT
-    SEGMENT: ?CO?TEMP
-    CALLER:  ?PR?_TOGGLE_MENU?TEMP
+    SEGMENT: ?PR?DRAW_BOTTOM_MENU?TEMP
+    CALLER:  ?PR?_CHANGE_MODE_CONTROL?TEMP
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?RESETT5L?SYS
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
@@ -90,7 +79,11 @@ linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?CANERRORRESET?CANBUS
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_PRINT_UTF_STR?MAIN
+    SEGMENT: ?PR?_DGUS_DRAW_STRING?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DGUS_PRINT_UTF_STR?MAIN
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?CO?MAIN
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?PAGEFUNCTION?UI
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
@@ -101,16 +94,19 @@ linking...
     SEGMENT: ?PR?SSD2828_READID?SSD2828
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_SSD2828_READREG?SSD2828
-Program Size: data=97.2 xdata=17361 code=18329
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?PRINTF?PRINTF
+Program Size: data=43.2 xdata=17081 code=16981
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
-C:\Users\OGK5-7\Desktop\dwin>cd objects 
-C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
+D:\Desktop\dwin>cd objects 
+D:\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x476C, got 0x3ECA)
-C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
-".\Objects\T5L51" - 0 Error(s), 33 Warning(s).
+    (expected >= 0x4233, got 0x3A21)
+D:\Desktop\dwin\Objects>echo.
+".\Objects\T5L51" - 0 Error(s), 31 Warning(s).
 </pre>
 </body>
 </html>
-.\Objects\T5L51" - 0 Error(s), 34 Warning(s).
+\dwin\Objects>echo.
+".\Objects\T5L51" - 0 Error(s), 32 Warning(s).
