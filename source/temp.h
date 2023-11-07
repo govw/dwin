@@ -15,6 +15,10 @@ typedef struct {
     rect_t r;
 }icon_t; 
 
+typedef struct {
+    u16 x;
+    u16 y;
+} point_t;
 void draw_bottom_menu(void);
 
 

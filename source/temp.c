@@ -260,71 +260,113 @@ void draw_bottom_menu(void)
 
 
 
+
+
+
+
+
+
+
+
+
+
+// dgus_draw_fillded_rect(u16 vp, filled_rect_t *p_rect, u8 size) 
+// {
+//     u8 i, j;
+//     u16 cmd[100];
+//     u8 size = 2;
+//     cmd[0] = 0x0004; //
+//     cmd[1] = size; //количество элементов для вывода
+//     j = 2;
+//     for(i = 0; i < size; i++) {
+//         cmd[j] = p_rect[i].x0;
+//         j++;
+//         cmd[j] = p_rect[i].y0;
+//         j++;
+//         cmd[j] = p_rect[i].x1;
+//         j++;
+//         cmd[j] = p_rect[i].y1;
+//         j++;
+//         cmd[j] = p_rect[i].color;
+//         j++;
+//     }
+//     cmd[j] = 0xFF00;
+//     write_dgus_vp(vp, (u8*)&cmd, j);
+// }
+
+
+
+point_t make_point(u16 x, u16 y) 
+{
+    point_t p;
+    p.x = x;
+    p.y = y;
+    return p;
+}
+
+
+typedef struct {
+    point_t p0;
+    point_t p1;
+    u16 color;
+} filled_rect_t;
+
 void draw_cyclogramm(void) 
 {
     u16 start_x = 0;
     u16 start_y = 300;
-    const u8 LINE_HEIGHT = 10;//px
+    const u8 LINE_HEIGHT = 11;//px
     const u8 LINE_WIDTH = 150;//px
-    struct {
-        u16 x0;
-        u16 y0;
-        u16 x1;
-        u16 y1;
-        u16 color;
-    }rect[10];
+    const u8 LEVEL_HEIGHT = 100;//px
 
-    rect[0].x0 = 0;
-    rect[0].y0 = 400;
-    rect[0].x1 = 300; 
-    rect[0].y1 = 400;
-    rect[0].color = 0xF800;
+    //циклограмма тиг не пульс в виде параметрической линии с 
+    point_t p[10];
+    p[0] = make_point(0,300);
+    p[1] = make_point(p[0].x + LINE_WIDTH, p[0].y); 
+    p[2] = make_point(p[1].x, p[1].y - LEVEL_HEIGHT); 
+    p[3] = make_point(p[2].x + LINE_WIDTH, p[2].y);
+    p[4] = make_point(p[3].x + LINE_WIDTH, p[3].y - LEVEL_HEIGHT);
+    
+    p[5] = make_point(p[4].x + LINE_WIDTH * 2, p[4].y);
 
-    rect[1].x0 = 150;
-    rect[1].y0 = 250;
-    rect[1].x1 = 300; 
-    rect[1].y1 = 400;
-    rect[1].color = 0xF800;
-
+    p[6] = make_point(p[5].x + LINE_WIDTH, p[5].y + LEVEL_HEIGHT);
+    p[7] = make_point(p[6].x + LINE_WIDTH, p[6].y);
+    p[8] = make_point(p[7].x, p[7].y + LEVEL_HEIGHT);
+    p[9] = make_point(p[7].x + LEVEL_HEIGHT, p[7].y);
+    
+     
     {
-        u8 i, j;
-        u16 cmd[100];
-        u8 size = 2;
-        cmd[0] = 0x0004; //
-        cmd[1] = size; //количество элементов для вывода
-        j = 2;
-        for(i = 0; i < size; i++) {
-            cmd[j] = rect[i].x0;
-            j++;
-            cmd[j] = rect[i].y0;
-            j++;
-            cmd[j] = rect[i].x1;
-            j++;
-            cmd[j] = rect[i].y1;
-            j++;
-            cmd[j] = rect[i].color;
-            j++;
-        }
-        cmd[j] = 0xFF00;
-        write_dgus_vp(0x7000, (u8*)&cmd, j);
+        u8 half_height = LEVEL_HEIGHT / 2;
+        filled_rects[0].p0 = make_point(p[0].x, p[0].y - half_height);
+        filled_rects[0].p1 = make_point(p[1].x, p[1].y + half_height);
+        
+        filled_rects[1].p0 = make_point(p[2].x - half_height, p[2].y);
+        filled_rects[1].p1 = make_point(p[1].x + half_height, p[1].y);
+
+        filled_rects[2].p0 = make_point(p[2].x, p[2].y - half_height);
+        filled_rects[2].p1 = make_point(p[3].x, p[3].y + half_height);
+
+        filled_rects[3].p0 = make_point(p[4].x, p[4].y - half_height);
+        filled_rects[3].p1 = make_point(p[5].x, p[5].y + half_height);
+
+        filled_rects[4].p0 = make_point(p[6].x, p[6].y - half_height);
+        filled_rects[4].p1 = make_point(p[7].x, p[7].y + half_height);
+
+        filled_rects[5].p0 = make_point(p[7].x - half_height, p[7].y - half_height);
+        filled_rects[5].p1 = make_point(p[8].x + half_height, p[8].y + half_height);
+
+        filled_rects[6].p0 = make_point(p[8].x - half_height, p[8].y - half_height);
+        filled_rects[6].p1 = make_point(p[9].x + half_height, p[9].y + half_height);
+
     }
+    
+    
+   
+    
+    //dgusbb_draw_fillded_rect(0x7000, rect, ARR_SIZE(rect));
 
 
-
-    //u16 cmd_len = 0;
-    // cmd[0] = 0x0004;
-    // cmd[1] = 1; //количество элементов для вывода
-    // cmd[2] = 0; //upper left coordinate
-    // cmd[3] = 0;
-    // cmd[4] = 1280; //lower right coordinate
-    // cmd[5] = 800;
-    // cmd[6] = 0xF800; //color
-    // cmd[7] = 0xFF00; //end cmd
-
-
-
-
-      
+    
 }
 
 
