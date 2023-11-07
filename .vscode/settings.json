@@ -6,6 +6,11 @@
         "limits": "c",
         "new": "c",
         "ssd2828.h": "c",
-        "temp.h": "c"
+        "temp.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "format": "c",
+        "initializer_list": "c",
+        "span": "c"
     }
 }

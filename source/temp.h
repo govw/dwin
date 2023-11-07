@@ -22,5 +22,6 @@ extern icon_t cur_menu[];
 extern u8  cur_menu_size;
 extern void (*cur_menu_fanc)(u8 item_pos);
 
+extern void draw_cyclogramm(void);
 
 #endif //TEMP_H

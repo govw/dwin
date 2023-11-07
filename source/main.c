@@ -87,7 +87,7 @@ void main()
 	UART_INIT //MARCROS
 	
     draw_bottom_menu();
-  
+    draw_cyclogramm();
 while(1)    
 {
    
