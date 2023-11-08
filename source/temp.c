@@ -7,6 +7,7 @@
 
 
 
+
 typedef enum {
     EIID_TIG,       EIID_TIG_SPOT, EIID_MMA,
     EIID_AC,        EIID_AC_MIX,   EIID_DC_MINUS, EIID_DC_PLUS,
@@ -270,29 +271,7 @@ void draw_bottom_menu(void)
 
 
 
-// dgus_draw_fillded_rect(u16 vp, filled_rect_t *p_rect, u8 size) 
-// {
-//     u8 i, j;
-//     u16 cmd[100];
-//     u8 size = 2;
-//     cmd[0] = 0x0004; //
-//     cmd[1] = size; //количество элементов для вывода
-//     j = 2;
-//     for(i = 0; i < size; i++) {
-//         cmd[j] = p_rect[i].x0;
-//         j++;
-//         cmd[j] = p_rect[i].y0;
-//         j++;
-//         cmd[j] = p_rect[i].x1;
-//         j++;
-//         cmd[j] = p_rect[i].y1;
-//         j++;
-//         cmd[j] = p_rect[i].color;
-//         j++;
-//     }
-//     cmd[j] = 0xFF00;
-//     write_dgus_vp(vp, (u8*)&cmd, j);
-// }
+
 
 
 
@@ -311,17 +290,77 @@ typedef struct {
     u16 color;
 } filled_rect_t;
 
+typedef struct {
+    point_t p0;
+    point_t p1;
+    u16 color;
+} line_t;
+
+dgus_draw_fillded_rect(u16 vp, filled_rect_t *p_rect, u8 size) 
+{
+    u8 i, j;
+    u16 cmd[120];
+    cmd[0] = 0x0004; //
+    cmd[1] = size; //количество элементов для вывода
+    j = 2;
+    for(i = 0; i < size; i++) {
+        cmd[j] = p_rect[i].p0.x;
+        j++;
+        cmd[j] = p_rect[i].p0.y;
+        j++;
+        cmd[j] = p_rect[i].p1.x;
+        j++;
+        cmd[j] = p_rect[i].p1.y;
+        j++;
+        cmd[j] = p_rect[i].color;
+        j++;
+    }
+    cmd[j] = 0xFF00;
+    write_dgus_vp(vp, (u8*)&cmd, j);
+}
+
+dgus_draw_line_segment(u16 vp, line_t *p_line, u8 size) 
+{
+    u8 i, j;
+    u16 cmd[120];
+    cmd[0] = 0x000A; //draw line segment instruction
+    cmd[1] = size; //количество элементов для вывода
+    j = 2;
+    for(i = 0; i < size; i++) {
+        cmd[j] = p_line[i].color;
+        j++;
+        cmd[j] = p_line[i].p0.x;
+        j++;
+        cmd[j] = p_line[i].p0.y;
+        j++;
+        cmd[j] = p_line[i].p1.x;
+        j++;
+        cmd[j] = p_line[i].p1.y;
+        j++;
+    }
+    cmd[j] = 0xFF00;
+    write_dgus_vp(vp, (u8*)&cmd, j);
+}
+
+
 void draw_cyclogramm(void) 
 {
     u16 start_x = 0;
-    u16 start_y = 300;
-    const u8 LINE_HEIGHT = 11;//px
+    u16 start_y = 500;
+    const u8 LINE_HIGHT = 11;//px
     const u8 LINE_WIDTH = 150;//px
-    const u8 LEVEL_HEIGHT = 100;//px
+    const u8 LEVEL_HEIGHT = 120;//px
+    const u16 RED = 0xF800;
+    filled_rect_t filled_rects[7];
+    line_t  l[11 * 2];
+    point_t disp_var_upper_left[10];
+    dgus_data_variable_display_t temp; //ода структура 30 слов //выделено с запасом
 
     //циклограмма тиг не пульс в виде параметрической линии с 
     point_t p[10];
-    p[0] = make_point(0,300);
+    
+
+    p[0] = make_point(40,500);
     p[1] = make_point(p[0].x + LINE_WIDTH, p[0].y); 
     p[2] = make_point(p[1].x, p[1].y - LEVEL_HEIGHT); 
     p[3] = make_point(p[2].x + LINE_WIDTH, p[2].y);
@@ -332,47 +371,131 @@ void draw_cyclogramm(void)
     p[6] = make_point(p[5].x + LINE_WIDTH, p[5].y + LEVEL_HEIGHT);
     p[7] = make_point(p[6].x + LINE_WIDTH, p[6].y);
     p[8] = make_point(p[7].x, p[7].y + LEVEL_HEIGHT);
-    p[9] = make_point(p[7].x + LEVEL_HEIGHT, p[7].y);
+    p[9] = make_point(p[8].x + LINE_WIDTH, p[8].y);
     
+
      
+    temp.vp = 0x3000;
+    temp.color = 0x07FF;
+    temp.lib_id = 0x00;
+    temp.font_size = 0x20;
+    temp.alignment = 0x00;
+    temp.integer_digits = 0x03;
+    temp.decimal_places = 0x00;
+    temp.variable_data_type = 0x00;
+    temp.len_unit = 0x00;
+    
+     //вывести вермя продвки на линией
+    temp.upper_left_point = make_point(((p[1].x - p[0].x) / 2) + p[0].x - (temp.font_size / 2), p[1].y);
+    write_dgus_vp(0x1000, (u8*)&temp, sizeof(temp) / 2);  
+    // //начальный ток
+    temp.upper_left_point = make_point(((p[3].x - p[2].x) / 2) + p[2].x - (temp.font_size / 2), p[1].y);
+    write_dgus_vp(0x1030, (u8*)&temp, sizeof(temp) / 2); 
+    //вермя начального тока
+    temp.upper_left_point = make_point(((p[4].x - p[3].x) / 2) + p[3].x - (temp.font_size / 2), p[1].y);
+    write_dgus_vp(0x1060, (u8*)&temp, sizeof(temp) / 2); 
+    // //время наростания
+    // temp.upper_left_point = make_point(((p[4].x - p[3].x) / 2) + p[3].x - 16, p[3].y);
+    // write_dgus_vp(0x1090, (u8*)&temp, sizeof(temp) / 2); 
+    // //ток базы
+    // temp.upper_left_point = make_point(((p[5].x - p[4].x) / 2) + p[4].x - 16, p[4].y);
+    // write_dgus_vp(0x1120, (u8*)&temp, sizeof(temp) / 2); 
+    // //время спада
+    // temp.upper_left_point = make_point(((p[6].x - p[5].x) / 2) + p[5].x - 16, p[5].y);
+    // write_dgus_vp(0x1150, (u8*)&temp, sizeof(temp) / 2); 
+    // //конечный ток
+    // temp.upper_left_point = make_point(((p[6].x - p[7].x) / 2) + p[6].x - 16, p[6].y - 128);
+    // write_dgus_vp(0x1180, (u8*)&temp, sizeof(temp) / 2); 
+    // //время конечного тока
+    // temp.upper_left_point = make_point(((p[6].x - p[7].x) / 2) + p[6].x - 16, p[6].y);
+    // write_dgus_vp(0x1210, (u8*)&temp, sizeof(temp) / 2);
+    // //пост продувка
+    // temp.upper_left_point = make_point(((p[9].x - p[8].x) / 2) + p[8].x - 16, p[8].y);
+    // write_dgus_vp(0x1240, (u8*)&temp, sizeof(temp) / 2);
+
+
+
+
     {
-        u8 half_height = LEVEL_HEIGHT / 2;
-        filled_rects[0].p0 = make_point(p[0].x, p[0].y - half_height);
-        filled_rects[0].p1 = make_point(p[1].x, p[1].y + half_height);
+        u8 i;
+        u8 half_hight = LINE_HIGHT / 2;
+        filled_rects[0].p0 = make_point(p[0].x - half_hight, p[0].y - half_hight); // горизонтальная лини //время продувки
+        filled_rects[0].p1 = make_point(p[1].x + half_hight, p[1].y + half_hight);
+                         
         
-        filled_rects[1].p0 = make_point(p[2].x - half_height, p[2].y);
-        filled_rects[1].p1 = make_point(p[1].x + half_height, p[1].y);
+        filled_rects[1].p0 = make_point(p[2].x - half_hight, p[2].y - half_hight);
+        filled_rects[1].p1 = make_point(p[1].x + half_hight, p[1].y + half_hight);
 
-        filled_rects[2].p0 = make_point(p[2].x, p[2].y - half_height);
-        filled_rects[2].p1 = make_point(p[3].x, p[3].y + half_height);
+        filled_rects[2].p0 = make_point(p[2].x - half_hight, p[2].y - half_hight);
+        filled_rects[2].p1 = make_point(p[3].x + half_hight, p[3].y + half_hight);
 
-        filled_rects[3].p0 = make_point(p[4].x, p[4].y - half_height);
-        filled_rects[3].p1 = make_point(p[5].x, p[5].y + half_height);
 
-        filled_rects[4].p0 = make_point(p[6].x, p[6].y - half_height);
-        filled_rects[4].p1 = make_point(p[7].x, p[7].y + half_height);
+        filled_rects[3].p0 = make_point(p[4].x - half_hight, p[4].y - half_hight);
+        filled_rects[3].p1 = make_point(p[5].x + half_hight, p[5].y + half_hight);
 
-        filled_rects[5].p0 = make_point(p[7].x - half_height, p[7].y - half_height);
-        filled_rects[5].p1 = make_point(p[8].x + half_height, p[8].y + half_height);
 
-        filled_rects[6].p0 = make_point(p[8].x - half_height, p[8].y - half_height);
-        filled_rects[6].p1 = make_point(p[9].x + half_height, p[9].y + half_height);
+        {//line down
+            point_t a,b;
+            a = make_point(filled_rects[2].p1.x, filled_rects[2].p1.y - LINE_HIGHT + 1);
+            b = filled_rects[3].p0;
+            for(i = 0; i < ARR_SIZE(l) / 2; i++) { //first half fill
+                l[i].p0 = a;
+                l[i].p1 = b;
+                l[i].color = 0x07FF;
+                a.y++;
+                b.y++;   
+            }
+        }
 
+        filled_rects[4].p0 = make_point(p[6].x - half_hight, p[6].y - half_hight);
+        filled_rects[4].p1 = make_point(p[7].x + half_hight, p[7].y + half_hight);
+
+        {//line down
+            point_t a,b;
+            a = make_point(filled_rects[3].p1.x, filled_rects[3].p1.y - LINE_HIGHT + 1);
+            b = filled_rects[4].p0;
+            for(i = ARR_SIZE(l) / 2; i < ARR_SIZE(l); i++) { //first half fill
+                l[i].p0 = a;
+                l[i].p1 = b;
+                l[i].color = 0x07FF;
+                a.y++;
+                b.y++;   
+            }
+        }
+
+        filled_rects[5].p0 = make_point(p[7].x - half_hight, p[7].y - half_hight);
+        filled_rects[5].p1 = make_point(p[8].x + half_hight, p[8].y + half_hight);
+
+        filled_rects[6].p0 = make_point(p[8].x - half_hight, p[8].y - half_hight);
+        filled_rects[6].p1 = make_point(p[9].x + half_hight, p[9].y + half_hight);
+
+
+        for(i = 0; i < ARR_SIZE(filled_rects); i++) { //задание цвета всем прямоугольникам
+            filled_rects[i].color = 0xffff;       
+        }
+        filled_rects[3].color = RED;
     }
     
-    
-   
-    
-    //dgusbb_draw_fillded_rect(0x7000, rect, ARR_SIZE(rect));
 
 
-    
+
+    dgus_draw_fillded_rect(0x7000, filled_rects, ARR_SIZE(filled_rects));
+    dgus_draw_line_segment(0x7500, l, ARR_SIZE(l)); 
 }
 
 
 
 
 
+
+void place_numbers_on_cyclogramm(void) 
+{
+    //30 00 00 f1 00 9F f8 00 00 20 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+    
+    
+    //memset(temp.string_unit, sizeof(temp.string_unit), 0x00);
+    //write_dgus_vp(0x1000, (u8*)&temp, sizeof(temp) / 2);
+}
 
 
 

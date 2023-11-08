@@ -88,6 +88,7 @@ void main()
 	
     draw_bottom_menu();
     draw_cyclogramm();
+    place_numbers_on_cyclogramm();
 while(1)    
 {
    
