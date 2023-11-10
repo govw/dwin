@@ -299,7 +299,7 @@ typedef struct {
 dgus_draw_fillded_rect(u16 vp, filled_rect_t *p_rect, u8 size) 
 {
     u8 i, j;
-    u16 cmd[120];
+    u16 cmd[140];
     cmd[0] = 0x0004; //
     cmd[1] = size; //количество элементов для вывода
     j = 2;
@@ -351,36 +351,44 @@ void draw_cyclogramm(void)
     const u8 LINE_WIDTH = 150;//px
     const u8 LEVEL_HEIGHT = 120;//px
     const u16 RED = 0xF800;
-    filled_rect_t filled_rects[7];
+    filled_rect_t filled_rects[10];
     line_t  l[11 * 2];
     point_t disp_var_upper_left[10];
     dgus_data_variable_display_t temp; //ода структура 30 слов //выделено с запасом
 
     //циклограмма тиг не пульс в виде параметрической линии с 
-    point_t p[10];
+    point_t p[13];
     
-
-    p[0] = make_point(40,500);
+    //создание точек для циклограммы tig
+    p[0] = make_point(40,550);
     p[1] = make_point(p[0].x + LINE_WIDTH, p[0].y); 
+
     p[2] = make_point(p[1].x, p[1].y - LEVEL_HEIGHT); 
     p[3] = make_point(p[2].x + LINE_WIDTH, p[2].y);
+
     p[4] = make_point(p[3].x + LINE_WIDTH, p[3].y - LEVEL_HEIGHT);
-    
-    p[5] = make_point(p[4].x + LINE_WIDTH * 2, p[4].y);
 
-    p[6] = make_point(p[5].x + LINE_WIDTH, p[5].y + LEVEL_HEIGHT);
+    p[5] = make_point(p[4].x + LINE_WIDTH, p[4].y); // ток базы
+    p[6] = make_point(p[5].x , p[5].y + LEVEL_HEIGHT);
+
     p[7] = make_point(p[6].x + LINE_WIDTH, p[6].y);
-    p[8] = make_point(p[7].x, p[7].y + LEVEL_HEIGHT);
-    p[9] = make_point(p[8].x + LINE_WIDTH, p[8].y);
+
+    p[8] = make_point(p[7].x, p[7].y - LEVEL_HEIGHT);
+
+
+    p[9] = make_point(p[8].x + LINE_WIDTH, p[8].y + LEVEL_HEIGHT);
+    p[10] = make_point(p[9].x + LINE_WIDTH, p[9].y);
+    p[11] = make_point(p[10].x, p[10].y + LEVEL_HEIGHT);
+    p[12] = make_point(p[11].x + LINE_WIDTH, p[11].y);
     
 
-     
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     temp.vp = 0x3000;
     temp.color = 0x07FF;
     temp.lib_id = 0x00;
     temp.font_size = 0x20;
     temp.alignment = 0x02; //center alignment
-    temp.integer_digits = 0x03;
+    temp.integer_digits = 0x01;
     temp.decimal_places = 0x00;
     temp.variable_data_type = 0x00;
     temp.len_unit = 0x02;
@@ -389,39 +397,40 @@ void draw_cyclogramm(void)
     temp.string_unit[2] = 0x00;
     
      //вермя продвки
-    temp.upper_left_point = make_point(p[0].x, p[1].y);
+    temp.upper_left_point = make_point(p[0].x + ((p[1].x - p[0].x) / 2) - 48, p[1].y);
     write_dgus_vp(0x1000, (u8*)&temp, sizeof(temp) / 2);  
     // //начальный ток
-    temp.upper_left_point = make_point(p[2].x, p[3].y - 70);
+    temp.upper_left_point = make_point(p[2].x + ((p[3].x - p[2].x) / 2) - 48, p[3].y - 70);
     write_dgus_vp(0x1030, (u8*)&temp, sizeof(temp) / 2);
     // //вермя начального тока
-    temp.upper_left_point = make_point(p[2].x, p[3].y);
+    temp.upper_left_point = make_point(p[2].x + ((p[3].x - p[2].x) / 2) - 48, p[3].y);
     write_dgus_vp(0x1060, (u8*)&temp, sizeof(temp) / 2);
     //время наростания
-    temp.upper_left_point = make_point(p[3].x, p[3].y);
+    temp.upper_left_point = make_point(p[3].x + ((p[4].x - p[3].x) / 2) - 48, p[3].y);
     write_dgus_vp(0x1090, (u8*)&temp, sizeof(temp) / 2);
     // //ток базы
-    temp.upper_left_point = make_point(p[4].x, p[5].y - 70);
+    temp.upper_left_point = make_point(p[4].x + ((p[5].x - p[4].x) / 2) - ((temp.font_size  * (temp.integer_digits + temp.len_unit)) / 2), p[5].y - 70);
     write_dgus_vp(0x1120, (u8*)&temp, sizeof(temp) / 2);
     // //время спада
-    temp.upper_left_point = make_point(p[5].x, p[6].y);
+    temp.upper_left_point = make_point(p[5].x + ((p[6].x - p[5].x) / 2) - 48, p[6].y);
     write_dgus_vp(0x1150, (u8*)&temp, sizeof(temp) / 2);
     // //конечный ток
-    temp.upper_left_point = make_point(p[6].x, p[6].y - 70);
+    temp.upper_left_point = make_point(p[6].x + ((p[7].x - p[6].x) / 2) - 48, p[6].y - 70);
     write_dgus_vp(0x1180, (u8*)&temp, sizeof(temp) / 2);
     // //время конечного тока
-    temp.upper_left_point = make_point(p[6].x, p[6].y);
+    temp.upper_left_point = make_point(p[6].x + ((p[7].x - p[6].x) / 2) - 48, p[6].y);
     write_dgus_vp(0x1210, (u8*)&temp, sizeof(temp) / 2);
     // //пост продувка
-    temp.upper_left_point = make_point(p[8].x, p[9].y);
+    temp.upper_left_point = make_point(p[8].x + ((p[9].x - p[8].x) / 2) - 48, p[9].y);
     write_dgus_vp(0x1240, (u8*)&temp, sizeof(temp) / 2);
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     {
         u8 i;
         u8 half_hight = LINE_HIGHT / 2;
+        //прямоугольники рисовать всегда с левого верхнего угла
         filled_rects[0].p0 = make_point(p[0].x - half_hight, p[0].y - half_hight); // горизонтальная лини //время продувки
         filled_rects[0].p1 = make_point(p[1].x + half_hight, p[1].y + half_hight);
                          
@@ -437,7 +446,7 @@ void draw_cyclogramm(void)
         filled_rects[3].p1 = make_point(p[5].x + half_hight, p[5].y + half_hight);
 
 
-        {//line down
+        {//line up
             point_t a,b;
             a = make_point(filled_rects[2].p1.x, filled_rects[2].p1.y - LINE_HIGHT + 1);
             b = filled_rects[3].p0;
@@ -450,13 +459,23 @@ void draw_cyclogramm(void)
             }
         }
 
-        filled_rects[4].p0 = make_point(p[6].x - half_hight, p[6].y - half_hight);
-        filled_rects[4].p1 = make_point(p[7].x + half_hight, p[7].y + half_hight);
+        filled_rects[4].p0 = make_point(p[5].x - half_hight, p[5].y - half_hight);
+        filled_rects[4].p1 = make_point(p[6].x + half_hight, p[6].y + half_hight); //down
 
-        {//line down
+        filled_rects[5].p0 = make_point(p[6].x - half_hight, p[6].y - half_hight);//right
+        filled_rects[5].p1 = make_point(p[7].x + half_hight, p[7].y + half_hight);
+
+        filled_rects[6].p0 = make_point(p[8].x - half_hight, p[8].y - half_hight);//up
+        filled_rects[6].p1 = make_point(p[7].x + half_hight, p[7].y + half_hight);
+
+
+        filled_rects[7].p0 = make_point(p[9].x - half_hight, p[9].y - half_hight);//right
+        filled_rects[7].p1 = make_point(p[10].x + half_hight, p[10].y + half_hight);
+
+         {//line down
             point_t a,b;
-            a = make_point(filled_rects[3].p1.x, filled_rects[3].p1.y - LINE_HIGHT + 1);
-            b = filled_rects[4].p0;
+            a = make_point(filled_rects[6].p1.x, filled_rects[6].p0.y);
+            b = filled_rects[7].p0;
             for(i = ARR_SIZE(l) / 2; i < ARR_SIZE(l); i++) { //first half fill
                 l[i].p0 = a;
                 l[i].p1 = b;
@@ -466,26 +485,25 @@ void draw_cyclogramm(void)
             }
         }
 
-        filled_rects[5].p0 = make_point(p[7].x - half_hight, p[7].y - half_hight);
-        filled_rects[5].p1 = make_point(p[8].x + half_hight, p[8].y + half_hight);
 
-        filled_rects[6].p0 = make_point(p[8].x - half_hight, p[8].y - half_hight);
-        filled_rects[6].p1 = make_point(p[9].x + half_hight, p[9].y + half_hight);
+        filled_rects[8].p0 = make_point(p[10].x - half_hight, p[10].y - half_hight); //down
+        filled_rects[8].p1 = make_point(p[11].x + half_hight, p[11].y + half_hight);
 
+        filled_rects[9].p0 = make_point(p[11].x - half_hight, p[11].y - half_hight);//right
+        filled_rects[9].p1 = make_point(p[12].x + half_hight, p[12].y + half_hight);
 
         for(i = 0; i < ARR_SIZE(filled_rects); i++) { //задание цвета всем прямоугольникам
             filled_rects[i].color = 0xffff;       
         }
         filled_rects[3].color = RED;
     }
-    
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
 
 
-    dgus_draw_fillded_rect(0x7000, filled_rects, ARR_SIZE(filled_rects));
-    dgus_draw_line_segment(0x7500, l, ARR_SIZE(l)); 
+    dgus_draw_fillded_rect(0x7000, filled_rects, ARR_SIZE(filled_rects)); // для отрисоки прямоугольников
+    dgus_draw_line_segment(0x7500, l, ARR_SIZE(l)); //для отрисовки косых линий
 }
-
 
 
 
