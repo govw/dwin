@@ -1,4 +1,4 @@
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 1   
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE TIMER
@@ -41,145 +41,157 @@ line level    source
   31          u16 data TimerTime[8];  //8个软定时器定时时间
   32          u8 data SysTick;
   33          u16 data SysTick_RTC=0;
-  34          /*****************************************************************************
-  35           函 数 名  : void T0_Init(void)
-  36           功能描述  : 定时器0初始化      定时间隔1ms
-  37           输入参数  :     
-  38           输出参数  : 
-  39           修改历史  :
-  40            1.日    期   : 2019年9月2日
-  41              作    者   :  陈美书
-  42              修改内容   : 创建
-  43          *****************************************************************************/
-  44          
-  45          void T0_Init(void)
-  46          {
-  47   1                TMOD=0x11;          //16位定时器
-  48   1          //T0
-  49   1          TH0=0x00;
-  50   1          TL0=0x00;
-  51   1          TR0=0x00;
-  52   1              
-  53   1                OutTimeFlag=0;
-  54   1                EnableTimer=0;
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 2   
+  34          
+  35          u8 data encoder_ticks; //
+  36          /*****************************************************************************
+  37           函 数 名  : void T0_Init(void)
+  38           功能描述  : 定时器0初始化      定时间隔1ms
+  39           输入参数  :     
+  40           输出参数  : 
+  41           修改历史  :
+  42            1.日    期   : 2019年9月2日
+  43              作    者   :  陈美书
+  44              修改内容   : 创建
+  45          *****************************************************************************/
+  46          
+  47          void T0_Init(void)
+  48          {
+  49   1              encoder_ticks = 0; 
+  50   1          
+  51   1          
+  52   1          TMOD=0x11;          //16位定时器
+  53   1          //T0
+  54   1          TH0=0x00;
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 2   
 
-  55   1              
-  56   1          TMOD|=0x01;
-  57   1          TH0=T1MS>>8;        //1ms定时器
-  58   1          TL0=T1MS;
-  59   1          ET0=1;              //开启定时器0中断
-  60   1      //    EA=1;               //开总中断
-  61   1          TR0=1;              //开启定时器
-  62   1      }
-  63          /*****************************************************************************
-  64           函 数 名  : void T0_ISR_PC(void)    interrupt 1
-  65           功能描述  : 定时器0处理函数，毫秒增加
-  66           输入参数  :     
-  67           输出参数  : 
-  68           修改历史  :
-  69            1.日    期   : 2019年9月2日
-  70              作    者   : 陈美书
-  71              修改内容   : 创建
-  72          *****************************************************************************/
-  73          void T0_ISR_PC(void)    interrupt 1
-  74          {
-  75   1               u8 data i;
-  76   1              
-  77   1          EA=0;
-  78   1          TH0=T1MS>>8;
-  79   1          TL0=T1MS;
-  80   1                      SysTick++;
-  81   1                      for(i=0;i<8;i++)
-  82   1                      {
-  83   2                              if(EnableTimer&(0x01<<i))
-  84   2                              {
-  85   3                                      TimerTime[i]--;
-  86   3                                      if(TimerTime[i]==0)
-  87   3                                      {
-  88   4                                              OutTimeFlag |= 0x01<<i;
-  89   4                                              EnableTimer &= ~(0x01<<i);                                       
-  90   4                                      }
-  91   3                              }
-  92   2                      }
-  93   1          EA=1;
-  94   1      }
-  95          
-  96          void timer2_Isr() interrupt 5
-  97          {
-  98   1              EA = 0;
-  99   1              TF2 = 0;
- 100   1              EA = 1;
- 101   1              SysTick_RTC++;
- 102   1      }
- 103          
- 104          
- 105          /*****************************************************************************
- 106           函 数 名  : void StartTimer(u8 ID, u16 nTime)
- 107           功能描述  : 启动一个软定时器，
- 108           输入参数  :     u8 ID         定时器ID
- 109                         u16 nTime     定时ms数
- 110          
- 111           输出参数  : 
- 112           修改历史  :
- 113            1.日    期   : 2019年9月2日
- 114              作    者   : 陈美书
- 115              修改内容   : 创建
- 116          *****************************************************************************/
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 3   
+  55   1          TL0=0x00;
+  56   1          TR0=0x00;
+  57   1              
+  58   1                OutTimeFlag=0;
+  59   1                EnableTimer=0;
+  60   1              
+  61   1          TMOD|=0x01;
+  62   1          TH0=T1MS>>8;        //1ms定时器
+  63   1          TL0=T1MS;
+  64   1          ET0=1;              //开启定时器0中断
+  65   1      //    EA=1;               //开总中断
+  66   1          TR0=1;              //开启定时器
+  67   1      }
+  68          /*****************************************************************************
+  69           函 数 名  : void T0_ISR_PC(void)    interrupt 1
+  70           功能描述  : 定时器0处理函数，毫秒增加
+  71           输入参数  :     
+  72           输出参数  : 
+  73           修改历史  :
+  74            1.日    期   : 2019年9月2日
+  75              作    者   : 陈美书
+  76              修改内容   : 创建
+  77          *****************************************************************************/
+  78          void T0_ISR_PC(void)    interrupt 1
+  79          {
+  80   1               u8 data i;
+  81   1              
+  82   1          EA=0;
+  83   1          
+  84   1          if(encoder_ticks != 0) {
+  85   2              encoder_ticks--;
+  86   2          }
+  87   1          
+  88   1          TH0=T1MS>>8;
+  89   1          TL0=T1MS;
+  90   1                      SysTick++;
+  91   1                      for(i=0;i<8;i++)
+  92   1                      {
+  93   2                              if(EnableTimer&(0x01<<i))
+  94   2                              {
+  95   3                                      TimerTime[i]--;
+  96   3                                      if(TimerTime[i]==0)
+  97   3                                      {
+  98   4                                              OutTimeFlag |= 0x01<<i;
+  99   4                                              EnableTimer &= ~(0x01<<i);                                       
+ 100   4                                      }
+ 101   3                              }
+ 102   2                      }
+ 103   1          EA=1;
+ 104   1      }
+ 105          
+ 106          void timer2_Isr() interrupt 5
+ 107          {
+ 108   1              EA = 0;
+ 109   1              TF2 = 0;
+ 110   1              EA = 1;
+ 111   1              SysTick_RTC++;
+ 112   1      }
+ 113          
+ 114          
+ 115          /*****************************************************************************
+ 116           函 数 名  : void StartTimer(u8 ID, u16 nTime)
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 3   
 
- 117          void StartTimer(u8 ID, u16 nTime)
- 118          {
- 119   1                EA=0;
- 120   1                EnableTimer=EnableTimer|(1<<ID);
- 121   1                TimerTime[ID]=nTime;
- 122   1                OutTimeFlag&=~(1<<ID);
- 123   1                EA=1; 
- 124   1      }
- 125          
- 126          
- 127          /*****************************************************************************
- 128           函 数 名  : void KillTimer(u8 ID)
- 129           功能描述  : 停止一个软定时器，
- 130           输入参数  :    u8 ID  定时器ID
- 131           输出参数  : 
- 132           修改历史  :
- 133            1.日    期   : 2019年9月2日
- 134              作    者   : 陈美书
- 135              修改内容   : 创建
- 136          *****************************************************************************/
- 137          void KillTimer(u8 ID)
- 138          {
- 139   1                EA=0;
- 140   1                EnableTimer&=~(1<<(ID));
- 141   1                OutTimeFlag&=~(1<<ID);
- 142   1                EA=1;
- 143   1      }
- 144          
- 145          /*****************************************************************************
- 146           函 数 名  : u8 GetTimeOutFlag(u8 ID)
- 147           功能描述  : 获得定时器是否超时
- 148           输入参数  :    u8 ID  定时器ID
- 149           输出参数  :  0  未超时    非0  超时
- 150           修改历史  :
- 151            1.日    期   : 2019年9月2日
- 152              作    者   : 陈美书
- 153              修改内容   : 创建
- 154          *****************************************************************************/
- 155          u8 GetTimeOutFlag(u8 ID)
- 156          {
- 157   1        u8 flag;
- 158   1              EA=0;
- 159   1              flag=OutTimeFlag&(1<<ID);
- 160   1              EA=1;
- 161   1              return flag;
- 162   1              
- 163   1      }
- 164          
- 165          #ifdef PWMENABLE
+ 117           功能描述  : 启动一个软定时器，
+ 118           输入参数  :     u8 ID         定时器ID
+ 119                         u16 nTime     定时ms数
+ 120          
+ 121           输出参数  : 
+ 122           修改历史  :
+ 123            1.日    期   : 2019年9月2日
+ 124              作    者   : 陈美书
+ 125              修改内容   : 创建
+ 126          *****************************************************************************/
+ 127          void StartTimer(u8 ID, u16 nTime)
+ 128          {
+ 129   1                EA=0;
+ 130   1                EnableTimer=EnableTimer|(1<<ID);
+ 131   1                TimerTime[ID]=nTime;
+ 132   1                OutTimeFlag&=~(1<<ID);
+ 133   1                EA=1; 
+ 134   1      }
+ 135          
+ 136          
+ 137          /*****************************************************************************
+ 138           函 数 名  : void KillTimer(u8 ID)
+ 139           功能描述  : 停止一个软定时器，
+ 140           输入参数  :    u8 ID  定时器ID
+ 141           输出参数  : 
+ 142           修改历史  :
+ 143            1.日    期   : 2019年9月2日
+ 144              作    者   : 陈美书
+ 145              修改内容   : 创建
+ 146          *****************************************************************************/
+ 147          void KillTimer(u8 ID)
+ 148          {
+ 149   1                EA=0;
+ 150   1                EnableTimer&=~(1<<(ID));
+ 151   1                OutTimeFlag&=~(1<<ID);
+ 152   1                EA=1;
+ 153   1      }
+ 154          
+ 155          /*****************************************************************************
+ 156           函 数 名  : u8 GetTimeOutFlag(u8 ID)
+ 157           功能描述  : 获得定时器是否超时
+ 158           输入参数  :    u8 ID  定时器ID
+ 159           输出参数  :  0  未超时    非0  超时
+ 160           修改历史  :
+ 161            1.日    期   : 2019年9月2日
+ 162              作    者   : 陈美书
+ 163              修改内容   : 创建
+ 164          *****************************************************************************/
+ 165          u8 GetTimeOutFlag(u8 ID)
+ 166          {
+ 167   1        u8 flag;
+ 168   1              EA=0;
+ 169   1              flag=OutTimeFlag&(1<<ID);
+ 170   1              EA=1;
+ 171   1              return flag;
+ 172   1              
+ 173   1      }
+ 174          
+ 175          #ifdef PWMENABLE
               void StartPWM(u8 PWMID, u16 VPWMTotal,u16 VPWMLow,u8 Port,u8 Pin )
               {
                         EA=0;
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 4   
+
                         SetPinOut(Port,Pin);
                         PWMTicks[PWMID]=0;
                         PWMTotal[PWMID]=VPWMTotal;
@@ -190,8 +202,6 @@ line level    source
                         EA=1;
               }
               
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 4   
-
               void StopPWM(u8 PWMID)
               {
                         EA=0;
@@ -210,461 +220,465 @@ line level    source
                       }
               }
               #endif
- 197          
- 198          
- 199          
- 200          //
- 201          
- 202          void delayus(unsigned char t)
- 203          {       
- 204   1              char i;
- 205   1              while(t)
- 206   1              {       
- 207   2                      for(i=0;i<50;i++)
- 208   2                      {
- 209   3                              i=i;
- 210   3                      }
- 211   2                      t--;
- 212   2              }
- 213   1      }
- 214          
- 215          
- 216          
- 217          void SDA_IN(void)
- 218          {       
- 219   1              P3MDOUT=P3MDOUT&0xF7;
- 220   1      }
- 221          
- 222          void SDA_OUT(void)
- 223          {   
- 224   1              P3MDOUT=P3MDOUT|0x08;
- 225   1      }
+ 207          
+ 208          
+ 209          
+ 210          //
+ 211          
+ 212          void delayus(unsigned char t)
+ 213          {       
+ 214   1              char i;
+ 215   1              while(t)
+ 216   1              {       
+ 217   2                      for(i=0;i<50;i++)
+ 218   2                      {
+ 219   3                              i=i;
+ 220   3                      }
+ 221   2                      t--;
+ 222   2              }
+ 223   1      }
+ 224          
+ 225          
  226          
- 227          //
- 228          sbit RTC_SDA = P3^3;
- 229          sbit RTC_SCL = P3^2;
- 230          
+ 227          void SDA_IN(void)
+ 228          {       
+ 229   1              P3MDOUT=P3MDOUT&0xF7;
+ 230   1      }
  231          
- 232          void i2cstart(void)
- 233          {       
- 234   1              SDA_OUT();
- 235   1              RTC_SDA=1;
- 236   1              RTC_SCL=1;
- 237   1              delayus(15);
- 238   1      
- 239   1              RTC_SDA=0;
- 240   1              delayus(15);
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 5   
+ 232          void SDA_OUT(void)
+ 233          {   
+ 234   1              P3MDOUT=P3MDOUT|0x08;
+ 235   1      }
+ 236          
+ 237          //
+ 238          sbit RTC_SDA = P3^3;
+ 239          sbit RTC_SCL = P3^2;
+ 240          
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 5   
 
- 241   1              RTC_SCL=0;
- 242   1              delayus(15);
- 243   1      }
- 244          
- 245          void i2cstop(void)
- 246          {       
- 247   1              SDA_OUT();
- 248   1              RTC_SDA=0;
- 249   1              RTC_SCL=1;
+ 241          
+ 242          void i2cstart(void)
+ 243          {       
+ 244   1              SDA_OUT();
+ 245   1              RTC_SDA=1;
+ 246   1              RTC_SCL=1;
+ 247   1              delayus(15);
+ 248   1      
+ 249   1              RTC_SDA=0;
  250   1              delayus(15);
- 251   1              RTC_SDA=1;
+ 251   1              RTC_SCL=0;
  252   1              delayus(15);
- 253   1              SDA_IN();
- 254   1      }
- 255          
- 256          void mack(void)
- 257          {       
- 258   1              SDA_OUT();
- 259   1              RTC_SDA=0;
- 260   1              delayus(5);
- 261   1              RTC_SCL=1;
- 262   1              delayus(5);
- 263   1              RTC_SCL=0;
- 264   1              delayus(5);
- 265   1      }
- 266          
- 267          void mnak(void)
- 268          {       
- 269   1              SDA_OUT();
- 270   1              RTC_SDA=1;
- 271   1              delayus(5);
- 272   1              RTC_SCL=1;
- 273   1              delayus(5);
- 274   1              RTC_SCL=0;
- 275   1              delayus(5);
- 276   1      }
- 277          
- 278          void cack(void)
- 279          {       
- 280   1              unsigned char i;
- 281   1              SDA_IN();
- 282   1              RTC_SDA=1;
+ 253   1      }
+ 254          
+ 255          void i2cstop(void)
+ 256          {       
+ 257   1              SDA_OUT();
+ 258   1              RTC_SDA=0;
+ 259   1              RTC_SCL=1;
+ 260   1              delayus(15);
+ 261   1              RTC_SDA=1;
+ 262   1              delayus(15);
+ 263   1              SDA_IN();
+ 264   1      }
+ 265          
+ 266          void mack(void)
+ 267          {       
+ 268   1              SDA_OUT();
+ 269   1              RTC_SDA=0;
+ 270   1              delayus(5);
+ 271   1              RTC_SCL=1;
+ 272   1              delayus(5);
+ 273   1              RTC_SCL=0;
+ 274   1              delayus(5);
+ 275   1      }
+ 276          
+ 277          void mnak(void)
+ 278          {       
+ 279   1              SDA_OUT();
+ 280   1              RTC_SDA=1;
+ 281   1              delayus(5);
+ 282   1              RTC_SCL=1;
  283   1              delayus(5);
- 284   1              RTC_SCL=1;
+ 284   1              RTC_SCL=0;
  285   1              delayus(5);
- 286   1              for(i=0;i<50;i++)
- 287   1              {   
- 288   2                      if(!RTC_SDA) 
- 289   2                      {
- 290   3                              break;
- 291   3                      }
- 292   2                      delayus(5);
- 293   2              }
- 294   1              RTC_SCL=0;
+ 286   1      }
+ 287          
+ 288          void cack(void)
+ 289          {       
+ 290   1              unsigned char i;
+ 291   1              SDA_IN();
+ 292   1              RTC_SDA=1;
+ 293   1              delayus(5);
+ 294   1              RTC_SCL=1;
  295   1              delayus(5);
- 296   1              SDA_OUT();
- 297   1      }
- 298          
- 299          //I2C 写入1个字节
- 300          void i2cbw(unsigned char dat)
- 301          {       
- 302   1              char i;
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 6   
+ 296   1              for(i=0;i<50;i++)
+ 297   1              {   
+ 298   2                      if(!RTC_SDA) 
+ 299   2                      {
+ 300   3                              break;
+ 301   3                      }
+ 302   2                      delayus(5);
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 6   
 
- 303   1              SDA_OUT();
- 304   1              for(i=0;i<8;i++)
- 305   1              {       
- 306   2                      if(dat&0x80)
- 307   2                      {
- 308   3                              RTC_SDA=1;
- 309   3                      }
- 310   2                      else 
- 311   2                      {
- 312   3                              RTC_SDA=0;
- 313   3                      }
- 314   2                      dat=(dat<<1);
- 315   2                      delayus(5);
- 316   2                      RTC_SCL=1;
- 317   2                      delayus(5);
- 318   2                      RTC_SCL=0;
- 319   2                      delayus(5);
- 320   2              }
- 321   1              cack();
- 322   1      }
- 323          
- 324          //i2c 读取1个字节数据
- 325          unsigned char i2cbr(void)
- 326          {       
- 327   1              char i;
- 328   1              unsigned char dat;
- 329   1              SDA_IN();
- 330   1              for(i=0;i<8;i++)
- 331   1              {       
- 332   2                      delayus(5);
- 333   2                      RTC_SCL=1;
- 334   2                      delayus(5);
- 335   2                      dat=(dat<<1);
- 336   2                      if(RTC_SDA) 
- 337   2                      {
- 338   3                              dat=dat|0x01;
- 339   3                      }
- 340   2                      else 
- 341   2                      {
- 342   3                              dat=dat&0xFE;
- 343   3                      }
- 344   2                      //dat=(dat<<1);
- 345   2                      RTC_SCL=0;
- 346   2                      delayus(5);
- 347   2              }
- 348   1              return(dat);
- 349   1      }
- 350          
- 351          //检查SD2058有没有掉电，掉电则初始化SD2058，设置时间为2021.01.01 星期五 00:00:00
- 352          void init_rtc(void)
- 353          {       
- 354   1              unsigned char dat1,dat2;
- 355   1              //检查有没有掉电
- 356   1              i2cstart();
- 357   1              i2cbw(0x64);
- 358   1              i2cbw(0x0f);            //0x0f最低位
- 359   1              i2cstart();
- 360   1              i2cbw(0x65);
- 361   1              dat2 = i2cbr();
- 362   1              mack();
- 363   1              dat1 = i2cbr();
- 364   1              mnak();
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 7   
+ 303   2              }
+ 304   1              RTC_SCL=0;
+ 305   1              delayus(5);
+ 306   1              SDA_OUT();
+ 307   1      }
+ 308          
+ 309          //I2C 写入1个字节
+ 310          void i2cbw(unsigned char dat)
+ 311          {       
+ 312   1              char i;
+ 313   1              SDA_OUT();
+ 314   1              for(i=0;i<8;i++)
+ 315   1              {       
+ 316   2                      if(dat&0x80)
+ 317   2                      {
+ 318   3                              RTC_SDA=1;
+ 319   3                      }
+ 320   2                      else 
+ 321   2                      {
+ 322   3                              RTC_SDA=0;
+ 323   3                      }
+ 324   2                      dat=(dat<<1);
+ 325   2                      delayus(5);
+ 326   2                      RTC_SCL=1;
+ 327   2                      delayus(5);
+ 328   2                      RTC_SCL=0;
+ 329   2                      delayus(5);
+ 330   2              }
+ 331   1              cack();
+ 332   1      }
+ 333          
+ 334          //i2c 读取1个字节数据
+ 335          unsigned char i2cbr(void)
+ 336          {       
+ 337   1              char i;
+ 338   1              unsigned char dat;
+ 339   1              SDA_IN();
+ 340   1              for(i=0;i<8;i++)
+ 341   1              {       
+ 342   2                      delayus(5);
+ 343   2                      RTC_SCL=1;
+ 344   2                      delayus(5);
+ 345   2                      dat=(dat<<1);
+ 346   2                      if(RTC_SDA) 
+ 347   2                      {
+ 348   3                              dat=dat|0x01;
+ 349   3                      }
+ 350   2                      else 
+ 351   2                      {
+ 352   3                              dat=dat&0xFE;
+ 353   3                      }
+ 354   2                      //dat=(dat<<1);
+ 355   2                      RTC_SCL=0;
+ 356   2                      delayus(5);
+ 357   2              }
+ 358   1              return(dat);
+ 359   1      }
+ 360          
+ 361          //检查SD2058有没有掉电，掉电则初始化SD2058，设置时间为2021.01.01 星期五 00:00:00
+ 362          void init_rtc(void)
+ 363          {       
+ 364   1              unsigned char dat1,dat2;
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 7   
 
- 365   1              i2cstop();
- 366   1              if(dat2&0x01)
- 367   1              {
- 368   2                      if(dat2&0x84)           //WRTC2 WRTC3是否为0，是的话，写0
- 369   2                      {
- 370   3                              dat2 &= ~0x84;
- 371   3                              i2cstart();             
- 372   3                              i2cbw(0x64);
- 373   3                              i2cbw(0x0f);
- 374   3                              i2cbw(dat2);
- 375   3                              i2cstop();
- 376   3                      }
- 377   2                      dat2 &= ~0x01;
- 378   2                      //读WRTC1是否为0
- 379   2                      if(dat1 & 0x80)         //WRTC1是否为1
- 380   2                      {
- 381   3                              dat1 &= ~0x80;
- 382   3                              i2cstart();             
- 383   3                              i2cbw(0x64);
- 384   3                              i2cbw(0x10);
- 385   3                              i2cbw(dat1);
- 386   3                              i2cstop();
- 387   3                      }
- 388   2                      
- 389   2                      //写使能
- 390   2                      dat1 |= 0x80;
- 391   2                      i2cstart();             
- 392   2                      i2cbw(0x64);
- 393   2                      i2cbw(0x10);
- 394   2                      i2cbw(dat1);
- 395   2                      i2cstop();
- 396   2                      dat2 |= 0x84;
- 397   2                      i2cstart();             
- 398   2                      i2cbw(0x64);
- 399   2                      i2cbw(0x0f);
- 400   2                      i2cbw(dat2);
- 401   2                      i2cstop();
- 402   2                      
- 403   2                      
- 404   2                      //重新配置时间
- 405   2                      i2cstart();             //10-16=RTC设置值 BCD格式
- 406   2                      i2cbw(0x64);
- 407   2                      i2cbw(0x00);
- 408   2                      i2cbw(0x00);    //秒
- 409   2                      i2cbw(0x00);    //分
- 410   2                      i2cbw(0x80);    //时，小时最高位是24-12小时配置位
- 411   2                      i2cbw(0x05);    //星期
- 412   2                      i2cbw(0x01);    //日
- 413   2                      i2cbw(0x01);    //月
- 414   2                      i2cbw(0x21);    //年
- 415   2                      i2cstop();
- 416   2                      dat2 &= ~0x84;
- 417   2                      dat1 &= ~0x80;
- 418   2                      i2cstart();             
- 419   2                      i2cbw(0x64);
- 420   2                      i2cbw(0x10);
- 421   2                      i2cbw(dat1);
- 422   2                      i2cstop();
- 423   2                      i2cstart();             
- 424   2                      i2cbw(0x64);
- 425   2                      i2cbw(0x0f);
- 426   2                      i2cbw(dat2);
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 8   
+ 365   1              //检查有没有掉电
+ 366   1              i2cstart();
+ 367   1              i2cbw(0x64);
+ 368   1              i2cbw(0x0f);            //0x0f最低位
+ 369   1              i2cstart();
+ 370   1              i2cbw(0x65);
+ 371   1              dat2 = i2cbr();
+ 372   1              mack();
+ 373   1              dat1 = i2cbr();
+ 374   1              mnak();
+ 375   1              i2cstop();
+ 376   1              if(dat2&0x01)
+ 377   1              {
+ 378   2                      if(dat2&0x84)           //WRTC2 WRTC3是否为0，是的话，写0
+ 379   2                      {
+ 380   3                              dat2 &= ~0x84;
+ 381   3                              i2cstart();             
+ 382   3                              i2cbw(0x64);
+ 383   3                              i2cbw(0x0f);
+ 384   3                              i2cbw(dat2);
+ 385   3                              i2cstop();
+ 386   3                      }
+ 387   2                      dat2 &= ~0x01;
+ 388   2                      //读WRTC1是否为0
+ 389   2                      if(dat1 & 0x80)         //WRTC1是否为1
+ 390   2                      {
+ 391   3                              dat1 &= ~0x80;
+ 392   3                              i2cstart();             
+ 393   3                              i2cbw(0x64);
+ 394   3                              i2cbw(0x10);
+ 395   3                              i2cbw(dat1);
+ 396   3                              i2cstop();
+ 397   3                      }
+ 398   2                      
+ 399   2                      //写使能
+ 400   2                      dat1 |= 0x80;
+ 401   2                      i2cstart();             
+ 402   2                      i2cbw(0x64);
+ 403   2                      i2cbw(0x10);
+ 404   2                      i2cbw(dat1);
+ 405   2                      i2cstop();
+ 406   2                      dat2 |= 0x84;
+ 407   2                      i2cstart();             
+ 408   2                      i2cbw(0x64);
+ 409   2                      i2cbw(0x0f);
+ 410   2                      i2cbw(dat2);
+ 411   2                      i2cstop();
+ 412   2                      
+ 413   2                      
+ 414   2                      //重新配置时间
+ 415   2                      i2cstart();             //10-16=RTC设置值 BCD格式
+ 416   2                      i2cbw(0x64);
+ 417   2                      i2cbw(0x00);
+ 418   2                      i2cbw(0x00);    //秒
+ 419   2                      i2cbw(0x00);    //分
+ 420   2                      i2cbw(0x80);    //时，小时最高位是24-12小时配置位
+ 421   2                      i2cbw(0x05);    //星期
+ 422   2                      i2cbw(0x01);    //日
+ 423   2                      i2cbw(0x01);    //月
+ 424   2                      i2cbw(0x21);    //年
+ 425   2                      i2cstop();
+ 426   2                      dat2 &= ~0x84;
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 8   
 
- 427   2                      i2cstop();
- 428   2              }
- 429   1      }
- 430          
- 431          
- 432          
- 433          void rtc_config(u8* prtc_set)
- 434          {
- 435   1              u8 dat,dat1;
- 436   1              i2cstart();
- 437   1              i2cbw(0x64);
- 438   1              i2cbw(0x0f);            //0x10
- 439   1              i2cstart();
- 440   1              i2cbw(0x65);
- 441   1              dat = i2cbr();
- 442   1              mack();
- 443   1              dat1 = i2cbr();
- 444   1              mnak();
- 445   1              i2cstop();
- 446   1              dat1 |= 0x80;
- 447   1              i2cstart();             
- 448   1              i2cbw(0x64);
- 449   1              i2cbw(0x10);
- 450   1              i2cbw(dat1);
- 451   1              i2cstop();
- 452   1              dat |= 0x84;
- 453   1              i2cstart();             
- 454   1              i2cbw(0x64);
- 455   1              i2cbw(0x0f);
- 456   1              i2cbw(dat);
- 457   1              i2cstop();
- 458   1              
- 459   1      
- 460   1              i2cstart();             //10-16=RTC设置值 BCD格式
- 461   1              i2cbw(0x64);
- 462   1              i2cbw(0x00);
- 463   1              i2cbw(prtc_set[6]);     //秒
- 464   1              i2cbw(prtc_set[5]);     //分
- 465   1              i2cbw(prtc_set[4]);     //时
- 466   1              i2cbw(prtc_set[3]);     //星期
- 467   1              i2cbw(prtc_set[2]);     //日
- 468   1              i2cbw(prtc_set[1]);     //月
- 469   1              i2cbw(prtc_set[0]);     //年
- 470   1              i2cstop();
- 471   1              dat &= ~0x84;
- 472   1              dat1 &= ~0x80;
- 473   1              i2cstart();             
- 474   1              i2cbw(0x64);
- 475   1              i2cbw(0x10);
- 476   1              i2cbw(dat1);
- 477   1              i2cstop();
- 478   1              i2cstart();             
- 479   1              i2cbw(0x64);
- 480   1              i2cbw(0x0f);
- 481   1              i2cbw(dat);
- 482   1              i2cstop();
- 483   1      }
- 484          
- 485          //把RTC读取并处理，写到DGUS对应的变量空间，主程序中每0.5秒调用一次
- 486          void rdtime(void)
- 487          {       
- 488   1              unsigned char rtcdata[8];
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 9   
+ 427   2                      dat1 &= ~0x80;
+ 428   2                      i2cstart();             
+ 429   2                      i2cbw(0x64);
+ 430   2                      i2cbw(0x10);
+ 431   2                      i2cbw(dat1);
+ 432   2                      i2cstop();
+ 433   2                      i2cstart();             
+ 434   2                      i2cbw(0x64);
+ 435   2                      i2cbw(0x0f);
+ 436   2                      i2cbw(dat2);
+ 437   2                      i2cstop();
+ 438   2              }
+ 439   1      }
+ 440          
+ 441          
+ 442          
+ 443          void rtc_config(u8* prtc_set)
+ 444          {
+ 445   1              u8 dat,dat1;
+ 446   1              i2cstart();
+ 447   1              i2cbw(0x64);
+ 448   1              i2cbw(0x0f);            //0x10
+ 449   1              i2cstart();
+ 450   1              i2cbw(0x65);
+ 451   1              dat = i2cbr();
+ 452   1              mack();
+ 453   1              dat1 = i2cbr();
+ 454   1              mnak();
+ 455   1              i2cstop();
+ 456   1              dat1 |= 0x80;
+ 457   1              i2cstart();             
+ 458   1              i2cbw(0x64);
+ 459   1              i2cbw(0x10);
+ 460   1              i2cbw(dat1);
+ 461   1              i2cstop();
+ 462   1              dat |= 0x84;
+ 463   1              i2cstart();             
+ 464   1              i2cbw(0x64);
+ 465   1              i2cbw(0x0f);
+ 466   1              i2cbw(dat);
+ 467   1              i2cstop();
+ 468   1              
+ 469   1      
+ 470   1              i2cstart();             //10-16=RTC设置值 BCD格式
+ 471   1              i2cbw(0x64);
+ 472   1              i2cbw(0x00);
+ 473   1              i2cbw(prtc_set[6]);     //秒
+ 474   1              i2cbw(prtc_set[5]);     //分
+ 475   1              i2cbw(prtc_set[4]);     //时
+ 476   1              i2cbw(prtc_set[3]);     //星期
+ 477   1              i2cbw(prtc_set[2]);     //日
+ 478   1              i2cbw(prtc_set[1]);     //月
+ 479   1              i2cbw(prtc_set[0]);     //年
+ 480   1              i2cstop();
+ 481   1              dat &= ~0x84;
+ 482   1              dat1 &= ~0x80;
+ 483   1              i2cstart();             
+ 484   1              i2cbw(0x64);
+ 485   1              i2cbw(0x10);
+ 486   1              i2cbw(dat1);
+ 487   1              i2cstop();
+ 488   1              i2cstart();             
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 9   
 
- 489   1              unsigned char i,n,m;
- 490   1              i2cstart();
- 491   1              i2cbw(0x64);
- 492   1              i2cbw(0x00);
- 493   1              i2cstart();
- 494   1              i2cbw(0x65);
- 495   1              for(i=6;i>0;i--)
- 496   1              {       
- 497   2                      rtcdata[i]=i2cbr();
- 498   2                      mack();
- 499   2              }
- 500   1              rtcdata[0]=i2cbr();
- 501   1              mnak();
- 502   1              i2cstop();
- 503   1              rtcdata[4] &= 0x7F;
- 504   1              for(i=0;i<3;i++)        //年月日转换成HEX
- 505   1              {       
- 506   2                      n=rtcdata[i]/16;
- 507   2                      m=rtcdata[i]%16;
- 508   2                      rtcdata[i]=n*10+m;
+ 489   1              i2cbw(0x64);
+ 490   1              i2cbw(0x0f);
+ 491   1              i2cbw(dat);
+ 492   1              i2cstop();
+ 493   1      }
+ 494          
+ 495          //把RTC读取并处理，写到DGUS对应的变量空间，主程序中每0.5秒调用一次
+ 496          void rdtime(void)
+ 497          {       
+ 498   1              unsigned char rtcdata[8];
+ 499   1              unsigned char i,n,m;
+ 500   1              i2cstart();
+ 501   1              i2cbw(0x64);
+ 502   1              i2cbw(0x00);
+ 503   1              i2cstart();
+ 504   1              i2cbw(0x65);
+ 505   1              for(i=6;i>0;i--)
+ 506   1              {       
+ 507   2                      rtcdata[i]=i2cbr();
+ 508   2                      mack();
  509   2              }
- 510   1              for(i=4;i<7;i++)        //时分秒转换成HEX
- 511   1              {       
- 512   2                      n=rtcdata[i]/16;
- 513   2                      m=rtcdata[i]%16;
- 514   2                      rtcdata[i]=n*10+m;
- 515   2              }
- 516   1              //星期可以不用处理
- 517   1              rtcdata[7]=0;
- 518   1              write_dgus_vp(0x0010,(u8*)rtcdata,4);   //写入DGUS变量空间
- 519   1      }
- 520          
- 521          //
- 522          
- 523          u8 BCD(u8 dat)
- 524          {
- 525   1                return ((dat/10)<<4)|(dat%10);
- 526   1      }
- 527          
- 528          u8 IBCD(u8 dat)
- 529          {
- 530   1               return (dat>>4)*10+(dat&0x0f);
- 531   1      }
+ 510   1              rtcdata[0]=i2cbr();
+ 511   1              mnak();
+ 512   1              i2cstop();
+ 513   1              rtcdata[4] &= 0x7F;
+ 514   1              for(i=0;i<3;i++)        //年月日转换成HEX
+ 515   1              {       
+ 516   2                      n=rtcdata[i]/16;
+ 517   2                      m=rtcdata[i]%16;
+ 518   2                      rtcdata[i]=n*10+m;
+ 519   2              }
+ 520   1              for(i=4;i<7;i++)        //时分秒转换成HEX
+ 521   1              {       
+ 522   2                      n=rtcdata[i]/16;
+ 523   2                      m=rtcdata[i]%16;
+ 524   2                      rtcdata[i]=n*10+m;
+ 525   2              }
+ 526   1              //星期可以不用处理
+ 527   1              rtcdata[7]=0;
+ 528   1              write_dgus_vp(0x0010,(u8*)rtcdata,4);   //写入DGUS变量空间
+ 529   1      }
+ 530          
+ 531          //
  532          
- 533          //
- 534          
- 535          
- 536          
- 537          u8 rtc_get_week(u8 year,u8 month,u8 day)
- 538          {       
- 539   1              u16 tmp,mon,y;
- 540   1              u8 week;
- 541   1              if((month == 1) || (month == 2))
- 542   1              {
- 543   2                      mon = month + 12;
- 544   2                      y = year - 1;
- 545   2              }
- 546   1              else 
- 547   1              {
- 548   2                      mon = month;
- 549   2                      y = year;
- 550   2              }
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 10  
+ 533          u8 BCD(u8 dat)
+ 534          {
+ 535   1                return ((dat/10)<<4)|(dat%10);
+ 536   1      }
+ 537          
+ 538          u8 IBCD(u8 dat)
+ 539          {
+ 540   1               return (dat>>4)*10+(dat&0x0f);
+ 541   1      }
+ 542          
+ 543          //
+ 544          
+ 545          
+ 546          
+ 547          u8 rtc_get_week(u8 year,u8 month,u8 day)
+ 548          {       
+ 549   1              u16 tmp,mon,y;
+ 550   1              u8 week;
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 10  
 
- 551   1              tmp = y + (y / 4) +(((mon + 1) * 26) / 10) + day - 36;
- 552   1              week = tmp % 7;
- 553   1              return week;
- 554   1      }
- 555          //
- 556          
- 557          
- 558          
- 559           void check_rtc_set(void)
- 560           {
- 561   1              u8 rtc_parm[8],rtc_set[8];
- 562   1              read_dgus_vp(0x9c,rtc_parm,4);
- 563   1              if((rtc_parm[0] == 0x5A) && (rtc_parm[1] == 0xA5))              //启动写入配置
- 564   1              {
- 565   2                      rtc_set[0] = BCD(rtc_parm[2]);
- 566   2                      rtc_set[1] = BCD(rtc_parm[3]);
- 567   2                      rtc_set[2] = BCD(rtc_parm[4]);
- 568   2                      rtc_set[3] = rtc_get_week(rtc_parm[2],rtc_parm[3],rtc_parm[4]);
- 569   2                      rtc_set[4] = BCD(rtc_parm[5]);
- 570   2                      rtc_set[4] |= 0x80;
- 571   2                      rtc_set[5] = BCD(rtc_parm[6]);
- 572   2                      rtc_set[6] = BCD(rtc_parm[7]);
- 573   2                      rtc_config(rtc_set);
- 574   2                      rtc_parm[0] = 0;
- 575   2                      rtc_parm[1] = 0;
- 576   2                      write_dgus_vp(0x9c,rtc_parm,1);
- 577   2              }
- 578   1       }
- 579          
- 580          
- 581          void Clock(void)
- 582          {       
- 583   1              SetPinOut(3,2);
- 584   1              SetPinOut(3,3);
- 585   1      
- 586   1              
- 587   1                      
- 588   1                              rdtime();                                                               //更新硬件RTC时间
- 589   1                              SysTick_RTC = 0;
- 590   1                      
- 591   1      
- 592   1              
- 593   1                      check_rtc_set();                //发指令可以直接写设置
- 594   1      
- 595   1      }
- 596          //
- 597          
- 598          
- 599          
- 600          
- 601          
- 602          
- 603          
- 604          
- 605          
- 606          
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 11  
+ 551   1              if((month == 1) || (month == 2))
+ 552   1              {
+ 553   2                      mon = month + 12;
+ 554   2                      y = year - 1;
+ 555   2              }
+ 556   1              else 
+ 557   1              {
+ 558   2                      mon = month;
+ 559   2                      y = year;
+ 560   2              }
+ 561   1              tmp = y + (y / 4) +(((mon + 1) * 26) / 10) + day - 36;
+ 562   1              week = tmp % 7;
+ 563   1              return week;
+ 564   1      }
+ 565          //
+ 566          
+ 567          
+ 568          
+ 569           void check_rtc_set(void)
+ 570           {
+ 571   1              u8 rtc_parm[8],rtc_set[8];
+ 572   1              read_dgus_vp(0x9c,rtc_parm,4);
+ 573   1              if((rtc_parm[0] == 0x5A) && (rtc_parm[1] == 0xA5))              //启动写入配置
+ 574   1              {
+ 575   2                      rtc_set[0] = BCD(rtc_parm[2]);
+ 576   2                      rtc_set[1] = BCD(rtc_parm[3]);
+ 577   2                      rtc_set[2] = BCD(rtc_parm[4]);
+ 578   2                      rtc_set[3] = rtc_get_week(rtc_parm[2],rtc_parm[3],rtc_parm[4]);
+ 579   2                      rtc_set[4] = BCD(rtc_parm[5]);
+ 580   2                      rtc_set[4] |= 0x80;
+ 581   2                      rtc_set[5] = BCD(rtc_parm[6]);
+ 582   2                      rtc_set[6] = BCD(rtc_parm[7]);
+ 583   2                      rtc_config(rtc_set);
+ 584   2                      rtc_parm[0] = 0;
+ 585   2                      rtc_parm[1] = 0;
+ 586   2                      write_dgus_vp(0x9c,rtc_parm,1);
+ 587   2              }
+ 588   1       }
+ 589          
+ 590          
+ 591          void Clock(void)
+ 592          {       
+ 593   1              SetPinOut(3,2);
+ 594   1              SetPinOut(3,3);
+ 595   1      
+ 596   1              
+ 597   1                      
+ 598   1                              rdtime();                                                               //更新硬件RTC时间
+ 599   1                              SysTick_RTC = 0;
+ 600   1                      
+ 601   1      
+ 602   1              
+ 603   1                      check_rtc_set();                //发指令可以直接写设置
+ 604   1      
+ 605   1      }
+ 606          //
+ 607          
+ 608          
+ 609          
+ 610          
+ 611          
+ 612          
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 11  
+
+ 613          
+ 614          
+ 615          
+ 616          
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 12  
 
 ASSEMBLY LISTING OF GENERATED OBJECT CODE
 
 
              ; FUNCTION T0_Init (BEGIN)
-                                           ; SOURCE LINE # 45
-                                           ; SOURCE LINE # 46
                                            ; SOURCE LINE # 47
-0000 758911            MOV     TMOD,#011H
+                                           ; SOURCE LINE # 48
                                            ; SOURCE LINE # 49
-0003 E4                CLR     A
-0004 F58C              MOV     TH0,A
-                                           ; SOURCE LINE # 50
-0006 F58A              MOV     TL0,A
-                                           ; SOURCE LINE # 51
-0008 C28C              CLR     TR0
-                                           ; SOURCE LINE # 53
-000A F500        R     MOV     OutTimeFlag,A
+0000 E4                CLR     A
+0001 F500        R     MOV     encoder_ticks,A
+                                           ; SOURCE LINE # 52
+0003 758911            MOV     TMOD,#011H
                                            ; SOURCE LINE # 54
-000C F500        R     MOV     EnableTimer,A
+0006 F58C              MOV     TH0,A
+                                           ; SOURCE LINE # 55
+0008 F58A              MOV     TL0,A
                                            ; SOURCE LINE # 56
-000E 438901            ORL     TMOD,#01H
-                                           ; SOURCE LINE # 57
-0011 758CBC            MOV     TH0,#0BCH
+000A C28C              CLR     TR0
                                            ; SOURCE LINE # 58
-0014 758ACD            MOV     TL0,#0CDH
+000C F500        R     MOV     OutTimeFlag,A
                                            ; SOURCE LINE # 59
-0017 D2A9              SETB    ET0
+000E F500        R     MOV     EnableTimer,A
                                            ; SOURCE LINE # 61
-0019 D28C              SETB    TR0
+0010 438901            ORL     TMOD,#01H
                                            ; SOURCE LINE # 62
-001B 22                RET     
+0013 758CBC            MOV     TH0,#0BCH
+                                           ; SOURCE LINE # 63
+0016 758ACD            MOV     TL0,#0CDH
+                                           ; SOURCE LINE # 64
+0019 D2A9              SETB    ET0
+                                           ; SOURCE LINE # 66
+001B D28C              SETB    TR0
+                                           ; SOURCE LINE # 67
+001D 22                RET     
              ; FUNCTION T0_Init (END)
 
              ; FUNCTION T0_ISR_PC (BEGIN)
@@ -674,140 +688,147 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0007 C000              PUSH    AR0
 0009 C006              PUSH    AR6
 000B C007              PUSH    AR7
-                                           ; SOURCE LINE # 73
-                                           ; SOURCE LINE # 77
-000D C2AF              CLR     EA
                                            ; SOURCE LINE # 78
-000F 758CBC            MOV     TH0,#0BCH
-                                           ; SOURCE LINE # 79
-0012 758ACD            MOV     TL0,#0CDH
-                                           ; SOURCE LINE # 80
-0015 0500        R     INC     SysTick
-                                           ; SOURCE LINE # 81
-0017 750000      R     MOV     i,#00H
-001A         ?C0002:
                                            ; SOURCE LINE # 82
-                                           ; SOURCE LINE # 83
-001A 7401              MOV     A,#01H
-001C 7E00              MOV     R6,#00H
-001E A800        R     MOV     R0,i
-0020 08                INC     R0
-0021 8005              SJMP    ?C0066
-0023         ?C0065:
-0023 C3                CLR     C
-0024 33                RLC     A
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 12  
-
-0025 CE                XCH     A,R6
-0026 33                RLC     A
-0027 CE                XCH     A,R6
-0028         ?C0066:
-0028 D8F9              DJNZ    R0,?C0065
-002A FF                MOV     R7,A
-002B EF                MOV     A,R7
-002C 5500        R     ANL     A,EnableTimer
-002E 602D              JZ      ?C0004
+000D C2AF              CLR     EA
                                            ; SOURCE LINE # 84
+000F E500        R     MOV     A,encoder_ticks
+0011 6002              JZ      ?C0002
                                            ; SOURCE LINE # 85
-0030 E500        R     MOV     A,i
-0032 25E0              ADD     A,ACC
-0034 2400        R     ADD     A,#LOW TimerTime
-0036 F8                MOV     R0,A
-0037 08                INC     R0
-0038 E6                MOV     A,@R0
-0039 16                DEC     @R0
-003A 18                DEC     R0
-003B 7001              JNZ     ?C0067
-003D 16                DEC     @R0
-003E         ?C0067:
+0013 1500        R     DEC     encoder_ticks
                                            ; SOURCE LINE # 86
-003E E500        R     MOV     A,i
-0040 25E0              ADD     A,ACC
-0042 2400        R     ADD     A,#LOW TimerTime
-0044 F8                MOV     R0,A
-0045 E6                MOV     A,@R0
-0046 FE                MOV     R6,A
-0047 08                INC     R0
-0048 E6                MOV     A,@R0
-0049 4E                ORL     A,R6
-004A 7011              JNZ     ?C0004
-                                           ; SOURCE LINE # 87
+0015         ?C0002:
                                            ; SOURCE LINE # 88
-004C AF00        R     MOV     R7,i
-004E 04                INC     A
-004F A807              MOV     R0,AR7
-0051 08                INC     R0
-0052 8002              SJMP    ?C0069
-0054         ?C0068:
-0054 C3                CLR     C
-0055 33                RLC     A
-0056         ?C0069:
-0056 D8FC              DJNZ    R0,?C0068
-0058 4200        R     ORL     OutTimeFlag,A
+0015 758CBC            MOV     TH0,#0BCH
                                            ; SOURCE LINE # 89
-005A F4                CPL     A
-005B 5200        R     ANL     EnableTimer,A
+0018 758ACD            MOV     TL0,#0CDH
                                            ; SOURCE LINE # 90
+001B 0500        R     INC     SysTick
                                            ; SOURCE LINE # 91
+001D 750000      R     MOV     i,#00H
+0020         ?C0003:
                                            ; SOURCE LINE # 92
-005D         ?C0004:
-005D 0500        R     INC     i
-005F E500        R     MOV     A,i
-0061 B408B6            CJNE    A,#08H,?C0002
-0064         ?C0003:
-                                           ; SOURCE LINE # 93
-0064 D2AF              SETB    EA
-                                           ; SOURCE LINE # 94
-0066 D007              POP     AR7
-0068 D006              POP     AR6
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 13  
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 13  
 
-006A D000              POP     AR0
-006C D0D0              POP     PSW
-006E D0E0              POP     ACC
-0070 32                RETI    
+                                           ; SOURCE LINE # 93
+0020 7401              MOV     A,#01H
+0022 7E00              MOV     R6,#00H
+0024 A800        R     MOV     R0,i
+0026 08                INC     R0
+0027 8005              SJMP    ?C0067
+0029         ?C0066:
+0029 C3                CLR     C
+002A 33                RLC     A
+002B CE                XCH     A,R6
+002C 33                RLC     A
+002D CE                XCH     A,R6
+002E         ?C0067:
+002E D8F9              DJNZ    R0,?C0066
+0030 FF                MOV     R7,A
+0031 EF                MOV     A,R7
+0032 5500        R     ANL     A,EnableTimer
+0034 602D              JZ      ?C0005
+                                           ; SOURCE LINE # 94
+                                           ; SOURCE LINE # 95
+0036 E500        R     MOV     A,i
+0038 25E0              ADD     A,ACC
+003A 2400        R     ADD     A,#LOW TimerTime
+003C F8                MOV     R0,A
+003D 08                INC     R0
+003E E6                MOV     A,@R0
+003F 16                DEC     @R0
+0040 18                DEC     R0
+0041 7001              JNZ     ?C0068
+0043 16                DEC     @R0
+0044         ?C0068:
+                                           ; SOURCE LINE # 96
+0044 E500        R     MOV     A,i
+0046 25E0              ADD     A,ACC
+0048 2400        R     ADD     A,#LOW TimerTime
+004A F8                MOV     R0,A
+004B E6                MOV     A,@R0
+004C FE                MOV     R6,A
+004D 08                INC     R0
+004E E6                MOV     A,@R0
+004F 4E                ORL     A,R6
+0050 7011              JNZ     ?C0005
+                                           ; SOURCE LINE # 97
+                                           ; SOURCE LINE # 98
+0052 AF00        R     MOV     R7,i
+0054 04                INC     A
+0055 A807              MOV     R0,AR7
+0057 08                INC     R0
+0058 8002              SJMP    ?C0070
+005A         ?C0069:
+005A C3                CLR     C
+005B 33                RLC     A
+005C         ?C0070:
+005C D8FC              DJNZ    R0,?C0069
+005E 4200        R     ORL     OutTimeFlag,A
+                                           ; SOURCE LINE # 99
+0060 F4                CPL     A
+0061 5200        R     ANL     EnableTimer,A
+                                           ; SOURCE LINE # 100
+                                           ; SOURCE LINE # 101
+                                           ; SOURCE LINE # 102
+0063         ?C0005:
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 14  
+
+0063 0500        R     INC     i
+0065 E500        R     MOV     A,i
+0067 B408B6            CJNE    A,#08H,?C0003
+006A         ?C0004:
+                                           ; SOURCE LINE # 103
+006A D2AF              SETB    EA
+                                           ; SOURCE LINE # 104
+006C D007              POP     AR7
+006E D006              POP     AR6
+0070 D000              POP     AR0
+0072 D0D0              POP     PSW
+0074 D0E0              POP     ACC
+0076 32                RETI    
              ; FUNCTION T0_ISR_PC (END)
 
              ; FUNCTION timer2_Isr (BEGIN)
 0000 C0E0              PUSH    ACC
-                                           ; SOURCE LINE # 96
-                                           ; SOURCE LINE # 98
+                                           ; SOURCE LINE # 106
+                                           ; SOURCE LINE # 108
 0002 C2AF              CLR     EA
-                                           ; SOURCE LINE # 99
+                                           ; SOURCE LINE # 109
 0004 C2C6              CLR     TF2
-                                           ; SOURCE LINE # 100
+                                           ; SOURCE LINE # 110
 0006 D2AF              SETB    EA
-                                           ; SOURCE LINE # 101
+                                           ; SOURCE LINE # 111
 0008 0500        R     INC     SysTick_RTC+01H
 000A E500        R     MOV     A,SysTick_RTC+01H
-000C 7002              JNZ     ?C0070
+000C 7002              JNZ     ?C0071
 000E 0500        R     INC     SysTick_RTC
-0010         ?C0070:
-                                           ; SOURCE LINE # 102
+0010         ?C0071:
+                                           ; SOURCE LINE # 112
 0010 D0E0              POP     ACC
 0012 32                RETI    
              ; FUNCTION timer2_Isr (END)
 
              ; FUNCTION _StartTimer (BEGIN)
-                                           ; SOURCE LINE # 117
+                                           ; SOURCE LINE # 127
 ;---- Variable 'ID' assigned to Register 'R7' ----
 ;---- Variable 'nTime' assigned to Register 'R4/R5' ----
-                                           ; SOURCE LINE # 118
-                                           ; SOURCE LINE # 119
+                                           ; SOURCE LINE # 128
+                                           ; SOURCE LINE # 129
 0000 C2AF              CLR     EA
-                                           ; SOURCE LINE # 120
+                                           ; SOURCE LINE # 130
 0002 7401              MOV     A,#01H
 0004 A807              MOV     R0,AR7
 0006 08                INC     R0
-0007 8002              SJMP    ?C0072
-0009         ?C0071:
+0007 8002              SJMP    ?C0073
+0009         ?C0072:
 0009 C3                CLR     C
 000A 33                RLC     A
-000B         ?C0072:
-000B D8FC              DJNZ    R0,?C0071
+000B         ?C0073:
+000B D8FC              DJNZ    R0,?C0072
 000D FE                MOV     R6,A
 000E 4200        R     ORL     EnableTimer,A
-                                           ; SOURCE LINE # 121
+                                           ; SOURCE LINE # 131
 0010 EF                MOV     A,R7
 0011 25E0              ADD     A,ACC
 0013 2400        R     ADD     A,#LOW TimerTime
@@ -815,700 +836,700 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0016 A604              MOV     @R0,AR4
 0018 08                INC     R0
 0019 A605              MOV     @R0,AR5
-                                           ; SOURCE LINE # 122
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 15  
+
+                                           ; SOURCE LINE # 132
 001B EE                MOV     A,R6
 001C F4                CPL     A
 001D 5200        R     ANL     OutTimeFlag,A
-                                           ; SOURCE LINE # 123
+                                           ; SOURCE LINE # 133
 001F D2AF              SETB    EA
-                                           ; SOURCE LINE # 124
+                                           ; SOURCE LINE # 134
 0021 22                RET     
              ; FUNCTION _StartTimer (END)
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 14  
-
 
              ; FUNCTION _KillTimer (BEGIN)
-                                           ; SOURCE LINE # 137
+                                           ; SOURCE LINE # 147
 ;---- Variable 'ID' assigned to Register 'R7' ----
-                                           ; SOURCE LINE # 138
-                                           ; SOURCE LINE # 139
+                                           ; SOURCE LINE # 148
+                                           ; SOURCE LINE # 149
 0000 C2AF              CLR     EA
-                                           ; SOURCE LINE # 140
+                                           ; SOURCE LINE # 150
 0002 7401              MOV     A,#01H
 0004 A807              MOV     R0,AR7
 0006 08                INC     R0
-0007 8002              SJMP    ?C0074
-0009         ?C0073:
+0007 8002              SJMP    ?C0075
+0009         ?C0074:
 0009 C3                CLR     C
 000A 33                RLC     A
-000B         ?C0074:
-000B D8FC              DJNZ    R0,?C0073
+000B         ?C0075:
+000B D8FC              DJNZ    R0,?C0074
 000D F4                CPL     A
 000E 5200        R     ANL     EnableTimer,A
-                                           ; SOURCE LINE # 141
+                                           ; SOURCE LINE # 151
 0010 5200        R     ANL     OutTimeFlag,A
-                                           ; SOURCE LINE # 142
+                                           ; SOURCE LINE # 152
 0012 D2AF              SETB    EA
-                                           ; SOURCE LINE # 143
+                                           ; SOURCE LINE # 153
 0014 22                RET     
              ; FUNCTION _KillTimer (END)
 
              ; FUNCTION _GetTimeOutFlag (BEGIN)
-                                           ; SOURCE LINE # 155
+                                           ; SOURCE LINE # 165
 ;---- Variable 'ID' assigned to Register 'R7' ----
-                                           ; SOURCE LINE # 156
-                                           ; SOURCE LINE # 158
+                                           ; SOURCE LINE # 166
+                                           ; SOURCE LINE # 168
 0000 C2AF              CLR     EA
-                                           ; SOURCE LINE # 159
+                                           ; SOURCE LINE # 169
 0002 7401              MOV     A,#01H
 0004 A807              MOV     R0,AR7
 0006 08                INC     R0
-0007 8002              SJMP    ?C0076
-0009         ?C0075:
+0007 8002              SJMP    ?C0077
+0009         ?C0076:
 0009 C3                CLR     C
 000A 33                RLC     A
-000B         ?C0076:
-000B D8FC              DJNZ    R0,?C0075
+000B         ?C0077:
+000B D8FC              DJNZ    R0,?C0076
 000D 5500        R     ANL     A,OutTimeFlag
 000F FF                MOV     R7,A
 ;---- Variable 'flag' assigned to Register 'R7' ----
-                                           ; SOURCE LINE # 160
+                                           ; SOURCE LINE # 170
 0010 D2AF              SETB    EA
-                                           ; SOURCE LINE # 161
-                                           ; SOURCE LINE # 163
-0012         ?C0011:
+                                           ; SOURCE LINE # 171
+                                           ; SOURCE LINE # 173
+0012         ?C0012:
 0012 22                RET     
              ; FUNCTION _GetTimeOutFlag (END)
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 16  
 
-             ; FUNCTION L?0081 (BEGIN)
+
+             ; FUNCTION L?0082 (BEGIN)
 0000 D2B3              SETB    RTC_SDA
-0002         L?0082:
+0002         L?0083:
 0002 7F05              MOV     R7,#05H
 0004 120000      R     LCALL   _delayus
 0007 D2B2              SETB    RTC_SCL
 0009 7F05              MOV     R7,#05H
              ; FUNCTION _delayus (BEGIN)
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 15  
-
-                                           ; SOURCE LINE # 202
+                                           ; SOURCE LINE # 212
 ;---- Variable 't' assigned to Register 'R7' ----
-                                           ; SOURCE LINE # 203
-000B         ?C0012:
-                                           ; SOURCE LINE # 205
+                                           ; SOURCE LINE # 213
+000B         ?C0013:
+                                           ; SOURCE LINE # 215
 000B EF                MOV     A,R7
-000C 600E              JZ      ?C0017
-                                           ; SOURCE LINE # 206
-                                           ; SOURCE LINE # 207
+000C 600E              JZ      ?C0018
+                                           ; SOURCE LINE # 216
+                                           ; SOURCE LINE # 217
 ;---- Variable 'i' assigned to Register 'R6' ----
 000E E4                CLR     A
 000F FE                MOV     R6,A
-0010         ?C0014:
-                                           ; SOURCE LINE # 208
-                                           ; SOURCE LINE # 209
-                                           ; SOURCE LINE # 210
+0010         ?C0015:
+                                           ; SOURCE LINE # 218
+                                           ; SOURCE LINE # 219
+                                           ; SOURCE LINE # 220
 0010 0E                INC     R6
 0011 C3                CLR     C
 0012 EE                MOV     A,R6
 0013 6480              XRL     A,#080H
 0015 94B2              SUBB    A,#0B2H
-0017 40F7              JC      ?C0014
-0019         ?C0015:
-                                           ; SOURCE LINE # 211
+0017 40F7              JC      ?C0015
+0019         ?C0016:
+                                           ; SOURCE LINE # 221
 0019 1F                DEC     R7
-                                           ; SOURCE LINE # 212
-001A 80EF              SJMP    ?C0012
-                                           ; SOURCE LINE # 213
-001C         ?C0017:
+                                           ; SOURCE LINE # 222
+001A 80EF              SJMP    ?C0013
+                                           ; SOURCE LINE # 223
+001C         ?C0018:
 001C 22                RET     
              ; FUNCTION _delayus (END)
 
              ; FUNCTION SDA_IN (BEGIN)
-                                           ; SOURCE LINE # 217
-                                           ; SOURCE LINE # 218
-                                           ; SOURCE LINE # 219
+                                           ; SOURCE LINE # 227
+                                           ; SOURCE LINE # 228
+                                           ; SOURCE LINE # 229
 0000 53BEF7            ANL     P3MDOUT,#0F7H
-                                           ; SOURCE LINE # 220
+                                           ; SOURCE LINE # 230
 0003 22                RET     
              ; FUNCTION SDA_IN (END)
 
              ; FUNCTION SDA_OUT (BEGIN)
-                                           ; SOURCE LINE # 222
-                                           ; SOURCE LINE # 223
-                                           ; SOURCE LINE # 224
+                                           ; SOURCE LINE # 232
+                                           ; SOURCE LINE # 233
+                                           ; SOURCE LINE # 234
 0000 43BE08            ORL     P3MDOUT,#08H
-                                           ; SOURCE LINE # 225
+                                           ; SOURCE LINE # 235
 0003 22                RET     
              ; FUNCTION SDA_OUT (END)
 
              ; FUNCTION i2cstart (BEGIN)
-                                           ; SOURCE LINE # 232
-                                           ; SOURCE LINE # 233
-                                           ; SOURCE LINE # 234
+                                           ; SOURCE LINE # 242
+                                           ; SOURCE LINE # 243
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 17  
+
+                                           ; SOURCE LINE # 244
 0000 120000      R     LCALL   SDA_OUT
-                                           ; SOURCE LINE # 235
+                                           ; SOURCE LINE # 245
 0003 D2B3              SETB    RTC_SDA
-                                           ; SOURCE LINE # 236
+                                           ; SOURCE LINE # 246
 0005 D2B2              SETB    RTC_SCL
-                                           ; SOURCE LINE # 237
+                                           ; SOURCE LINE # 247
 0007 7F0F              MOV     R7,#0FH
 0009 120000      R     LCALL   _delayus
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 16  
-
-                                           ; SOURCE LINE # 239
+                                           ; SOURCE LINE # 249
 000C C2B3              CLR     RTC_SDA
-                                           ; SOURCE LINE # 240
+                                           ; SOURCE LINE # 250
 000E 7F0F              MOV     R7,#0FH
 0010 120000      R     LCALL   _delayus
-                                           ; SOURCE LINE # 241
+                                           ; SOURCE LINE # 251
 0013 C2B2              CLR     RTC_SCL
-                                           ; SOURCE LINE # 242
+                                           ; SOURCE LINE # 252
 0015 7F0F              MOV     R7,#0FH
 0017 020000      R     LJMP    _delayus
              ; FUNCTION i2cstart (END)
 
-             ; FUNCTION L?0083 (BEGIN)
+             ; FUNCTION L?0084 (BEGIN)
 0000 7F0F              MOV     R7,#0FH
 0002 120000      R     LCALL   _i2cbw
 0005 AF03              MOV     R7,AR3
 0007 120000      R     LCALL   _i2cbw
              ; FUNCTION i2cstop (BEGIN)
-                                           ; SOURCE LINE # 245
-                                           ; SOURCE LINE # 246
-                                           ; SOURCE LINE # 247
+                                           ; SOURCE LINE # 255
+                                           ; SOURCE LINE # 256
+                                           ; SOURCE LINE # 257
 000A 120000      R     LCALL   SDA_OUT
-                                           ; SOURCE LINE # 248
+                                           ; SOURCE LINE # 258
 000D C2B3              CLR     RTC_SDA
-                                           ; SOURCE LINE # 249
+                                           ; SOURCE LINE # 259
 000F D2B2              SETB    RTC_SCL
-                                           ; SOURCE LINE # 250
+                                           ; SOURCE LINE # 260
 0011 7F0F              MOV     R7,#0FH
 0013 120000      R     LCALL   _delayus
-                                           ; SOURCE LINE # 251
+                                           ; SOURCE LINE # 261
 0016 D2B3              SETB    RTC_SDA
-                                           ; SOURCE LINE # 252
+                                           ; SOURCE LINE # 262
 0018 7F0F              MOV     R7,#0FH
 001A 120000      R     LCALL   _delayus
-                                           ; SOURCE LINE # 253
+                                           ; SOURCE LINE # 263
 001D 020000      R     LJMP    SDA_IN
              ; FUNCTION i2cstop (END)
 
              ; FUNCTION mack (BEGIN)
-                                           ; SOURCE LINE # 256
-                                           ; SOURCE LINE # 257
-                                           ; SOURCE LINE # 258
+                                           ; SOURCE LINE # 266
+                                           ; SOURCE LINE # 267
+                                           ; SOURCE LINE # 268
 0000 120000      R     LCALL   SDA_OUT
-                                           ; SOURCE LINE # 259
+                                           ; SOURCE LINE # 269
 0003 C2B3              CLR     RTC_SDA
-                                           ; SOURCE LINE # 260
-                                           ; SOURCE LINE # 261
-                                           ; SOURCE LINE # 262
-0005 120000      R     LCALL   L?0082
-                                           ; SOURCE LINE # 263
+                                           ; SOURCE LINE # 270
+                                           ; SOURCE LINE # 271
+                                           ; SOURCE LINE # 272
+0005 120000      R     LCALL   L?0083
+                                           ; SOURCE LINE # 273
 0008 C2B2              CLR     RTC_SCL
-                                           ; SOURCE LINE # 264
+                                           ; SOURCE LINE # 274
 000A 7F05              MOV     R7,#05H
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 18  
+
 000C 020000      R     LJMP    _delayus
              ; FUNCTION mack (END)
 
              ; FUNCTION mnak (BEGIN)
-                                           ; SOURCE LINE # 267
-                                           ; SOURCE LINE # 268
-                                           ; SOURCE LINE # 269
+                                           ; SOURCE LINE # 277
+                                           ; SOURCE LINE # 278
+                                           ; SOURCE LINE # 279
 0000 120000      R     LCALL   SDA_OUT
-                                           ; SOURCE LINE # 270
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 17  
-
-                                           ; SOURCE LINE # 271
-                                           ; SOURCE LINE # 272
-                                           ; SOURCE LINE # 273
-0003 120000      R     LCALL   L?0081
-                                           ; SOURCE LINE # 274
+                                           ; SOURCE LINE # 280
+                                           ; SOURCE LINE # 281
+                                           ; SOURCE LINE # 282
+                                           ; SOURCE LINE # 283
+0003 120000      R     LCALL   L?0082
+                                           ; SOURCE LINE # 284
 0006 C2B2              CLR     RTC_SCL
-                                           ; SOURCE LINE # 275
+                                           ; SOURCE LINE # 285
 0008 7F05              MOV     R7,#05H
 000A 020000      R     LJMP    _delayus
              ; FUNCTION mnak (END)
 
              ; FUNCTION cack (BEGIN)
-                                           ; SOURCE LINE # 278
-                                           ; SOURCE LINE # 279
-                                           ; SOURCE LINE # 281
+                                           ; SOURCE LINE # 288
+                                           ; SOURCE LINE # 289
+                                           ; SOURCE LINE # 291
 0000 120000      R     LCALL   SDA_IN
-                                           ; SOURCE LINE # 282
-                                           ; SOURCE LINE # 283
-                                           ; SOURCE LINE # 284
-                                           ; SOURCE LINE # 285
-0003 120000      R     LCALL   L?0081
-                                           ; SOURCE LINE # 286
+                                           ; SOURCE LINE # 292
+                                           ; SOURCE LINE # 293
+                                           ; SOURCE LINE # 294
+                                           ; SOURCE LINE # 295
+0003 120000      R     LCALL   L?0082
+                                           ; SOURCE LINE # 296
 ;---- Variable 'i' assigned to Register 'R5' ----
 0006 E4                CLR     A
 0007 FD                MOV     R5,A
-0008         ?C0024:
-                                           ; SOURCE LINE # 287
-                                           ; SOURCE LINE # 288
-0008 30B30A            JNB     RTC_SDA,?C0025
-                                           ; SOURCE LINE # 289
-                                           ; SOURCE LINE # 290
-                                           ; SOURCE LINE # 291
-000B         ?C0027:
-                                           ; SOURCE LINE # 292
+0008         ?C0025:
+                                           ; SOURCE LINE # 297
+                                           ; SOURCE LINE # 298
+0008 30B30A            JNB     RTC_SDA,?C0026
+                                           ; SOURCE LINE # 299
+                                           ; SOURCE LINE # 300
+                                           ; SOURCE LINE # 301
+000B         ?C0028:
+                                           ; SOURCE LINE # 302
 000B 7F05              MOV     R7,#05H
 000D 120000      R     LCALL   _delayus
-                                           ; SOURCE LINE # 293
+                                           ; SOURCE LINE # 303
 0010 0D                INC     R5
 0011 ED                MOV     A,R5
-0012 B432F3            CJNE    A,#032H,?C0024
-0015         ?C0025:
-                                           ; SOURCE LINE # 294
+0012 B432F3            CJNE    A,#032H,?C0025
+0015         ?C0026:
+                                           ; SOURCE LINE # 304
 0015 C2B2              CLR     RTC_SCL
-                                           ; SOURCE LINE # 295
+                                           ; SOURCE LINE # 305
 0017 7F05              MOV     R7,#05H
 0019 120000      R     LCALL   _delayus
-                                           ; SOURCE LINE # 296
+                                           ; SOURCE LINE # 306
 001C 020000      R     LJMP    SDA_OUT
              ; FUNCTION cack (END)
 
-             ; FUNCTION L?0078 (BEGIN)
+             ; FUNCTION L?0079 (BEGIN)
 0000 120000      R     LCALL   _i2cbw
 0003 E0                MOVX    A,@DPTR
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 19  
+
 0004 FF                MOV     R7,A
-0005         L?0079:
+0005         L?0080:
 0005 120000      R     LCALL   _i2cbw
 0008 120000      R     LCALL   i2cstop
-000B         L?0080:
+000B         L?0081:
 000B 120000      R     LCALL   i2cstart
 000E 7F64              MOV     R7,#064H
              ; FUNCTION _i2cbw (BEGIN)
-                                           ; SOURCE LINE # 300
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 18  
-
+                                           ; SOURCE LINE # 310
 ;---- Variable 'dat' assigned to Register 'R5' ----
 0010 AD07              MOV     R5,AR7
-                                           ; SOURCE LINE # 301
-                                           ; SOURCE LINE # 303
+                                           ; SOURCE LINE # 311
+                                           ; SOURCE LINE # 313
 0012 120000      R     LCALL   SDA_OUT
-                                           ; SOURCE LINE # 304
+                                           ; SOURCE LINE # 314
 ;---- Variable 'i' assigned to Register 'R4' ----
 0015 E4                CLR     A
 0016 FC                MOV     R4,A
-0017         ?C0029:
-                                           ; SOURCE LINE # 305
-                                           ; SOURCE LINE # 306
+0017         ?C0030:
+                                           ; SOURCE LINE # 315
+                                           ; SOURCE LINE # 316
 0017 ED                MOV     A,R5
-0018 30E704            JNB     ACC.7,?C0032
-                                           ; SOURCE LINE # 307
-                                           ; SOURCE LINE # 308
+0018 30E704            JNB     ACC.7,?C0033
+                                           ; SOURCE LINE # 317
+                                           ; SOURCE LINE # 318
 001B D2B3              SETB    RTC_SDA
-                                           ; SOURCE LINE # 309
-001D 8002              SJMP    ?C0033
-001F         ?C0032:
-                                           ; SOURCE LINE # 311
-                                           ; SOURCE LINE # 312
+                                           ; SOURCE LINE # 319
+001D 8002              SJMP    ?C0034
+001F         ?C0033:
+                                           ; SOURCE LINE # 321
+                                           ; SOURCE LINE # 322
 001F C2B3              CLR     RTC_SDA
-                                           ; SOURCE LINE # 313
-0021         ?C0033:
-                                           ; SOURCE LINE # 314
+                                           ; SOURCE LINE # 323
+0021         ?C0034:
+                                           ; SOURCE LINE # 324
 0021 ED                MOV     A,R5
 0022 25E0              ADD     A,ACC
 0024 FD                MOV     R5,A
-                                           ; SOURCE LINE # 315
-                                           ; SOURCE LINE # 316
-                                           ; SOURCE LINE # 317
-0025 120000      R     LCALL   L?0082
-                                           ; SOURCE LINE # 318
+                                           ; SOURCE LINE # 325
+                                           ; SOURCE LINE # 326
+                                           ; SOURCE LINE # 327
+0025 120000      R     LCALL   L?0083
+                                           ; SOURCE LINE # 328
 0028 C2B2              CLR     RTC_SCL
-                                           ; SOURCE LINE # 319
+                                           ; SOURCE LINE # 329
 002A 7F05              MOV     R7,#05H
 002C 120000      R     LCALL   _delayus
-                                           ; SOURCE LINE # 320
+                                           ; SOURCE LINE # 330
 002F 0C                INC     R4
 0030 EC                MOV     A,R4
-0031 B408E3            CJNE    A,#08H,?C0029
-0034         ?C0030:
-                                           ; SOURCE LINE # 321
+0031 B408E3            CJNE    A,#08H,?C0030
+0034         ?C0031:
+                                           ; SOURCE LINE # 331
 0034 020000      R     LJMP    cack
              ; FUNCTION _i2cbw (END)
 
-             ; FUNCTION L?0084 (BEGIN)
+             ; FUNCTION L?0085 (BEGIN)
 0000 7F0F              MOV     R7,#0FH
 0002 120000      R     LCALL   _i2cbw
 0005 120000      R     LCALL   i2cstart
 0008 7F65              MOV     R7,#065H
 000A 120000      R     LCALL   _i2cbw
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 20  
+
              ; FUNCTION i2cbr (BEGIN)
-                                           ; SOURCE LINE # 325
+                                           ; SOURCE LINE # 335
 ;---- Variable 'dat' assigned to Register 'R5' ----
-                                           ; SOURCE LINE # 326
-                                           ; SOURCE LINE # 329
+                                           ; SOURCE LINE # 336
+                                           ; SOURCE LINE # 339
 000D 120000      R     LCALL   SDA_IN
-                                           ; SOURCE LINE # 330
+                                           ; SOURCE LINE # 340
 ;---- Variable 'i' assigned to Register 'R4' ----
 0010 E4                CLR     A
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 19  
-
 0011 FC                MOV     R4,A
-0012         ?C0035:
-                                           ; SOURCE LINE # 331
-                                           ; SOURCE LINE # 332
-                                           ; SOURCE LINE # 333
-                                           ; SOURCE LINE # 334
-0012 120000      R     LCALL   L?0082
-                                           ; SOURCE LINE # 335
+0012         ?C0036:
+                                           ; SOURCE LINE # 341
+                                           ; SOURCE LINE # 342
+                                           ; SOURCE LINE # 343
+                                           ; SOURCE LINE # 344
+0012 120000      R     LCALL   L?0083
+                                           ; SOURCE LINE # 345
 0015 ED                MOV     A,R5
 0016 25E0              ADD     A,ACC
 0018 FD                MOV     R5,A
-                                           ; SOURCE LINE # 336
-0019 30B305            JNB     RTC_SDA,?C0038
-                                           ; SOURCE LINE # 337
-                                           ; SOURCE LINE # 338
+                                           ; SOURCE LINE # 346
+0019 30B305            JNB     RTC_SDA,?C0039
+                                           ; SOURCE LINE # 347
+                                           ; SOURCE LINE # 348
 001C 4401              ORL     A,#01H
 001E FD                MOV     R5,A
-                                           ; SOURCE LINE # 339
-001F 8004              SJMP    ?C0039
-0021         ?C0038:
-                                           ; SOURCE LINE # 341
-                                           ; SOURCE LINE # 342
+                                           ; SOURCE LINE # 349
+001F 8004              SJMP    ?C0040
+0021         ?C0039:
+                                           ; SOURCE LINE # 351
+                                           ; SOURCE LINE # 352
 0021 ED                MOV     A,R5
 0022 54FE              ANL     A,#0FEH
 0024 FD                MOV     R5,A
-                                           ; SOURCE LINE # 343
-0025         ?C0039:
-                                           ; SOURCE LINE # 345
+                                           ; SOURCE LINE # 353
+0025         ?C0040:
+                                           ; SOURCE LINE # 355
 0025 C2B2              CLR     RTC_SCL
-                                           ; SOURCE LINE # 346
+                                           ; SOURCE LINE # 356
 0027 7F05              MOV     R7,#05H
 0029 120000      R     LCALL   _delayus
-                                           ; SOURCE LINE # 347
+                                           ; SOURCE LINE # 357
 002C 0C                INC     R4
 002D EC                MOV     A,R4
-002E B408E1            CJNE    A,#08H,?C0035
-0031         ?C0036:
-                                           ; SOURCE LINE # 348
+002E B408E1            CJNE    A,#08H,?C0036
+0031         ?C0037:
+                                           ; SOURCE LINE # 358
 0031 AF05              MOV     R7,AR5
-                                           ; SOURCE LINE # 349
-0033         ?C0040:
+                                           ; SOURCE LINE # 359
+0033         ?C0041:
 0033 22                RET     
              ; FUNCTION i2cbr (END)
 
              ; FUNCTION init_rtc (BEGIN)
-                                           ; SOURCE LINE # 352
-                                           ; SOURCE LINE # 353
-                                           ; SOURCE LINE # 356
-                                           ; SOURCE LINE # 357
-0000 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 358
-                                           ; SOURCE LINE # 359
-                                           ; SOURCE LINE # 360
-                                           ; SOURCE LINE # 361
-0003 120000      R     LCALL   L?0084
-;---- Variable 'dat2' assigned to Register 'R3' ----
-0006 AB07              MOV     R3,AR7
                                            ; SOURCE LINE # 362
-0008 120000      R     LCALL   mack
                                            ; SOURCE LINE # 363
-000B 120000      R     LCALL   i2cbr
-;---- Variable 'dat1' assigned to Register 'R2' ----
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 20  
-
-000E AA07              MOV     R2,AR7
-                                           ; SOURCE LINE # 364
-0010 120000      R     LCALL   mnak
-                                           ; SOURCE LINE # 365
-0013 120000      R     LCALL   i2cstop
                                            ; SOURCE LINE # 366
-0016 EB                MOV     A,R3
-0017 20E003            JB      ACC.0,$ + 6H
-001A 020000      R     LJMP    ?C0044
                                            ; SOURCE LINE # 367
+0000 120000      R     LCALL   L?0081
                                            ; SOURCE LINE # 368
-001D 5484              ANL     A,#084H
-001F 600A              JZ      ?C0042
                                            ; SOURCE LINE # 369
                                            ; SOURCE LINE # 370
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 21  
+
+                                           ; SOURCE LINE # 371
+0003 120000      R     LCALL   L?0085
+;---- Variable 'dat2' assigned to Register 'R3' ----
+0006 AB07              MOV     R3,AR7
+                                           ; SOURCE LINE # 372
+0008 120000      R     LCALL   mack
+                                           ; SOURCE LINE # 373
+000B 120000      R     LCALL   i2cbr
+;---- Variable 'dat1' assigned to Register 'R2' ----
+000E AA07              MOV     R2,AR7
+                                           ; SOURCE LINE # 374
+0010 120000      R     LCALL   mnak
+                                           ; SOURCE LINE # 375
+0013 120000      R     LCALL   i2cstop
+                                           ; SOURCE LINE # 376
+0016 EB                MOV     A,R3
+0017 20E003            JB      ACC.0,$ + 6H
+001A 020000      R     LJMP    ?C0045
+                                           ; SOURCE LINE # 377
+                                           ; SOURCE LINE # 378
+001D 5484              ANL     A,#084H
+001F 600A              JZ      ?C0043
+                                           ; SOURCE LINE # 379
+                                           ; SOURCE LINE # 380
 0021 EB                MOV     A,R3
 0022 547B              ANL     A,#07BH
 0024 FB                MOV     R3,A
-                                           ; SOURCE LINE # 371
-                                           ; SOURCE LINE # 372
-0025 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 373
-                                           ; SOURCE LINE # 374
-                                           ; SOURCE LINE # 375
-0028 120000      R     LCALL   L?0083
-                                           ; SOURCE LINE # 376
-002B         ?C0042:
-                                           ; SOURCE LINE # 377
+                                           ; SOURCE LINE # 381
+                                           ; SOURCE LINE # 382
+0025 120000      R     LCALL   L?0081
+                                           ; SOURCE LINE # 383
+                                           ; SOURCE LINE # 384
+                                           ; SOURCE LINE # 385
+0028 120000      R     LCALL   L?0084
+                                           ; SOURCE LINE # 386
+002B         ?C0043:
+                                           ; SOURCE LINE # 387
 002B EB                MOV     A,R3
 002C 54FE              ANL     A,#0FEH
 002E FB                MOV     R3,A
-                                           ; SOURCE LINE # 379
+                                           ; SOURCE LINE # 389
 002F EA                MOV     A,R2
-0030 30E713            JNB     ACC.7,?C0043
-                                           ; SOURCE LINE # 380
-                                           ; SOURCE LINE # 381
+0030 30E713            JNB     ACC.7,?C0044
+                                           ; SOURCE LINE # 390
+                                           ; SOURCE LINE # 391
 0033 547F              ANL     A,#07FH
 0035 FA                MOV     R2,A
-                                           ; SOURCE LINE # 382
-                                           ; SOURCE LINE # 383
-0036 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 384
+                                           ; SOURCE LINE # 392
+                                           ; SOURCE LINE # 393
+0036 120000      R     LCALL   L?0081
+                                           ; SOURCE LINE # 394
 0039 7F10              MOV     R7,#010H
 003B 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 385
+                                           ; SOURCE LINE # 395
 003E AF02              MOV     R7,AR2
 0040 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 386
+                                           ; SOURCE LINE # 396
 0043 120000      R     LCALL   i2cstop
-                                           ; SOURCE LINE # 387
-0046         ?C0043:
-                                           ; SOURCE LINE # 390
+                                           ; SOURCE LINE # 397
+0046         ?C0044:
+                                           ; SOURCE LINE # 400
 0046 EA                MOV     A,R2
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 22  
+
 0047 4480              ORL     A,#080H
 0049 FA                MOV     R2,A
-                                           ; SOURCE LINE # 391
-                                           ; SOURCE LINE # 392
-004A 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 393
+                                           ; SOURCE LINE # 401
+                                           ; SOURCE LINE # 402
+004A 120000      R     LCALL   L?0081
+                                           ; SOURCE LINE # 403
 004D 7F10              MOV     R7,#010H
 004F 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 394
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 21  
-
+                                           ; SOURCE LINE # 404
 0052 AF02              MOV     R7,AR2
 0054 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 395
+                                           ; SOURCE LINE # 405
 0057 120000      R     LCALL   i2cstop
-                                           ; SOURCE LINE # 396
+                                           ; SOURCE LINE # 406
 005A EB                MOV     A,R3
 005B 4484              ORL     A,#084H
 005D FB                MOV     R3,A
-                                           ; SOURCE LINE # 397
-                                           ; SOURCE LINE # 398
-005E 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 399
+                                           ; SOURCE LINE # 407
+                                           ; SOURCE LINE # 408
+005E 120000      R     LCALL   L?0081
+                                           ; SOURCE LINE # 409
 0061 7F0F              MOV     R7,#0FH
 0063 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 400
+                                           ; SOURCE LINE # 410
 0066 AF03              MOV     R7,AR3
-                                           ; SOURCE LINE # 401
-                                           ; SOURCE LINE # 405
-                                           ; SOURCE LINE # 406
-0068 120000      R     LCALL   L?0079
-                                           ; SOURCE LINE # 407
+                                           ; SOURCE LINE # 411
+                                           ; SOURCE LINE # 415
+                                           ; SOURCE LINE # 416
+0068 120000      R     LCALL   L?0080
+                                           ; SOURCE LINE # 417
 006B E4                CLR     A
 006C FF                MOV     R7,A
 006D 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 408
+                                           ; SOURCE LINE # 418
 0070 E4                CLR     A
 0071 FF                MOV     R7,A
 0072 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 409
+                                           ; SOURCE LINE # 419
 0075 E4                CLR     A
 0076 FF                MOV     R7,A
 0077 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 410
+                                           ; SOURCE LINE # 420
 007A 7F80              MOV     R7,#080H
 007C 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 411
+                                           ; SOURCE LINE # 421
 007F 7F05              MOV     R7,#05H
 0081 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 412
+                                           ; SOURCE LINE # 422
 0084 7F01              MOV     R7,#01H
 0086 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 413
+                                           ; SOURCE LINE # 423
 0089 7F01              MOV     R7,#01H
 008B 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 414
+                                           ; SOURCE LINE # 424
 008E 7F21              MOV     R7,#021H
 0090 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 415
+                                           ; SOURCE LINE # 425
 0093 120000      R     LCALL   i2cstop
-                                           ; SOURCE LINE # 416
+                                           ; SOURCE LINE # 426
 0096 EB                MOV     A,R3
 0097 547B              ANL     A,#07BH
 0099 FB                MOV     R3,A
-                                           ; SOURCE LINE # 417
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 23  
+
+                                           ; SOURCE LINE # 427
 009A EA                MOV     A,R2
 009B 547F              ANL     A,#07FH
 009D FA                MOV     R2,A
-                                           ; SOURCE LINE # 418
-                                           ; SOURCE LINE # 419
-009E 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 420
-00A1 7F10              MOV     R7,#010H
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 22  
-
-00A3 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 421
-00A6 AF02              MOV     R7,AR2
-                                           ; SOURCE LINE # 422
-                                           ; SOURCE LINE # 423
-                                           ; SOURCE LINE # 424
-00A8 120000      R     LCALL   L?0079
-                                           ; SOURCE LINE # 425
-                                           ; SOURCE LINE # 426
-                                           ; SOURCE LINE # 427
-00AB 120000      R     LCALL   L?0083
                                            ; SOURCE LINE # 428
                                            ; SOURCE LINE # 429
-00AE         ?C0044:
+009E 120000      R     LCALL   L?0081
+                                           ; SOURCE LINE # 430
+00A1 7F10              MOV     R7,#010H
+00A3 120000      R     LCALL   _i2cbw
+                                           ; SOURCE LINE # 431
+00A6 AF02              MOV     R7,AR2
+                                           ; SOURCE LINE # 432
+                                           ; SOURCE LINE # 433
+                                           ; SOURCE LINE # 434
+00A8 120000      R     LCALL   L?0080
+                                           ; SOURCE LINE # 435
+                                           ; SOURCE LINE # 436
+                                           ; SOURCE LINE # 437
+00AB 120000      R     LCALL   L?0084
+                                           ; SOURCE LINE # 438
+                                           ; SOURCE LINE # 439
+00AE         ?C0045:
 00AE 22                RET     
              ; FUNCTION init_rtc (END)
 
              ; FUNCTION _rtc_config (BEGIN)
-                                           ; SOURCE LINE # 433
+                                           ; SOURCE LINE # 443
 ;---- Variable 'prtc_set' assigned to Register 'R1/R2/R3' ----
-                                           ; SOURCE LINE # 434
-                                           ; SOURCE LINE # 436
-                                           ; SOURCE LINE # 437
-0000 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 438
-                                           ; SOURCE LINE # 439
-                                           ; SOURCE LINE # 440
-                                           ; SOURCE LINE # 441
-0003 120000      R     LCALL   L?0084
+                                           ; SOURCE LINE # 444
+                                           ; SOURCE LINE # 446
+                                           ; SOURCE LINE # 447
+0000 120000      R     LCALL   L?0081
+                                           ; SOURCE LINE # 448
+                                           ; SOURCE LINE # 449
+                                           ; SOURCE LINE # 450
+                                           ; SOURCE LINE # 451
+0003 120000      R     LCALL   L?0085
 0006 900000      R     MOV     DPTR,#dat
 0009 EF                MOV     A,R7
 000A F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 442
+                                           ; SOURCE LINE # 452
 000B 120000      R     LCALL   mack
-                                           ; SOURCE LINE # 443
+                                           ; SOURCE LINE # 453
 000E 120000      R     LCALL   i2cbr
 0011 A3                INC     DPTR
 0012 EF                MOV     A,R7
 0013 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 444
+                                           ; SOURCE LINE # 454
 0014 120000      R     LCALL   mnak
-                                           ; SOURCE LINE # 445
+                                           ; SOURCE LINE # 455
 0017 120000      R     LCALL   i2cstop
-                                           ; SOURCE LINE # 446
+                                           ; SOURCE LINE # 456
 001A E0                MOVX    A,@DPTR
 001B 4480              ORL     A,#080H
 001D F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 447
-                                           ; SOURCE LINE # 448
-001E 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 449
+                                           ; SOURCE LINE # 457
+                                           ; SOURCE LINE # 458
+001E 120000      R     LCALL   L?0081
+                                           ; SOURCE LINE # 459
 0021 7F10              MOV     R7,#010H
 0023 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 450
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 24  
+
+                                           ; SOURCE LINE # 460
 0026 E0                MOVX    A,@DPTR
 0027 FF                MOV     R7,A
 0028 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 451
+                                           ; SOURCE LINE # 461
 002B 120000      R     LCALL   i2cstop
-                                           ; SOURCE LINE # 452
+                                           ; SOURCE LINE # 462
 002E 900000      R     MOV     DPTR,#dat
 0031 E0                MOVX    A,@DPTR
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 23  
-
 0032 4484              ORL     A,#084H
 0034 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 453
-                                           ; SOURCE LINE # 454
-0035 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 455
+                                           ; SOURCE LINE # 463
+                                           ; SOURCE LINE # 464
+0035 120000      R     LCALL   L?0081
+                                           ; SOURCE LINE # 465
 0038 7F0F              MOV     R7,#0FH
-                                           ; SOURCE LINE # 456
-                                           ; SOURCE LINE # 457
-                                           ; SOURCE LINE # 460
-                                           ; SOURCE LINE # 461
-003A 120000      R     LCALL   L?0078
-                                           ; SOURCE LINE # 462
+                                           ; SOURCE LINE # 466
+                                           ; SOURCE LINE # 467
+                                           ; SOURCE LINE # 470
+                                           ; SOURCE LINE # 471
+003A 120000      R     LCALL   L?0079
+                                           ; SOURCE LINE # 472
 003D E4                CLR     A
 003E FF                MOV     R7,A
 003F 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 463
+                                           ; SOURCE LINE # 473
 0042 900006            MOV     DPTR,#06H
 0045 120000      E     LCALL   ?C?CLDOPTR
 0048 FF                MOV     R7,A
 0049 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 464
+                                           ; SOURCE LINE # 474
 004C 900005            MOV     DPTR,#05H
 004F 120000      E     LCALL   ?C?CLDOPTR
 0052 FF                MOV     R7,A
 0053 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 465
+                                           ; SOURCE LINE # 475
 0056 900004            MOV     DPTR,#04H
 0059 120000      E     LCALL   ?C?CLDOPTR
 005C FF                MOV     R7,A
 005D 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 466
+                                           ; SOURCE LINE # 476
 0060 900003            MOV     DPTR,#03H
 0063 120000      E     LCALL   ?C?CLDOPTR
 0066 FF                MOV     R7,A
 0067 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 467
+                                           ; SOURCE LINE # 477
 006A 900002            MOV     DPTR,#02H
 006D 120000      E     LCALL   ?C?CLDOPTR
 0070 FF                MOV     R7,A
 0071 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 468
+                                           ; SOURCE LINE # 478
 0074 900001            MOV     DPTR,#01H
 0077 120000      E     LCALL   ?C?CLDOPTR
 007A FF                MOV     R7,A
 007B 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 469
+                                           ; SOURCE LINE # 479
 007E 120000      E     LCALL   ?C?CLDPTR
 0081 FF                MOV     R7,A
 0082 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 470
+                                           ; SOURCE LINE # 480
 0085 120000      R     LCALL   i2cstop
-                                           ; SOURCE LINE # 471
+                                           ; SOURCE LINE # 481
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 25  
+
 0088 900000      R     MOV     DPTR,#dat
 008B E0                MOVX    A,@DPTR
 008C 547B              ANL     A,#07BH
 008E F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 472
+                                           ; SOURCE LINE # 482
 008F A3                INC     DPTR
 0090 E0                MOVX    A,@DPTR
 0091 547F              ANL     A,#07FH
 0093 F0                MOVX    @DPTR,A
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 24  
-
-                                           ; SOURCE LINE # 473
-                                           ; SOURCE LINE # 474
-0094 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 475
+                                           ; SOURCE LINE # 483
+                                           ; SOURCE LINE # 484
+0094 120000      R     LCALL   L?0081
+                                           ; SOURCE LINE # 485
 0097 7F10              MOV     R7,#010H
-                                           ; SOURCE LINE # 476
-                                           ; SOURCE LINE # 477
-                                           ; SOURCE LINE # 478
-                                           ; SOURCE LINE # 479
-0099 120000      R     LCALL   L?0078
-                                           ; SOURCE LINE # 480
+                                           ; SOURCE LINE # 486
+                                           ; SOURCE LINE # 487
+                                           ; SOURCE LINE # 488
+                                           ; SOURCE LINE # 489
+0099 120000      R     LCALL   L?0079
+                                           ; SOURCE LINE # 490
 009C 7F0F              MOV     R7,#0FH
 009E 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 481
+                                           ; SOURCE LINE # 491
 00A1 900000      R     MOV     DPTR,#dat
 00A4 E0                MOVX    A,@DPTR
 00A5 FF                MOV     R7,A
 00A6 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 482
+                                           ; SOURCE LINE # 492
 00A9 020000      R     LJMP    i2cstop
              ; FUNCTION _rtc_config (END)
 
              ; FUNCTION rdtime (BEGIN)
-                                           ; SOURCE LINE # 486
-                                           ; SOURCE LINE # 487
-                                           ; SOURCE LINE # 490
-                                           ; SOURCE LINE # 491
-0000 120000      R     LCALL   L?0080
-                                           ; SOURCE LINE # 492
+                                           ; SOURCE LINE # 496
+                                           ; SOURCE LINE # 497
+                                           ; SOURCE LINE # 500
+                                           ; SOURCE LINE # 501
+0000 120000      R     LCALL   L?0081
+                                           ; SOURCE LINE # 502
 0003 E4                CLR     A
 0004 FF                MOV     R7,A
 0005 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 493
+                                           ; SOURCE LINE # 503
 0008 120000      R     LCALL   i2cstart
-                                           ; SOURCE LINE # 494
+                                           ; SOURCE LINE # 504
 000B 7F65              MOV     R7,#065H
 000D 120000      R     LCALL   _i2cbw
-                                           ; SOURCE LINE # 495
+                                           ; SOURCE LINE # 505
 ;---- Variable 'i' assigned to Register 'R3' ----
 0010 7B06              MOV     R3,#06H
-0012         ?C0046:
-                                           ; SOURCE LINE # 496
-                                           ; SOURCE LINE # 497
+0012         ?C0047:
+                                           ; SOURCE LINE # 506
+                                           ; SOURCE LINE # 507
 0012 120000      R     LCALL   i2cbr
 0015 7400        R     MOV     A,#LOW rtcdata
 0017 2B                ADD     A,R3
@@ -1518,33 +1539,33 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 001D F583              MOV     DPH,A
 001F EF                MOV     A,R7
 0020 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 498
+                                           ; SOURCE LINE # 508
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 26  
+
 0021 120000      R     LCALL   mack
-                                           ; SOURCE LINE # 499
-0024 DBEC              DJNZ    R3,?C0046
-0026         ?C0047:
-                                           ; SOURCE LINE # 500
+                                           ; SOURCE LINE # 509
+0024 DBEC              DJNZ    R3,?C0047
+0026         ?C0048:
+                                           ; SOURCE LINE # 510
 0026 120000      R     LCALL   i2cbr
 0029 900000      R     MOV     DPTR,#rtcdata
 002C EF                MOV     A,R7
 002D F0                MOVX    @DPTR,A
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 25  
-
-                                           ; SOURCE LINE # 501
+                                           ; SOURCE LINE # 511
 002E 120000      R     LCALL   mnak
-                                           ; SOURCE LINE # 502
+                                           ; SOURCE LINE # 512
 0031 120000      R     LCALL   i2cstop
-                                           ; SOURCE LINE # 503
+                                           ; SOURCE LINE # 513
 0034 900000      R     MOV     DPTR,#rtcdata+04H
 0037 E0                MOVX    A,@DPTR
 0038 547F              ANL     A,#07FH
 003A F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 504
+                                           ; SOURCE LINE # 514
 003B E4                CLR     A
 003C FB                MOV     R3,A
-003D         ?C0049:
-                                           ; SOURCE LINE # 505
-                                           ; SOURCE LINE # 506
+003D         ?C0050:
+                                           ; SOURCE LINE # 515
+                                           ; SOURCE LINE # 516
 003D 7400        R     MOV     A,#LOW rtcdata
 003F 2B                ADD     A,R3
 0040 F582              MOV     DPL,A
@@ -1558,13 +1579,13 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 004C FE                MOV     R6,A
 004D 900000      R     MOV     DPTR,#n
 0050 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 507
+                                           ; SOURCE LINE # 517
 0051 EF                MOV     A,R7
 0052 540F              ANL     A,#0FH
 0054 FF                MOV     R7,A
 0055 A3                INC     DPTR
 0056 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 508
+                                           ; SOURCE LINE # 518
 0057 EE                MOV     A,R6
 0058 75F00A            MOV     B,#0AH
 005B A4                MUL     AB
@@ -1578,22 +1599,22 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0066 F583              MOV     DPH,A
 0068 EF                MOV     A,R7
 0069 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 509
+                                           ; SOURCE LINE # 519
 006A 0B                INC     R3
 006B EB                MOV     A,R3
-006C B403CE            CJNE    A,#03H,?C0049
-006F         ?C0050:
-                                           ; SOURCE LINE # 510
+006C B403CE            CJNE    A,#03H,?C0050
+006F         ?C0051:
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 27  
+
+                                           ; SOURCE LINE # 520
 006F 7B04              MOV     R3,#04H
-0071         ?C0052:
-                                           ; SOURCE LINE # 511
-                                           ; SOURCE LINE # 512
+0071         ?C0053:
+                                           ; SOURCE LINE # 521
+                                           ; SOURCE LINE # 522
 0071 7400        R     MOV     A,#LOW rtcdata
 0073 2B                ADD     A,R3
 0074 F582              MOV     DPL,A
 0076 E4                CLR     A
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 26  
-
 0077 3400        R     ADDC    A,#HIGH rtcdata
 0079 F583              MOV     DPH,A
 007B E0                MOVX    A,@DPTR
@@ -1603,13 +1624,13 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0080 FE                MOV     R6,A
 0081 900000      R     MOV     DPTR,#n
 0084 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 513
+                                           ; SOURCE LINE # 523
 0085 EF                MOV     A,R7
 0086 540F              ANL     A,#0FH
 0088 FF                MOV     R7,A
 0089 A3                INC     DPTR
 008A F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 514
+                                           ; SOURCE LINE # 524
 008B EE                MOV     A,R6
 008C 75F00A            MOV     B,#0AH
 008F A4                MUL     AB
@@ -1623,16 +1644,16 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 009A F583              MOV     DPH,A
 009C EF                MOV     A,R7
 009D F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 515
+                                           ; SOURCE LINE # 525
 009E 0B                INC     R3
 009F EB                MOV     A,R3
-00A0 B407CE            CJNE    A,#07H,?C0052
-00A3         ?C0053:
-                                           ; SOURCE LINE # 517
+00A0 B407CE            CJNE    A,#07H,?C0053
+00A3         ?C0054:
+                                           ; SOURCE LINE # 527
 00A3 E4                CLR     A
 00A4 900000      R     MOV     DPTR,#rtcdata+07H
 00A7 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 518
+                                           ; SOURCE LINE # 528
 00A8 7B01              MOV     R3,#01H
 00AA 7A00        R     MOV     R2,#HIGH rtcdata
 00AC 7900        R     MOV     R1,#LOW rtcdata
@@ -1647,17 +1668,17 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
              ; FUNCTION rdtime (END)
 
              ; FUNCTION _BCD (BEGIN)
-                                           ; SOURCE LINE # 523
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 28  
+
+                                           ; SOURCE LINE # 533
 ;---- Variable 'dat' assigned to Register 'R7' ----
-                                           ; SOURCE LINE # 524
-                                           ; SOURCE LINE # 525
+                                           ; SOURCE LINE # 534
+                                           ; SOURCE LINE # 535
 0000 EF                MOV     A,R7
 0001 75F00A            MOV     B,#0AH
 0004 84                DIV     AB
 0005 C4                SWAP    A
 0006 54F0              ANL     A,#0F0H
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 27  
-
 0008 FE                MOV     R6,A
 0009 EF                MOV     A,R7
 000A 75F00A            MOV     B,#0AH
@@ -1665,16 +1686,16 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 000E E5F0              MOV     A,B
 0010 4E                ORL     A,R6
 0011 FF                MOV     R7,A
-                                           ; SOURCE LINE # 526
-0012         ?C0056:
+                                           ; SOURCE LINE # 536
+0012         ?C0057:
 0012 22                RET     
              ; FUNCTION _BCD (END)
 
              ; FUNCTION _IBCD (BEGIN)
-                                           ; SOURCE LINE # 528
+                                           ; SOURCE LINE # 538
 ;---- Variable 'dat' assigned to Register 'R7' ----
-                                           ; SOURCE LINE # 529
-                                           ; SOURCE LINE # 530
+                                           ; SOURCE LINE # 539
+                                           ; SOURCE LINE # 540
 0000 EF                MOV     A,R7
 0001 C4                SWAP    A
 0002 540F              ANL     A,#0FH
@@ -1685,32 +1706,34 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 000A 540F              ANL     A,#0FH
 000C 2E                ADD     A,R6
 000D FF                MOV     R7,A
-                                           ; SOURCE LINE # 531
-000E         ?C0057:
+                                           ; SOURCE LINE # 541
+000E         ?C0058:
 000E 22                RET     
              ; FUNCTION _IBCD (END)
 
              ; FUNCTION _rtc_get_week (BEGIN)
-                                           ; SOURCE LINE # 537
+                                           ; SOURCE LINE # 547
 0000 900000      R     MOV     DPTR,#day
 0003 EB                MOV     A,R3
 0004 F0                MOVX    @DPTR,A
 ;---- Variable 'month' assigned to Register 'R5' ----
 ;---- Variable 'year' assigned to Register 'R3' ----
 0005 AB07              MOV     R3,AR7
-                                           ; SOURCE LINE # 538
-                                           ; SOURCE LINE # 541
+                                           ; SOURCE LINE # 548
+                                           ; SOURCE LINE # 551
 0007 ED                MOV     A,R5
 0008 6401              XRL     A,#01H
-000A 6004              JZ      ?C0059
+000A 6004              JZ      ?C0060
 000C ED                MOV     A,R5
-000D B4021B            CJNE    A,#02H,?C0058
-0010         ?C0059:
-                                           ; SOURCE LINE # 542
-                                           ; SOURCE LINE # 543
+000D B4021B            CJNE    A,#02H,?C0059
+0010         ?C0060:
+                                           ; SOURCE LINE # 552
+                                           ; SOURCE LINE # 553
 0010 ED                MOV     A,R5
 0011 240C              ADD     A,#0CH
 0013 FE                MOV     R6,A
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 29  
+
 0014 E4                CLR     A
 0015 33                RLC     A
 0016 900000      R     MOV     DPTR,#mon
@@ -1718,10 +1741,8 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 001A A3                INC     DPTR
 001B CE                XCH     A,R6
 001C F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 544
+                                           ; SOURCE LINE # 554
 001D EB                MOV     A,R3
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 28  
-
 001E 24FF              ADD     A,#0FFH
 0020 FE                MOV     R6,A
 0021 E4                CLR     A
@@ -1731,11 +1752,11 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0026 A3                INC     DPTR
 0027 CE                XCH     A,R6
 0028 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 545
-0029 8012              SJMP    ?C0060
-002B         ?C0058:
-                                           ; SOURCE LINE # 547
-                                           ; SOURCE LINE # 548
+                                           ; SOURCE LINE # 555
+0029 8012              SJMP    ?C0061
+002B         ?C0059:
+                                           ; SOURCE LINE # 557
+                                           ; SOURCE LINE # 558
 002B AF05              MOV     R7,AR5
 002D 900000      R     MOV     DPTR,#mon
 0030 E4                CLR     A
@@ -1743,7 +1764,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0032 A3                INC     DPTR
 0033 EF                MOV     A,R7
 0034 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 549
+                                           ; SOURCE LINE # 559
 0035 AF03              MOV     R7,AR3
 0037 A3                INC     DPTR
 0038 E4                CLR     A
@@ -1751,9 +1772,9 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 003A A3                INC     DPTR
 003B EF                MOV     A,R7
 003C F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 550
-003D         ?C0060:
-                                           ; SOURCE LINE # 551
+                                           ; SOURCE LINE # 560
+003D         ?C0061:
+                                           ; SOURCE LINE # 561
 003D 900000      R     MOV     DPTR,#mon+01H
 0040 E0                MOVX    A,@DPTR
 0041 2401              ADD     A,#01H
@@ -1775,17 +1796,17 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0060 A3                INC     DPTR
 0061 E0                MOVX    A,@DPTR
 0062 FB                MOV     R3,A
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 30  
+
 0063 AE02              MOV     R6,AR2
 0065 7802              MOV     R0,#02H
-0067         ?C0077:
+0067         ?C0078:
 0067 CE                XCH     A,R6
 0068 C3                CLR     C
 0069 13                RRC     A
 006A CE                XCH     A,R6
 006B 13                RRC     A
-006C D8F9              DJNZ    R0,?C0077
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 29  
-
+006C D8F9              DJNZ    R0,?C0078
 006E 2B                ADD     A,R3
 006F FF                MOV     R7,A
 0070 EA                MOV     A,R2
@@ -1808,21 +1829,21 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0085 34FF              ADDC    A,#0FFH
 0087 FE                MOV     R6,A
 ;---- Variable 'tmp' assigned to Register 'R6/R7' ----
-                                           ; SOURCE LINE # 552
+                                           ; SOURCE LINE # 562
 0088 7D07              MOV     R5,#07H
 008A 120000      E     LCALL   ?C?UIDIV
 008D AF05              MOV     R7,AR5
 ;---- Variable 'week' assigned to Register 'R7' ----
-                                           ; SOURCE LINE # 553
-                                           ; SOURCE LINE # 554
-008F         ?C0061:
+                                           ; SOURCE LINE # 563
+                                           ; SOURCE LINE # 564
+008F         ?C0062:
 008F 22                RET     
              ; FUNCTION _rtc_get_week (END)
 
              ; FUNCTION check_rtc_set (BEGIN)
-                                           ; SOURCE LINE # 559
-                                           ; SOURCE LINE # 560
-                                           ; SOURCE LINE # 562
+                                           ; SOURCE LINE # 569
+                                           ; SOURCE LINE # 570
+                                           ; SOURCE LINE # 572
 0000 7B01              MOV     R3,#01H
 0002 7A00        R     MOV     R2,#HIGH rtc_parm
 0004 7900        R     MOV     R1,#LOW rtc_parm
@@ -1835,21 +1856,21 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 000F 7F9C              MOV     R7,#09CH
 0011 7E00              MOV     R6,#00H
 0013 120000      E     LCALL   _read_dgus_vp
-                                           ; SOURCE LINE # 563
+                                           ; SOURCE LINE # 573
 0016 900000      R     MOV     DPTR,#rtc_parm
 0019 E0                MOVX    A,@DPTR
 001A 645A              XRL     A,#05AH
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 31  
+
 001C 6003              JZ      $ + 5H
-001E 020000      R     LJMP    ?C0063
+001E 020000      R     LJMP    ?C0064
 0021 A3                INC     DPTR
 0022 E0                MOVX    A,@DPTR
 0023 64A5              XRL     A,#0A5H
 0025 6003              JZ      $ + 5H
-0027 020000      R     LJMP    ?C0063
-                                           ; SOURCE LINE # 564
-                                           ; SOURCE LINE # 565
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 30  
-
+0027 020000      R     LJMP    ?C0064
+                                           ; SOURCE LINE # 574
+                                           ; SOURCE LINE # 575
 002A A3                INC     DPTR
 002B E0                MOVX    A,@DPTR
 002C FF                MOV     R7,A
@@ -1857,7 +1878,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0030 900000      R     MOV     DPTR,#rtc_set
 0033 EF                MOV     A,R7
 0034 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 566
+                                           ; SOURCE LINE # 576
 0035 900000      R     MOV     DPTR,#rtc_parm+03H
 0038 E0                MOVX    A,@DPTR
 0039 FF                MOV     R7,A
@@ -1865,7 +1886,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 003D 900000      R     MOV     DPTR,#rtc_set+01H
 0040 EF                MOV     A,R7
 0041 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 567
+                                           ; SOURCE LINE # 577
 0042 900000      R     MOV     DPTR,#rtc_parm+04H
 0045 E0                MOVX    A,@DPTR
 0046 FF                MOV     R7,A
@@ -1873,7 +1894,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 004A 900000      R     MOV     DPTR,#rtc_set+02H
 004D EF                MOV     A,R7
 004E F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 568
+                                           ; SOURCE LINE # 578
 004F 900000      R     MOV     DPTR,#rtc_parm+02H
 0052 E0                MOVX    A,@DPTR
 0053 FF                MOV     R7,A
@@ -1887,7 +1908,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 005D 900000      R     MOV     DPTR,#rtc_set+03H
 0060 EF                MOV     A,R7
 0061 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 569
+                                           ; SOURCE LINE # 579
 0062 900000      R     MOV     DPTR,#rtc_parm+05H
 0065 E0                MOVX    A,@DPTR
 0066 FF                MOV     R7,A
@@ -1895,40 +1916,40 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 006A 900000      R     MOV     DPTR,#rtc_set+04H
 006D EF                MOV     A,R7
 006E F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 570
+                                           ; SOURCE LINE # 580
 006F 4480              ORL     A,#080H
 0071 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 571
+                                           ; SOURCE LINE # 581
 0072 900000      R     MOV     DPTR,#rtc_parm+06H
 0075 E0                MOVX    A,@DPTR
 0076 FF                MOV     R7,A
 0077 120000      R     LCALL   _BCD
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 32  
+
 007A 900000      R     MOV     DPTR,#rtc_set+05H
 007D EF                MOV     A,R7
 007E F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 572
+                                           ; SOURCE LINE # 582
 007F 900000      R     MOV     DPTR,#rtc_parm+07H
 0082 E0                MOVX    A,@DPTR
 0083 FF                MOV     R7,A
 0084 120000      R     LCALL   _BCD
 0087 900000      R     MOV     DPTR,#rtc_set+06H
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 31  
-
 008A EF                MOV     A,R7
 008B F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 573
+                                           ; SOURCE LINE # 583
 008C 7B01              MOV     R3,#01H
 008E 7A00        R     MOV     R2,#HIGH rtc_set
 0090 7900        R     MOV     R1,#LOW rtc_set
 0092 120000      R     LCALL   _rtc_config
-                                           ; SOURCE LINE # 574
+                                           ; SOURCE LINE # 584
 0095 E4                CLR     A
 0096 900000      R     MOV     DPTR,#rtc_parm
 0099 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 575
+                                           ; SOURCE LINE # 585
 009A A3                INC     DPTR
 009B F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 576
+                                           ; SOURCE LINE # 586
 009C 7A00        R     MOV     R2,#HIGH rtc_parm
 009E 7900        R     MOV     R1,#LOW rtc_parm
 00A0 900000      E     MOV     DPTR,#?_write_dgus_vp?BYTE+05H
@@ -1939,34 +1960,34 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00A7 7F9C              MOV     R7,#09CH
 00A9 7E00              MOV     R6,#00H
 00AB 120000      E     LCALL   _write_dgus_vp
-                                           ; SOURCE LINE # 577
-                                           ; SOURCE LINE # 578
-00AE         ?C0063:
+                                           ; SOURCE LINE # 587
+                                           ; SOURCE LINE # 588
+00AE         ?C0064:
 00AE 22                RET     
              ; FUNCTION check_rtc_set (END)
 
              ; FUNCTION Clock (BEGIN)
-                                           ; SOURCE LINE # 581
-                                           ; SOURCE LINE # 582
-                                           ; SOURCE LINE # 583
+                                           ; SOURCE LINE # 591
+                                           ; SOURCE LINE # 592
+                                           ; SOURCE LINE # 593
 0000 7D02              MOV     R5,#02H
 0002 7F03              MOV     R7,#03H
 0004 120000      E     LCALL   _SetPinOut
-                                           ; SOURCE LINE # 584
+                                           ; SOURCE LINE # 594
 0007 7D03              MOV     R5,#03H
 0009 7F03              MOV     R7,#03H
 000B 120000      E     LCALL   _SetPinOut
-                                           ; SOURCE LINE # 588
+                                           ; SOURCE LINE # 598
 000E 120000      R     LCALL   rdtime
-                                           ; SOURCE LINE # 589
+                                           ; SOURCE LINE # 599
 0011 E4                CLR     A
 0012 F500        R     MOV     SysTick_RTC,A
 0014 F500        R     MOV     SysTick_RTC+01H,A
-                                           ; SOURCE LINE # 593
+                                           ; SOURCE LINE # 603
 0016 020000      R     LJMP    check_rtc_set
              ; FUNCTION Clock (END)
 
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 32  
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 33  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -2029,7 +2050,7 @@ MNORFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  12
   Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
   Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
 _mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 33  
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 34  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -2085,19 +2106,20 @@ init_rtc . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
   dat1 . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0002H  1
   dat2 . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0003H  1
 timer2_Isr . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
+encoder_ticks. . . . . . . . . . . . .  PUBLIC   DATA   U_CHAR   0015H  1
 T2CON. . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00C8H  1
 _GetTimeOutFlag. . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
   ID . . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
   flag . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0007H  1
 Clock. . . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
 PWMTicks . . . . . . . . . . . . . . .  PUBLIC   XDATA  ARRAY    0021H  16
-T0_Init. . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
-C51 COMPILER V9.53.0.0   TIMER                                                             11/08/2023 15:49:25 PAGE 34  
+C51 COMPILER V9.53.0.0   TIMER                                                             11/10/2023 13:37:38 PAGE 35  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
 
 
+T0_Init. . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
 _rtc_get_week. . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
   year . . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0003H  1
   month. . . . . . . . . . . . . . . .  * REG *  DATA   U_CHAR   0005H  1
@@ -2114,11 +2136,11 @@ PWMTotal . . . . . . . . . . . . . . .  PUBLIC   XDATA  ARRAY    0031H  16
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1409    ----
+   CODE SIZE        =   1417    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     65      33
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     21       1
+   DATA SIZE        =     22       1
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.

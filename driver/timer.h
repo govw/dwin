@@ -25,6 +25,8 @@
 extern u8 data SysTick;
 extern	u16 data SysTick_RTC;
 
+extern u8 data encoder_ticks;
+
 void T0_Init(void);
 void T1_Init(void);
 void T2_Init(void);
@@ -39,6 +41,8 @@ void StartPWM(u8 PWMID, u16 VPWMTotal,u16 VPWMLow,u8 Port,u8 Pin );
 void StopAllPWM();
 void StopPWM(u8 PWMID);
 void Clock(void);
+
+
 
 
 

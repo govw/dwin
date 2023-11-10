@@ -31,6 +31,8 @@ u8 data OutTimeFlag;   //8个软定时器是否超时
 u16 data TimerTime[8];  //8个软定时器定时时间
 u8 data SysTick;
 u16 data SysTick_RTC=0;
+
+u8 data encoder_ticks; //
 /*****************************************************************************
  函 数 名  : void T0_Init(void)
  功能描述  : 定时器0初始化	定时间隔1ms
@@ -44,7 +46,10 @@ u16 data SysTick_RTC=0;
 
 void T0_Init(void)
 {
-	  TMOD=0x11;          //16位定时器
+	encoder_ticks = 0; 
+    
+    
+    TMOD=0x11;          //16位定时器
     //T0
     TH0=0x00;
     TL0=0x00;
@@ -75,6 +80,11 @@ void T0_ISR_PC(void)    interrupt 1
 	 u8 data i;
 	
     EA=0;
+    
+    if(encoder_ticks != 0) {
+        encoder_ticks--;
+    }
+    
     TH0=T1MS>>8;
     TL0=T1MS;
 		SysTick++;

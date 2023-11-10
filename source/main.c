@@ -54,7 +54,7 @@ void dgus_draw_string(u16 vp, u8* s)
 
 
 
-dgus_print_utf_str(u16 vp, u8* str)
+void dgus_print_utf_str(u16 vp, u8* str)
 {
     xdata u16 out_str[30];
     u8 i;
@@ -65,16 +65,143 @@ dgus_print_utf_str(u16 vp, u8* str)
     write_dgus_vp(vp, (u8*)out_str, sizeof(out_str));
 }
 
-
-
-
-
-
+void setup_ext_int0(void)
+{
+    //int0
+    IP0 &= 0xFE;//Clear bit0
+	IP1 &= 0xFE;//Clear bit0
+	IE0 = 0;//Clear the interrupt flag bit of external interrupt 0
+	
+	IT0 = 1;//1 is set as falling edge trigger, 0 is set as low level trigger
+	EX0 = 1;//Enable external interrupt 0, the corresponding pin is P3.0
+    
    
+    //int1
+    IE1 = 0;
+    
+    IT1 = 1;
+    EX1 = 1;
+
+    
+//EA = 0;   
+//    //Interrupt Allow Register IE
+//    //EA = 1;     //Open the total interrupt
+//      EX0 = 1;     //Open the external interrupt of the 0
+//    //Control register TCON
+//      IT0 = 1;     //Set external interrupt trigger mode 
+//                   //0 - low level trigger
+//                   //1 - Negative jump trigger
+//       
+////    P0 |= (1 << 6);
+////    P0 |= (1 << 7);
+//    SetPinIn(0,6);    
+//    SetPinIn(0,7);
+//    EA = 1;	
+}
+
+
+static u16 tmp = 0;
+
+void ext_int0() interrupt 0
+{ //p3.0
+EA = 0;
+   
+   
+    do
+    {
+        delay_us(800);
+    }
+    while((P3 & (1 << 0)) == 0);
+    do
+    {
+        delay_us(800);
+    }
+    while((P3 & (1 << 0)) == 0);
+    do
+    {
+        delay_us(300);
+    }
+    while((P3 & (1 << 0)) == 0);
+    
+   
+    
+    if((P3 & (1 << 1)) == 0) {
+        if(encoder_ticks > 80) 
+            tmp-=5;
+        else
+            tmp--;
+        encoder_ticks = 100;
+    }
+    delay_ms(1);
+   
+    
+    IE0 = 0;
+    IE1 = 0;
+    EA = 1;
+    
+}
+
+void ext_int1() interrupt 2
+{//p3.1
+    EA = 0;
+   
+   
+    do
+    {
+        delay_us(800);
+    }
+    while((P3 & (1 << 1)) == 0);
+    do
+    {
+        delay_us(800);
+    }
+    while((P3 & (1 << 1)) == 0);
+    do
+    {
+        delay_us(300);
+    }
+    while((P3 & (1 << 1)) == 0);
+    
+   
+    
+    if((P3 & (1 << 0)) == 0) {
+        if(encoder_ticks > 80) 
+            tmp+=5;
+        else
+            tmp++;
+        encoder_ticks = 100;
+    }
+    delay_ms(1);
+   
+    
+    IE0 = 0;
+    IE1 = 0;
+    EA = 1;
+    
+
+}
+
+u8 read_gray_code_from_encoder(void ) 
+{ 
+ u8 val=0; 
+
+    
+  if((P3 & (1 << 0)) == 0) 
+	val |= (1<<1); 
+
+  if((P3 & (1 << 6)) == 0)  
+	val |= (1<<0); 
+
+  return val; 
+}
+
+
+u8 val; 
 void main()
 {
 	INIT_CPU();            //CPU ��ʼ����ע���ʼ�������л������xdata������ʼ����0����������ı����г�ʼֵ����Ҫ�ڸú����������¸�ֵ
 	T0_Init();						 //��ʱ��0��ʼ��
+    setup_ext_int0();
 	EA = 1; //interrupt on
     //StartTimer(0,100);
 	//StartTimer(1,50);
@@ -86,9 +213,18 @@ void main()
 	UartInit(UART5, 115200);
 	UART_INIT //MARCROS
 	
+    
     draw_bottom_menu();
     draw_cyclogramm();
     place_numbers_on_cyclogramm();
+
+    
+    //SetPinIn(3,0);    
+    //SetPinIn(3,1);
+    //PinOutput(0,6,1);
+    //PinOutput(3,0,1);
+   
+ 
 while(1)    
 {
    
@@ -112,6 +248,10 @@ while(1)
     
    while(1)
    {
+       EA = 0;
+       write_dgus_vp(0x3000, (u8*) &tmp, 1);
+       EA = 1;
+       
        read_dgus_vp(0x16,(u8*)&touch_data, sizeof(touch_data) / 2); //info about touch status and coords
        
        if(touch_data.status == 0x5A) //if status byte 0x05 some action done

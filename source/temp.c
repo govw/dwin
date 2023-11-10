@@ -379,39 +379,42 @@ void draw_cyclogramm(void)
     temp.color = 0x07FF;
     temp.lib_id = 0x00;
     temp.font_size = 0x20;
-    temp.alignment = 0x00;
+    temp.alignment = 0x02; //center alignment
     temp.integer_digits = 0x03;
     temp.decimal_places = 0x00;
     temp.variable_data_type = 0x00;
-    temp.len_unit = 0x00;
+    temp.len_unit = 0x02;
+    temp.string_unit[0] = 'm';
+    temp.string_unit[1] = 's';
+    temp.string_unit[2] = 0x00;
     
-     //вывести вермя продвки на линией
-    temp.upper_left_point = make_point(((p[1].x - p[0].x) / 2) + p[0].x - (temp.font_size / 2), p[1].y);
+     //вермя продвки
+    temp.upper_left_point = make_point(p[0].x, p[1].y);
     write_dgus_vp(0x1000, (u8*)&temp, sizeof(temp) / 2);  
     // //начальный ток
-    temp.upper_left_point = make_point(((p[3].x - p[2].x) / 2) + p[2].x - (temp.font_size / 2), p[1].y);
-    write_dgus_vp(0x1030, (u8*)&temp, sizeof(temp) / 2); 
-    //вермя начального тока
-    temp.upper_left_point = make_point(((p[4].x - p[3].x) / 2) + p[3].x - (temp.font_size / 2), p[1].y);
-    write_dgus_vp(0x1060, (u8*)&temp, sizeof(temp) / 2); 
-    // //время наростания
-    // temp.upper_left_point = make_point(((p[4].x - p[3].x) / 2) + p[3].x - 16, p[3].y);
-    // write_dgus_vp(0x1090, (u8*)&temp, sizeof(temp) / 2); 
+    temp.upper_left_point = make_point(p[2].x, p[3].y - 70);
+    write_dgus_vp(0x1030, (u8*)&temp, sizeof(temp) / 2);
+    // //вермя начального тока
+    temp.upper_left_point = make_point(p[2].x, p[3].y);
+    write_dgus_vp(0x1060, (u8*)&temp, sizeof(temp) / 2);
+    //время наростания
+    temp.upper_left_point = make_point(p[3].x, p[3].y);
+    write_dgus_vp(0x1090, (u8*)&temp, sizeof(temp) / 2);
     // //ток базы
-    // temp.upper_left_point = make_point(((p[5].x - p[4].x) / 2) + p[4].x - 16, p[4].y);
-    // write_dgus_vp(0x1120, (u8*)&temp, sizeof(temp) / 2); 
+    temp.upper_left_point = make_point(p[4].x, p[5].y - 70);
+    write_dgus_vp(0x1120, (u8*)&temp, sizeof(temp) / 2);
     // //время спада
-    // temp.upper_left_point = make_point(((p[6].x - p[5].x) / 2) + p[5].x - 16, p[5].y);
-    // write_dgus_vp(0x1150, (u8*)&temp, sizeof(temp) / 2); 
+    temp.upper_left_point = make_point(p[5].x, p[6].y);
+    write_dgus_vp(0x1150, (u8*)&temp, sizeof(temp) / 2);
     // //конечный ток
-    // temp.upper_left_point = make_point(((p[6].x - p[7].x) / 2) + p[6].x - 16, p[6].y - 128);
-    // write_dgus_vp(0x1180, (u8*)&temp, sizeof(temp) / 2); 
+    temp.upper_left_point = make_point(p[6].x, p[6].y - 70);
+    write_dgus_vp(0x1180, (u8*)&temp, sizeof(temp) / 2);
     // //время конечного тока
-    // temp.upper_left_point = make_point(((p[6].x - p[7].x) / 2) + p[6].x - 16, p[6].y);
-    // write_dgus_vp(0x1210, (u8*)&temp, sizeof(temp) / 2);
+    temp.upper_left_point = make_point(p[6].x, p[6].y);
+    write_dgus_vp(0x1210, (u8*)&temp, sizeof(temp) / 2);
     // //пост продувка
-    // temp.upper_left_point = make_point(((p[9].x - p[8].x) / 2) + p[8].x - 16, p[8].y);
-    // write_dgus_vp(0x1240, (u8*)&temp, sizeof(temp) / 2);
+    temp.upper_left_point = make_point(p[8].x, p[9].y);
+    write_dgus_vp(0x1240, (u8*)&temp, sizeof(temp) / 2);
 
 
 
