@@ -100,8 +100,16 @@ void setup_ext_int0(void)
 }
 
 
-static u16 tmp = 0;
 
+enum {
+    ENC_STOP,
+    ENC_L0,
+    ENC_L1,
+    ENC_R0,
+    ENC_R1,
+};
+static xdata u8 roteate_state;
+static xdata u16 tmp = 0;
 void ext_int0() interrupt 0
 { //p3.0
 EA = 0;
@@ -127,9 +135,9 @@ EA = 0;
     
     if((P3 & (1 << 1)) == 0) {
         if(encoder_ticks > 80) 
-            tmp-=5;
-        else
-            tmp--;
+            //roteate_state = ENC_L1;
+        //else
+            //roteate_state = ENC_L0;
         encoder_ticks = 100;
     }
     delay_ms(1);
@@ -140,6 +148,7 @@ EA = 0;
     EA = 1;
     
 }
+
 
 void ext_int1() interrupt 2
 {//p3.1
@@ -166,9 +175,9 @@ void ext_int1() interrupt 2
     
     if((P3 & (1 << 0)) == 0) {
         if(encoder_ticks > 80) 
-            tmp+=5;
-        else
-            tmp++;
+            //roteate_state = ENC_R1;
+        //else
+            //roteate_state = ENC_R0;
         encoder_ticks = 100;
     }
     delay_ms(1);
@@ -177,23 +186,9 @@ void ext_int1() interrupt 2
     IE0 = 0;
     IE1 = 0;
     EA = 1;
-    
-
 }
 
-u8 read_gray_code_from_encoder(void ) 
-{ 
- u8 val=0; 
 
-    
-  if((P3 & (1 << 0)) == 0) 
-	val |= (1<<1); 
-
-  if((P3 & (1 << 6)) == 0)  
-	val |= (1<<0); 
-
-  return val; 
-}
 
 
 u8 val; 
@@ -201,7 +196,7 @@ void main()
 {
 	INIT_CPU();            //CPU ��ʼ����ע���ʼ�������л������xdata������ʼ����0����������ı����г�ʼֵ����Ҫ�ڸú����������¸�ֵ
 	T0_Init();						 //��ʱ��0��ʼ��
-    setup_ext_int0();
+    //setup_ext_int0();
 	EA = 1; //interrupt on
     //StartTimer(0,100);
 	//StartTimer(1,50);
@@ -212,12 +207,12 @@ void main()
 //________________________________________________________________________ __________	
 	UartInit(UART5, 115200);
 	UART_INIT //MARCROS
-	
+	  
     
-    draw_bottom_menu();
-    draw_cyclogramm();
+    // draw_cyclogramm();
+    
     place_numbers_on_cyclogramm();
-
+    
     
     //SetPinIn(3,0);    
     //SetPinIn(3,1);
@@ -246,22 +241,57 @@ while(1)
        u16 y;
    } touch_data;
     
+
+
+
    while(1)
-   {
-       EA = 0;
-       write_dgus_vp(0x3000, (u8*) &tmp, 1);
-       EA = 1;
-       
-       read_dgus_vp(0x16,(u8*)&touch_data, sizeof(touch_data) / 2); //info about touch status and coords
-       
+   {    
+            read_dgus_vp(0x16,(u8*)&touch_data, sizeof(touch_data) / 2); //info about touch status and coords
+         
+            // if(roteate_state)
+            // {
+            //     switch (roteate_state)
+            //     {
+            //         case ENC_L0:
+            //         {
+            //             tmp--;
+            //         }break;
+            //         case ENC_L1:
+            //         {
+            //             tmp-= 5;
+            //         }break;
+            //         case ENC_R0:
+            //         {
+            //             tmp++;
+            //         }break;
+            //         case ENC_R1:
+            //         {
+            //             tmp += 5;
+            //         }break;  
+            //     }
+            //     roteate_state = ENC_STOP;
+            //     //write_dgus_vp(0x5000, (u8*) &tmp, 1);
+            // }
+            
+    //    {
+    //         static u16 tmp;
+                
+    //         tmp++;
+    //         if(tmp >= 40) tmp = 0;
+            
+    //         //delay_ms(100);
+    //    }
+        
+
+
        if(touch_data.status == 0x5A) //if status byte 0x05 some action done
        {
            touch_data.status = 0x00;
            write_dgus_vp(0x16, (u8*) &touch_data.x, 1); //clear status byte to 00;
            {
-               u16 action = touch_data.action_type; 
-               write_dgus_vp(0x4000, (u8*) &action, 1); //show action type
-               write_dgus_vp(0x5200, (u8*) &touch_data.x, 2); //show coords of touch point
+                u16 action = touch_data.action_type; 
+                write_dgus_vp(0x4000, (u8*) &touch_data.x, 2); //show coords of touch point
+                write_dgus_vp(0x4002, (u8*) &action, 1); //show action type
            }
     
            switch(touch_data.action_type)
@@ -279,7 +309,7 @@ while(1)
                     
                     {//для отладки
                         u16 dummy = i;
-                        write_dgus_vp(0x2500, (u8*) &dummy, 1); //отобразить код выбранной функции
+                        write_dgus_vp(0x4003, (u8*) &dummy, 1); //отобразить код выбранной функции
                     }
                    break;
                }

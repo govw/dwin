@@ -21,29 +21,13 @@ Dialog DLL:      DCore51.DLL V2.81.4.0
 Dialog DLL:      TCore51.DLL V2.66.2.1
  
 <h2>Project:</h2>
-C:\Users\OGK5-7\Desktop\dwin\T5L51.uvproj
-Project File Date:  11/10/2023
+c:\Users\OGK5-7\Desktop\dwin\T5L51.uvproj
+Project File Date:  11/13/2023
 
 <h2>Output:</h2>
-Rebuild target 'Target 1'
-assembling STARTUP_M5.A51...
-compiling sys.c...
-compiling timer.c...
-compiling uart.c...
-compiling canbus.c...
-compiling main.c...
-source\ssd2828.h(76): warning C235: parameter 1: different types
-source\main.c(240): warning C280: 'tp_state': unreferenced local variable
-source\main.c(326): warning C280: 'buf_idx': unreferenced local variable
-compiling const.c...
-compiling ui.c...
-compiling dwin8283.c...
-compiling ssd2828.c...
-source\ssd2828.h(76): warning C235: parameter 1: different types
+Build target 'Target 1'
 compiling temp.c...
-source\temp.c(356): warning C280: 'disp_var_upper_left': unreferenced local variable
-source\temp.c(320): warning C290: missing return value
-source\temp.c(343): warning C290: missing return value
+source\temp.c(134): warning C280: 'item_pos': unreferenced local variable
 linking...
 *** WARNING L13: RECURSIVE CALL TO SEGMENT
     SEGMENT: ?PR?_BOTTOM_LEVEL_CONTROLS?TEMP
@@ -85,7 +69,7 @@ linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_DGUS_PRINT_UTF_STR?MAIN
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?READ_GRAY_CODE_FROM_ENCODER?MAIN
+    SEGMENT: ?PR?SETUP_EXT_INT0?MAIN
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?CO?MAIN
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
@@ -99,6 +83,8 @@ linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_SSD2828_READREG?SSD2828
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CLEAR_SCREEN?DRAWING
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?PRINTF?PRINTF
 *** WARNING L15: MULTIPLE CALL TO SEGMENT
     SEGMENT: ?PR?_DELAY_MS?SYS
@@ -108,15 +94,15 @@ linking...
     SEGMENT: ?PR?_DELAY_MS?SYS
     CALLER1: ?PR?EXT_INT1?MAIN
     CALLER2: ?C_C51STARTUP
-Program Size: data=44.2 xdata=17608 code=21148
+Program Size: data=55.2 xdata=17159 code=21415
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
-C:\Users\OGK5-7\Desktop\dwin>cd objects 
-C:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
+c:\Users\OGK5-7\Desktop\dwin>cd objects 
+c:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x525F, got 0x49F4)
-C:\Users\OGK5-7\Desktop\dwin\Objects>echo.
-".\Objects\T5L51" - 0 Error(s), 36 Warning(s).
+    (expected >= 0x5368, got 0x49CC)
+c:\Users\OGK5-7\Desktop\dwin\Objects>echo.
+".\Objects\T5L51" - 0 Error(s), 31 Warning(s).
 </pre>
 </body>
 </html>

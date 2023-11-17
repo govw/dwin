@@ -1,11 +1,7 @@
 #include "temp.h"
 #include "sys.h"
 #include "string.h"
-
-#define ARR_SIZE(x) (sizeof(x) / sizeof(x[0]))
-
-
-
+#include "drawing.h"
 
 
 typedef enum {
@@ -17,7 +13,24 @@ typedef enum {
     EIID_D_10,      EIID_D_16,     EIID_D_20,     EIID_D_24, EIID_D_32, EIID_D_40,
     EIID_SIN,       EIID_TRIG,     EIID_RECT,     EIID_TRAP,
     EIID_H2O_ON,    EIID_H2O_OFF,
-    EIID_NO_ICON,
+    
+    EIID_PRE_FLOW_T1,  //Т1 время предв. продувки, с
+    EIID_START_I1,     //I1 начальный ток, А
+    EIID_START_T2,     //T2 время начального тока, c
+    EIID_UP_T3,        //Т3 время нарастания, с
+    EIID_BASE_I2,      //I2   сварочный ток (ток базы), А
+    EIID_BASE_T4,      //Т4   время тока базы, с
+    EIID_IMPULSE_I3,   //I3   импульсный ток, А
+    EIID_IMPULSE_T5,   //Т5   время тока импульса, с
+    EIID_FREQ_F1,      //F1   частота, Гц
+    EIID_BALANCE_D1,   //D1   баланс *
+    EIID_DOWN_T6,      //Т6   время спада, с
+    EIID_END_I4,       //I4   ток окончания сварки, А
+    EIID_END_T7,       //T7   время конечного тока, с
+    EIID_POST_FLOW_T8, //Т8   время продувки в конце, с
+    EIDD_KZ_I5,        //I5   ток короткого замыкания, %
+    EIID_BASE2_I2X,    //I2х  второй ток базы (только в 4Т+), А
+
 }icon_id;
 
 enum {
@@ -36,6 +49,11 @@ enum {
     TIG_SPOT,
     MMA,
 };
+
+
+idata u8 cur_par_id = 28; //номер текущего параметра к отображению
+
+
 
 code const u16 ICON_RECT_SZ = 128;
 
@@ -60,6 +78,8 @@ code const u32 active_items[] = {
 
     ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_TIG_SPOT) | ((u32)1 << EIID_MMA)     |
     ((u32)1 << EIID_AC)        | ((u32)1 << EIID_DC_MINUS) | ((u32)1 << EIID_DC_PLUS) |
+
+
     ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON),     //mma
 };
 u8 cur_active_items_id = TIG;
@@ -87,10 +107,13 @@ struct Flags {
 }bit_field_startup;
 
 
-icon_t cur_menu[32];
+icon_t cur_menu[48];
 u32 cur_menu_active;
 u8 cur_menu_size;
 
+
+u16 dgus_variables_display_sp_cylcogramm_numbers[16];
+u8 curent_selected_param_img_id = 0;
 
 //те элементы которые будут отображены в горизонтальном меню
 idata u32 main_menu_bm = (((u32)1 << EIID_TIG)       |
@@ -106,39 +129,33 @@ idata u32 main_menu_bm = (((u32)1 << EIID_TIG)       |
 //битовая маска горизонтального меню на нижнем экране необходима первоначальная инициализация
 
 
-void (*cur_menu_fanc)(u8 item_pos);
-
-void change_mode_control(u8 item_pos);
-void dgus_draw_icons(u16 vp, icon_t *p_icon, u8 size);
-void make_menu_bar(u16 vp, u8 is_vertical, u16 start_x, u16 start_y, u32 id_bm, void (*cur_menu_fanc)(u8 item_pos));
 
 
+void do_nothing(u8 item_pos)
+{
+    static u8 sw = 0;
 
-
-
-
-
-void dgus_draw_icons(u16 vp, icon_t *p_icon, u8 size)
-{//classic now change 
-    u8 i, j;
-    u16 cmd[100];
-    cmd[0] = 0x2407; //icon_write_instruction      
-    cmd[1] = size; //display_icon_cnt
-    j = 2;
-    for(i = 0; i < size; i++) {
-        cmd[j] = p_icon[i].r.x0;
-        j++;
-        cmd[j] = p_icon[i].r.y0;
-        j++;
-        cmd[j] = p_icon[i].ico;
-        j++;
+    if(sw & 1){
+        //change_image_id(curent_selected_param_img_id, 28);
+        change_number_color(dgus_variables_display_sp_cylcogramm_numbers[0], PINK);
+    } else {
+        //change_image_id(curent_selected_param_img_id, 29);
+        change_number_color(dgus_variables_display_sp_cylcogramm_numbers[0], GREEN);
     }
-    cmd[j] = 0xFF00;
-    write_dgus_vp(vp, (u8*)&cmd, j);
+        
+
+    sw++;
+    return;
 }
 
+void (*cur_menu_fanc)(u8 item_pos);
+void change_mode_control(u8 item_pos);
 
-void make_menu_bar(u16 vp, u8 is_vertical, u16 start_x, u16 start_y, u32 id_bm, void (*fanc)(u8 item_pos))
+void make_menu_bar(u8 is_vertical, u16 start_x, u16 start_y, u32 id_bm, u16 start_image_vp, void (*cur_menu_fanc)(u8 item_pos));
+
+
+
+void make_menu_bar(u8 is_vertical, u16 start_x, u16 start_y, u32 id_bm, u16 start_image_vp, void (*fanc)(u8 item_pos))
 {
     u8 i; 
     s16 shift_x = 0;
@@ -150,7 +167,8 @@ void make_menu_bar(u16 vp, u8 is_vertical, u16 start_x, u16 start_y, u32 id_bm, 
         shift_x = ICON_RECT_SZ;
 
     i = 0;
-    cur_menu_size = 0;
+
+    cur_menu_size = 0;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     while (id_bm != 0) {
         if((u32)id_bm & (u32)1) {
             cur_menu[cur_menu_size].ico = i;
@@ -167,7 +185,14 @@ void make_menu_bar(u16 vp, u8 is_vertical, u16 start_x, u16 start_y, u32 id_bm, 
     }
 
     cur_menu_fanc = fanc;
-    dgus_draw_icons(vp, cur_menu, cur_menu_size);
+    
+    
+    for(i = 0; i < cur_menu_size ; i++) {
+        draw_image(cur_menu[i].r.x0, cur_menu[i].r.y0, cur_menu[i].ico, start_image_vp++);  
+    }
+   
+    
+    
 }
 
 void bottom_level_controls(u8 item_pos)
@@ -180,18 +205,19 @@ void bottom_level_controls(u8 item_pos)
             bm = active_items[cur_active_items_id] & menu_item_bm[i];//убрать из отображения эелементы которые не доступны в данном режиме 
             bm &= ~((u32)1 << cur_menu[item_pos].ico); //убрать из отборажения элемент который уже высвечен в нижнем меню
             if(bm != 0 )//если нечего выводить не рисовать горизонтальное меню
-                make_menu_bar(0x9500, 1, ICON_RECT_SZ * item_pos, 800 - 128 * 2, bm, change_mode_control);         
+                make_menu_bar(1, ICON_RECT_SZ * item_pos, 800 - 128 * 2, bm, VAR_ICON_START_VP + 10, change_mode_control);   //10 картинок зарезервиновано до этого      
             break;
         }
     }
+    
+
 }
+
 
 void change_mode_control(u8 item_pos) 
 {//вызовется после выбора эелемента в вертикальном меню
     u8 i;
     u32 bm;
-
-
     for(i = 0; i < ARR_SIZE(menu_item_bm); i++) {
         if(menu_item_bm[i] & (u32)1 << cur_menu[item_pos].ico) {
             main_menu_bm &= (u32)~menu_item_bm[i]; //очисть область связанную с этим подменю в гавном меню
@@ -213,18 +239,16 @@ void change_mode_control(u8 item_pos)
             
             bm = active_items[cur_active_items_id];
             bm &= (u32)main_menu_bm;
-            make_menu_bar(0x9000, 0, 0, 800 - ICON_RECT_SZ, bm, bottom_level_controls); 
+            
+            
+            //после каждой зачистки картиног нужно отобразить некторые из них завново
+           
+            clear_images();
+            make_menu_bar(0, 0, 800 - ICON_RECT_SZ, bm, VAR_ICON_START_VP, bottom_level_controls);
+            
             break;
         }
     }
-    
-    {
-        u16 tmp = 0;
-        write_dgus_vp(0x9500, (u8*)&tmp, 1);
-    }
-   
-
-   
 }
 
 
@@ -239,49 +263,16 @@ void draw_bottom_menu(void)
     // bit_field_startup.vawe = 1;
     // bit_field_startup.elctrode_d = 1;
     // bit_field_startup.flow = 1;
-    
     // //main_menu_bm = *(u32*)&bit_field_startup;
 
     cur_active_items_id = TIG;
-    make_menu_bar(0x9000, 0, 0, 800 - ICON_RECT_SZ, main_menu_bm, bottom_level_controls);   
+    make_menu_bar(0, 0, 800 - ICON_RECT_SZ, main_menu_bm, VAR_ICON_START_VP, bottom_level_controls);   
 }
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-point_t make_point(u16 x, u16 y) 
-{
-    point_t p;
-    p.x = x;
-    p.y = y;
-    return p;
-}
 
 
 typedef struct {
@@ -296,226 +287,137 @@ typedef struct {
     u16 color;
 } line_t;
 
-dgus_draw_fillded_rect(u16 vp, filled_rect_t *p_rect, u8 size) 
+
+
+
+void add_touch_place(u16 x0, u16 y0, u16 x1, u16 y1, u8 touch_id)
 {
-    u8 i, j;
-    u16 cmd[140];
-    cmd[0] = 0x0004; //
-    cmd[1] = size; //количество элементов для вывода
-    j = 2;
-    for(i = 0; i < size; i++) {
-        cmd[j] = p_rect[i].p0.x;
-        j++;
-        cmd[j] = p_rect[i].p0.y;
-        j++;
-        cmd[j] = p_rect[i].p1.x;
-        j++;
-        cmd[j] = p_rect[i].p1.y;
-        j++;
-        cmd[j] = p_rect[i].color;
-        j++;
-    }
-    cmd[j] = 0xFF00;
-    write_dgus_vp(vp, (u8*)&cmd, j);
+    if(cur_menu_size > ARR_SIZE(cur_menu)) return;
+
+    cur_menu[cur_menu_size].ico = touch_id;
+    cur_menu[cur_menu_size].r.x0 = x0;
+    cur_menu[cur_menu_size].r.y0 = y0;
+    cur_menu[cur_menu_size].r.x1 = x1;
+    cur_menu[cur_menu_size].r.y1 = y1; // размер кнопки
+    cur_menu_size++;        
 }
-
-dgus_draw_line_segment(u16 vp, line_t *p_line, u8 size) 
-{
-    u8 i, j;
-    u16 cmd[120];
-    cmd[0] = 0x000A; //draw line segment instruction
-    cmd[1] = size; //количество элементов для вывода
-    j = 2;
-    for(i = 0; i < size; i++) {
-        cmd[j] = p_line[i].color;
-        j++;
-        cmd[j] = p_line[i].p0.x;
-        j++;
-        cmd[j] = p_line[i].p0.y;
-        j++;
-        cmd[j] = p_line[i].p1.x;
-        j++;
-        cmd[j] = p_line[i].p1.y;
-        j++;
-    }
-    cmd[j] = 0xFF00;
-    write_dgus_vp(vp, (u8*)&cmd, j);
-}
-
-
-void draw_cyclogramm(void) 
-{
-    u16 start_x = 0;
-    u16 start_y = 500;
-    const u8 LINE_HIGHT = 11;//px
-    const u8 LINE_WIDTH = 150;//px
-    const u8 LEVEL_HEIGHT = 120;//px
-    const u16 RED = 0xF800;
-    filled_rect_t filled_rects[10];
-    line_t  l[11 * 2];
-    point_t disp_var_upper_left[10];
-    dgus_data_variable_display_t temp; //ода структура 30 слов //выделено с запасом
-
-    //циклограмма тиг не пульс в виде параметрической линии с 
-    point_t p[13];
-    
-    //создание точек для циклограммы tig
-    p[0] = make_point(40,550);
-    p[1] = make_point(p[0].x + LINE_WIDTH, p[0].y); 
-
-    p[2] = make_point(p[1].x, p[1].y - LEVEL_HEIGHT); 
-    p[3] = make_point(p[2].x + LINE_WIDTH, p[2].y);
-
-    p[4] = make_point(p[3].x + LINE_WIDTH, p[3].y - LEVEL_HEIGHT);
-
-    p[5] = make_point(p[4].x + LINE_WIDTH, p[4].y); // ток базы
-    p[6] = make_point(p[5].x , p[5].y + LEVEL_HEIGHT);
-
-    p[7] = make_point(p[6].x + LINE_WIDTH, p[6].y);
-
-    p[8] = make_point(p[7].x, p[7].y - LEVEL_HEIGHT);
-
-
-    p[9] = make_point(p[8].x + LINE_WIDTH, p[8].y + LEVEL_HEIGHT);
-    p[10] = make_point(p[9].x + LINE_WIDTH, p[9].y);
-    p[11] = make_point(p[10].x, p[10].y + LEVEL_HEIGHT);
-    p[12] = make_point(p[11].x + LINE_WIDTH, p[11].y);
-    
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-    temp.vp = 0x3000;
-    temp.color = 0x07FF;
-    temp.lib_id = 0x00;
-    temp.font_size = 0x20;
-    temp.alignment = 0x02; //center alignment
-    temp.integer_digits = 0x01;
-    temp.decimal_places = 0x00;
-    temp.variable_data_type = 0x00;
-    temp.len_unit = 0x02;
-    temp.string_unit[0] = 'm';
-    temp.string_unit[1] = 's';
-    temp.string_unit[2] = 0x00;
-    
-     //вермя продвки
-    temp.upper_left_point = make_point(p[0].x + ((p[1].x - p[0].x) / 2) - 48, p[1].y);
-    write_dgus_vp(0x1000, (u8*)&temp, sizeof(temp) / 2);  
-    // //начальный ток
-    temp.upper_left_point = make_point(p[2].x + ((p[3].x - p[2].x) / 2) - 48, p[3].y - 70);
-    write_dgus_vp(0x1030, (u8*)&temp, sizeof(temp) / 2);
-    // //вермя начального тока
-    temp.upper_left_point = make_point(p[2].x + ((p[3].x - p[2].x) / 2) - 48, p[3].y);
-    write_dgus_vp(0x1060, (u8*)&temp, sizeof(temp) / 2);
-    //время наростания
-    temp.upper_left_point = make_point(p[3].x + ((p[4].x - p[3].x) / 2) - 48, p[3].y);
-    write_dgus_vp(0x1090, (u8*)&temp, sizeof(temp) / 2);
-    // //ток базы
-    temp.upper_left_point = make_point(p[4].x + ((p[5].x - p[4].x) / 2) - ((temp.font_size  * (temp.integer_digits + temp.len_unit)) / 2), p[5].y - 70);
-    write_dgus_vp(0x1120, (u8*)&temp, sizeof(temp) / 2);
-    // //время спада
-    temp.upper_left_point = make_point(p[5].x + ((p[6].x - p[5].x) / 2) - 48, p[6].y);
-    write_dgus_vp(0x1150, (u8*)&temp, sizeof(temp) / 2);
-    // //конечный ток
-    temp.upper_left_point = make_point(p[6].x + ((p[7].x - p[6].x) / 2) - 48, p[6].y - 70);
-    write_dgus_vp(0x1180, (u8*)&temp, sizeof(temp) / 2);
-    // //время конечного тока
-    temp.upper_left_point = make_point(p[6].x + ((p[7].x - p[6].x) / 2) - 48, p[6].y);
-    write_dgus_vp(0x1210, (u8*)&temp, sizeof(temp) / 2);
-    // //пост продувка
-    temp.upper_left_point = make_point(p[8].x + ((p[9].x - p[8].x) / 2) - 48, p[9].y);
-    write_dgus_vp(0x1240, (u8*)&temp, sizeof(temp) / 2);
-    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    {
-        u8 i;
-        u8 half_hight = LINE_HIGHT / 2;
-        //прямоугольники рисовать всегда с левого верхнего угла
-        filled_rects[0].p0 = make_point(p[0].x - half_hight, p[0].y - half_hight); // горизонтальная лини //время продувки
-        filled_rects[0].p1 = make_point(p[1].x + half_hight, p[1].y + half_hight);
-                         
-        
-        filled_rects[1].p0 = make_point(p[2].x - half_hight, p[2].y - half_hight);
-        filled_rects[1].p1 = make_point(p[1].x + half_hight, p[1].y + half_hight);
-
-        filled_rects[2].p0 = make_point(p[2].x - half_hight, p[2].y - half_hight);
-        filled_rects[2].p1 = make_point(p[3].x + half_hight, p[3].y + half_hight);
-
-
-        filled_rects[3].p0 = make_point(p[4].x - half_hight, p[4].y - half_hight);
-        filled_rects[3].p1 = make_point(p[5].x + half_hight, p[5].y + half_hight);
-
-
-        {//line up
-            point_t a,b;
-            a = make_point(filled_rects[2].p1.x, filled_rects[2].p1.y - LINE_HIGHT + 1);
-            b = filled_rects[3].p0;
-            for(i = 0; i < ARR_SIZE(l) / 2; i++) { //first half fill
-                l[i].p0 = a;
-                l[i].p1 = b;
-                l[i].color = 0x07FF;
-                a.y++;
-                b.y++;   
-            }
-        }
-
-        filled_rects[4].p0 = make_point(p[5].x - half_hight, p[5].y - half_hight);
-        filled_rects[4].p1 = make_point(p[6].x + half_hight, p[6].y + half_hight); //down
-
-        filled_rects[5].p0 = make_point(p[6].x - half_hight, p[6].y - half_hight);//right
-        filled_rects[5].p1 = make_point(p[7].x + half_hight, p[7].y + half_hight);
-
-        filled_rects[6].p0 = make_point(p[8].x - half_hight, p[8].y - half_hight);//up
-        filled_rects[6].p1 = make_point(p[7].x + half_hight, p[7].y + half_hight);
-
-
-        filled_rects[7].p0 = make_point(p[9].x - half_hight, p[9].y - half_hight);//right
-        filled_rects[7].p1 = make_point(p[10].x + half_hight, p[10].y + half_hight);
-
-         {//line down
-            point_t a,b;
-            a = make_point(filled_rects[6].p1.x, filled_rects[6].p0.y);
-            b = filled_rects[7].p0;
-            for(i = ARR_SIZE(l) / 2; i < ARR_SIZE(l); i++) { //first half fill
-                l[i].p0 = a;
-                l[i].p1 = b;
-                l[i].color = 0x07FF;
-                a.y++;
-                b.y++;   
-            }
-        }
-
-
-        filled_rects[8].p0 = make_point(p[10].x - half_hight, p[10].y - half_hight); //down
-        filled_rects[8].p1 = make_point(p[11].x + half_hight, p[11].y + half_hight);
-
-        filled_rects[9].p0 = make_point(p[11].x - half_hight, p[11].y - half_hight);//right
-        filled_rects[9].p1 = make_point(p[12].x + half_hight, p[12].y + half_hight);
-
-        for(i = 0; i < ARR_SIZE(filled_rects); i++) { //задание цвета всем прямоугольникам
-            filled_rects[i].color = 0xffff;       
-        }
-        filled_rects[3].color = RED;
-    }
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-
-
-
-    dgus_draw_fillded_rect(0x7000, filled_rects, ARR_SIZE(filled_rects)); // для отрисоки прямоугольников
-    dgus_draw_line_segment(0x7500, l, ARR_SIZE(l)); //для отрисовки косых линий
-}
-
-
-
 
 
 void place_numbers_on_cyclogramm(void) 
 {
-    //30 00 00 f1 00 9F f8 00 00 20 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+    point_t p[13];
+    const u8 LINE_HIGHT = 13;//px
+    const u8 LINE_WIDTH = 150;//px
+    const u8 LEVEL_HEIGHT = 120;//px
+    const u8 TOUCH_HEIGHT = 100;//px
+    u16 i;
+
+    u16 x = 40;
+    u16 y = 550;
+
+    u16 y_for_times; //времена распологаются на одном уровне
+    cur_menu_size = 0;//старовая инициализация меню
+
+    drawing_init();
+
+        p[0] = make_point(x,y);
+        p[1] = make_point(p[0].x + LINE_WIDTH,   p[0].y); 
+        y_for_times = p[1].y + 30;
+        dgus_variables_display_sp_cylcogramm_numbers[0] = draw_number(p[0].x + LINE_HIGHT, y_for_times, 100, 0x18, CYAN, 0x5000); //время продувки 
+        add_touch_place(p[0].x, y_for_times, p[1].x, y_for_times + TOUCH_HEIGHT, EIID_PRE_FLOW_T1);//создание области касания для настройки времени продувки
+        
+        
+        p[2] = make_point(p[1].x, p[1].y - LEVEL_HEIGHT); //конец вертикальной линии
+        draw_number(p[2].x + LINE_HIGHT, y_for_times, 100, 0x18, CYAN, 0x5000); //время начального тока
+        p[3] = make_point(p[2].x + LINE_WIDTH, p[2].y); 
+        add_touch_place(p[2].x, y_for_times, p[3].x, y_for_times + TOUCH_HEIGHT, EIID_START_T2);//создание области касания для настройки времени начального тока
+        add_touch_place(p[2].x, p[2].y - TOUCH_HEIGHT, p[3].x, p[3].y, EIID_START_I1); //область касания начальный ток
     
+
+        draw_number(p[2].x + LINE_HIGHT, p[3].y - 64, 100, 0x18, RED, 0x5000); //начальный ток
+        
+        
+        draw_number(p[3].x + LINE_HIGHT, y_for_times, 100, 0x18, CYAN, 0x5000); //время наростания
+        p[4] = make_point(p[3].x + LINE_WIDTH,   p[3].y - LEVEL_HEIGHT);
+        add_touch_place(p[3].x, y_for_times, p[4].x, y_for_times + TOUCH_HEIGHT, EIID_UP_T3); //область касания время наростания
+        
+        draw_number(p[4].x + LINE_HIGHT, y_for_times, 100, 0x18, CYAN, 0x5000); //время базы
+        draw_number(p[4].x + LINE_HIGHT, p[4].y - 64, 100, 0x18, RED, 0x5000); //ток базы
+        draw_number(p[4].x + LINE_HIGHT, p[4].y + 32, 100, 0x18, RED, 0x5000); //второй ток базы
+        
+        p[5] = make_point(p[4].x + LINE_WIDTH,   p[4].y); 
+        add_touch_place(p[4].x, p[4].y - TOUCH_HEIGHT, p[5].x, p[5].y, EIID_BASE_I2); //область касания ток базы
+        add_touch_place(p[4].x, p[4].y, p[5].x, p[5].y + TOUCH_HEIGHT, EIID_BASE2_I2X); //область касания второй ток базы
+
+        add_touch_place(p[4].x, y_for_times, p[5].x, y_for_times + TOUCH_HEIGHT, EIID_BASE_T4); //область касания время базы
+        draw_number(p[5].x + LINE_HIGHT, y_for_times, 100, 0x18, CYAN, 0x5000);// время импульса
+       
+
+        p[6] = make_point(p[5].x , p[5].y + LEVEL_HEIGHT);
+        draw_number(p[5].x + LINE_HIGHT, p[6].y - 64, 100, 0x18, RED, 0x5000); //ток импульса
+
+        p[7] = make_point(p[6].x + LINE_WIDTH, p[6].y);
+        add_touch_place(p[6].x, p[6].y - TOUCH_HEIGHT, p[7].x, p[7].y, EIID_IMPULSE_I3); //область касания ток импульса
+        draw_number(p[7].x + LINE_HIGHT, y_for_times, 100, 0x18, CYAN, 0x5000); //время спада
+
+        add_touch_place(p[6].x, y_for_times, p[7].x, y_for_times + TOUCH_HEIGHT, EIID_IMPULSE_T5); //область касания время тока импульса
+
+        p[8] = make_point(p[7].x,  p[7].y - LEVEL_HEIGHT);
+        p[9] = make_point(p[8].x + LINE_WIDTH, p[8].y + LEVEL_HEIGHT);
+        add_touch_place(p[8].x, y_for_times, p[9].x, y_for_times + TOUCH_HEIGHT, EIID_DOWN_T6); //область касания время спада
+        draw_number(p[9].x + LINE_HIGHT, y_for_times, 100, 0x18, CYAN, 0x5000); //время конечного тока
+        draw_number(p[9].x + LINE_HIGHT, p[9].y - 64, 100, 0x18, RED, 0x5000); //конечный ток
+
+        p[10] = make_point(p[9].x + LINE_WIDTH, p[9].y);
+        add_touch_place(p[9].x, p[9].y - TOUCH_HEIGHT, p[10].x, p[10].y, EIID_END_I4); //область касания конечный ток
+        add_touch_place(p[9].x, y_for_times, p[10].x, y_for_times + TOUCH_HEIGHT, EIID_END_T7); //область касания время конечного ток
+        draw_number(p[10].x + LINE_HIGHT, y_for_times, 100, 0x18, CYAN, 0x5000);//время конечной продувки
+
+
+        p[11] = make_point(p[10].x, p[10].y + LEVEL_HEIGHT);
+        p[12] = make_point(p[11].x + LINE_WIDTH, p[11].y);
+        add_touch_place(p[11].x, y_for_times, p[12].x, y_for_times + TOUCH_HEIGHT, EIID_POST_FLOW_T8); //область касания время конечной продувки
+
+        for(i = 0; i < 12; i++) {
+            draw_line(p[i].x, p[i].y, p[i+1].x, p[i+1].y, LINE_HIGHT, GREEN); 
+        }
+
+        
+        draw_number(0, 0, 100, 64, RED, 0x5000); //Текущий настраиваемый параметр
+
+        // {
+        //     u8 i;
+        //     u16 start_vp = 0xEFF1;
+        //     for(i = 0; i < 10; i++) {
+        //         draw_image(i*128, 800-128, i, start_vp++);
+        //     }
+        // }
     
-    //memset(temp.string_unit, sizeof(temp.string_unit), 0x00);
-    //write_dgus_vp(0x1000, (u8*)&temp, sizeof(temp) / 2);
+       
+        
+         
+        cur_menu_fanc = do_nothing;   
+        draw_bottom_menu();
+       
+       
+
+
+        //draw_line(p[0].x, p[0].y + 100, p[12].x, p[0].y + 100, 2, WHITE); //cian color
+        
+        
+
+        // {
+        //     u16 tmp = 0;
+        //     while (1)
+        //     {
+        //         write_dgus_vp(0x5000, (u8*) &tmp, 1);
+        //         tmp++;
+        //         if(tmp >= 999) tmp = 0;
+        //         delay_ms(10);
+        //     }
+        // }
+        
+
 }
 
 

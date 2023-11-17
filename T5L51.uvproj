@@ -427,6 +427,11 @@
               <FileType>1</FileType>
               <FilePath>.\source\temp.c</FilePath>
             </File>
+            <File>
+              <FileName>drawing.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\drawing.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

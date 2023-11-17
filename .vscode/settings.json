@@ -12,6 +12,9 @@
         "format": "c",
         "initializer_list": "c",
         "span": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "drawing.h": "c",
+        "sys.h": "c",
+        "system_error": "c"
     }
 }
