@@ -15,6 +15,8 @@
         "string.h": "c",
         "drawing.h": "c",
         "sys.h": "c",
-        "system_error": "c"
+        "system_error": "c",
+        "ui.h": "c",
+        "STRING.H": "cpp"
     }
 }

@@ -40,30 +40,7 @@ void io_init()
 }
 
  
-void dgus_draw_string(u16 vp, u8* s)
-{
-    xdata u16 str[50];
-    u8 i;
-    u8 len = strlen(s) + 1;
-    for(i = 0; i < len; i++)
-    {
-        str[i] = s[i]; 
-    }
-    write_dgus_vp(vp, (u8*)str, len);
-}
 
-
-
-void dgus_print_utf_str(u16 vp, u8* str)
-{
-    xdata u16 out_str[30];
-    u8 i;
-    u8 len = strlen(str) + 1;
-    for(i = 0; i < len; i++) {
-        out_str[i] = str[i];
-    }
-    write_dgus_vp(vp, (u8*)out_str, sizeof(out_str));
-}
 
 void setup_ext_int0(void)
 {
@@ -112,9 +89,7 @@ static xdata u8 roteate_state;
 static xdata u16 tmp = 0;
 void ext_int0() interrupt 0
 { //p3.0
-EA = 0;
-   
-   
+    EA = 0;// моежет и не нужно сдесь
     do
     {
         delay_us(800);
@@ -153,8 +128,6 @@ EA = 0;
 void ext_int1() interrupt 2
 {//p3.1
     EA = 0;
-   
-   
     do
     {
         delay_us(800);
@@ -214,10 +187,7 @@ void main()
     place_numbers_on_cyclogramm();
     
     
-    //SetPinIn(3,0);    
-    //SetPinIn(3,1);
-    //PinOutput(0,6,1);
-    //PinOutput(3,0,1);
+   
    
  
 while(1)    
@@ -241,8 +211,6 @@ while(1)
        u16 y;
    } touch_data;
     
-
-
 
    while(1)
    {    

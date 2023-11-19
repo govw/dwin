@@ -10,7 +10,6 @@
 #define WHITE 0xFFFF
 #define GREEN 0x07E0
 
-#define VAR_ICON_START_VP 0xEFF1
 
 typedef struct {
     u16 x;
@@ -28,7 +27,7 @@ typedef struct {
         u8 decimal_places;
         u8 variable_data_type;
         u8 len_unit;
-        u8 string_unit[11]; //max 11
+        u8 string_unit[5]; //max 11
 } dgus_data_variable_display_t;
 
 typedef struct {
@@ -48,21 +47,18 @@ typedef struct {
 
 
 
-point_t make_point(u16 x, u16 y); 
+extern point_t make_point          (u16 x, u16 y);
+extern void    drawing_init        (void);
+extern u8      chack_screen_bounds (u16 x, u16 y);
+extern u16     draw_line_1px       (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
+extern void    clear_line_1px      (void);
+extern u16     draw_filled_rect    (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
+extern u16     draw_line           (u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color);
+extern void    clear_lines         (void);
+extern u16     draw_image          (u16 x, u16 y, u16 image_id); 
+extern u16     Draw_Number         (u16 x, u16 y, u16 n, u8 *units, u8 font_size, u16 color);
+extern void    change_number_color (u16 sp, u16 new_color); 
 
-extern void draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color);
-extern void draw_image(u16 x, u16 y, u16 image_id, u16 vp);
-
-extern void clear_images(void);
-extern void draw_line_1px(u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
-
-extern u16 draw_number(u16 x, u16 y, u16 n, u8 font_size, u16 color, u16 vp);
-extern void change_number_color(u16 sp, u16 new_color);
-
-
-extern void draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
-void clear_screen(void);
-void drawing_init(void);
 
 
 
