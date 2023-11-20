@@ -1,4 +1,4 @@
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 1   
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
   51   1              
   52   1              IT0 = 1;//1 is set as falling edge trigger, 0 is set as low level trigger
   53   1              EX0 = 1;//Enable external interrupt 0, the corresponding pin is P3.0
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 2   
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 2   
 
   54   1          
   55   1         
@@ -126,7 +126,7 @@ line level    source
  113   2                  //roteate_state = ENC_L1;
  114   2              //else
  115   2                  //roteate_state = ENC_L0;
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 3   
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 3   
 
  116   2              encoder_ticks = 100;
  117   2          }
@@ -190,7 +190,7 @@ line level    source
  173   1              EA = 1; //interrupt on
  174   1          //StartTimer(0,100);
  175   1              //StartTimer(1,50);
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 4   
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 4   
 
  176   1              //-------------------
  177   1              io_init();
@@ -254,7 +254,7 @@ line level    source
  234   3                  //         }break;
  235   3                  //         case ENC_R1:
  236   3                  //         {
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 5   
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 5   
 
  237   3                  //             tmp += 5;
  238   3                  //         }break;  
@@ -318,7 +318,7 @@ line level    source
  294   5                     {
  295   6                          break;
  296   6                     }
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 6   
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 6   
 
  297   5                     default:
  298   5                         break;
@@ -382,7 +382,7 @@ line level    source
  356   5                                              break; 
  357   5                                      
  358   5                                      case 1:
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 7   
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 7   
 
  359   5                                              if(byte == 0xA5) 
  360   5                                                      state=4;
@@ -446,7 +446,7 @@ line level    source
  418   5                                      case 11:
  419   5                                      {
  420   6                          u8 i;
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 8   
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 8   
 
  421   6                                              u8 crc = 0;
  422   6                          xdata u16 temp_buf[30];
@@ -510,7 +510,7 @@ line level    source
  480   1      }
 *** WARNING C280 IN LINE 205 OF source\main.c: 'tp_state': unreferenced local variable
 *** WARNING C280 IN LINE 324 OF source\main.c: 'buf_idx': unreferenced local variable
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 9   
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 9   
 
 ASSEMBLY LISTING OF GENERATED OBJECT CODE
 
@@ -574,7 +574,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 95
 001F 7F20              MOV     R7,#020H
 0021 7E03              MOV     R6,#03H
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 10  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 10  
 
 0023 120000      E     LCALL   _delay_us
                                            ; SOURCE LINE # 96
@@ -638,7 +638,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0075 D0F0              POP     B
 0077 D0E0              POP     ACC
 0079 32                RETI    
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 11  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 11  
 
              ; FUNCTION ext_int0 (END)
 
@@ -702,7 +702,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 004F 750064      E     MOV     encoder_ticks,#064H
                                            ; SOURCE LINE # 155
 0052         ?C0024:
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 12  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 12  
 
                                            ; SOURCE LINE # 156
 0052 7F01              MOV     R7,#01H
@@ -766,7 +766,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 187
 002E 120000      E     LCALL   place_numbers_on_cyclogramm
                                            ; SOURCE LINE # 193
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 13  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 13  
 
                                            ; SOURCE LINE # 194
 0031         ?C0029:
@@ -830,7 +830,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0082 7E40              MOV     R6,#040H
 0084 120000      E     LCALL   _write_dgus_vp
                                            ; SOURCE LINE # 262
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 14  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 14  
 
 0087 7B01              MOV     R3,#01H
 0089 7A00        R     MOV     R2,#HIGH action
@@ -894,7 +894,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00D7 EC                MOV     A,R4
 00D8 9E                SUBB    A,R6
 00D9 406F              JC      ?C0036
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 15  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 15  
 
 00DB 900000      R     MOV     DPTR,#i
 00DE E0                MOVX    A,@DPTR
@@ -958,7 +958,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0131 FB                MOV     R3,A
 0132 D3                SETB    C
 0133 ED                MOV     A,R5
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 16  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 16  
 
 0134 9B                SUBB    A,R3
 0135 EC                MOV     A,R4
@@ -1015,7 +1015,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0173 020000      R     LJMP    ?C0029
              ; FUNCTION main (END)
 
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 17  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 17  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -1078,7 +1078,7 @@ CANUNIT. . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  13
   status . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
   ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
   candata. . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0005H  8
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 18  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 18  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -1141,7 +1141,7 @@ _candataunitbuf. . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  6661
   BusTXbuf . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0D00H  3328
   CanRxHead. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A00H  1
   CanRxTail. . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   1A01H  1
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 19  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 19  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -1204,7 +1204,7 @@ MMUSIC . . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  35
   PlayInterrupt. . . . . . . . . . . .  MEMBER   -----  U_CHAR   0022H  1
 _mMUSIC. . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  35
   IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
-C51 COMPILER V9.53.0.0   MAIN                                                              11/19/2023 20:14:07 PAGE 20  
+C51 COMPILER V9.53.0.0   MAIN                                                              11/20/2023 12:56:35 PAGE 20  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====

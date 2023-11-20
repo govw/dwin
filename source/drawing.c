@@ -22,10 +22,11 @@ void clear_line_1px(void);
 u16 draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 u16 draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color);
 void clear_lines(void);
-u16 draw_image(u16 x, u16 y, u16 image_id); 
-u16 Draw_Number(u16 x, u16 y, u16 n, u8 *units, u8 font_size, u16 color);
+u16 draw_image(u16 x, u16 y, u16 image_id);
+void image_change_id(u16 sp, u16 new_image_id); 
+u16 Draw_Number(u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color);
 void change_number_color(u16 sp, u16 new_color); 
-
+void change_number_value(u16 sp, u16 new_value);
 
 
 
@@ -69,13 +70,13 @@ u16 draw_line_1px(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
     cmd[5] = x1;
     cmd[6] = y1;
     cmd[7] = 0xFF00;
-    all_line_1px_cnt++;
     cmd[0] = 0x000A; //draw line segment instruction
-    cmd[1] = all_line_1px_cnt; //количество элементов для вывода   
-        
+    
     write_dgus_vp(LINE_VP ,(u8*) &cmd[0], 2); // запись количества элементов и команды
     {
-        u16 cur_object_vp = LINE_VP + 2 + (5 * (u16)all_line_1px_cnt); 
+        u16 cur_object_vp = LINE_VP + 2 + (5 * (u16)all_line_1px_cnt);
+        all_line_1px_cnt++; 
+        cmd[1] = all_line_1px_cnt; //количество элементов для вывода   
         write_dgus_vp (cur_object_vp ,(u8*) &cmd[2], 6); // сам элемент
         return cur_object_vp;
     }
@@ -100,13 +101,15 @@ u16 draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
     cmd[5] = y1;
     cmd[6] = color;
     cmd[7] = 0xFF00;
-    all_filled_rect_cnt++;
+
     cmd[0] = 0x0004;       //draw line filled rect
-    cmd[1] = all_filled_rect_cnt; //количество элементов для вывода
     
-    write_dgus_vp(FILLED_RECT_VP ,(u8*) &cmd[0], 2); // запись количества элементов и команды
+    
     {
         u16 cur_object_vp = FILLED_RECT_VP + 2 + (5 * (u16)all_filled_rect_cnt);
+        all_filled_rect_cnt++;
+        cmd[1] = all_filled_rect_cnt; //количество элементов для вывода
+        write_dgus_vp(FILLED_RECT_VP ,(u8*) &cmd[0], 2); // запись количества элементов и команды
         write_dgus_vp (cur_object_vp, (u8*) &cmd[2], 6); // сам элемент//5 - количество элементов в структуре
         return cur_object_vp;
     }
@@ -117,8 +120,7 @@ u16 draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
 u16 draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color)
 {
     u8 half_widht = width / 2;
-    if(!(chack_screen_bounds(x0, y0) && chack_screen_bounds(x1, y1))) return 0;
-    
+     
     if(x0 == x1 || y0 == y1)
     {
         {
@@ -145,9 +147,9 @@ u16 draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color)
         u8 i;
 
         x0 += half_widht; 
-        y0 -= half_widht + 2;
+        y0 -= half_widht;
         x1 -= half_widht;
-        y1 -= half_widht + 2;
+        y1 -= half_widht;
 
         for(i = 0; i <= width; i++) {
             draw_line_1px(x0, y0, x1,y1, color);
@@ -195,9 +197,8 @@ u16 draw_image(u16 x, u16 y, u16 image_id)
     d.pic_gamma        = 0x00; 
     d.filter_set       = 0x01;
    
-    d.vp = var_icon_sp[all_img_cnt] + sizeof(dgus_variables_icon_t); //адрес переменной id картинки
+    d.vp = var_icon_sp[all_img_cnt] + sizeof(dgus_variables_icon_t) / 2; //адрес переменной id картинки
     write_dgus_vp(d.vp, (u8*)&image_id, 1); //запись id картинки
-    
     {
         u16 cur_sp = var_icon_sp[all_img_cnt];
         write_dgus_vp(cur_sp, (u8*)&d, sizeof(d) / 2);
@@ -206,13 +207,18 @@ u16 draw_image(u16 x, u16 y, u16 image_id)
     }
 }
 
+void image_change_id(u16 sp, u16 new_image_id)
+{
+    write_dgus_vp(sp + (sizeof(dgus_variables_icon_t) / 2), (u8*) &new_image_id, 1);
+}
+
 
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 
 
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-u16 Draw_Number(u16 x, u16 y, u16 n, u8 *units, u8 font_size, u16 color)
+u16 Draw_Number(u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color)
 {
     code u16 data_variables_sp[] = {
         0xF500, 0xF4D0, 0xF4A0, 0xF470,
@@ -225,13 +231,19 @@ u16 Draw_Number(u16 x, u16 y, u16 n, u8 *units, u8 font_size, u16 color)
     
     if(all_data_variabl_cnt > ARR_SIZE(data_variables_sp)) return 0;
     
+    // if      (n < 10)    temp.integer_digits = 1;
+    // else if (n < 100)   temp.integer_digits = 2;
+    // else if (n < 1000)  temp.integer_digits = 3;
+    //else if (n < 10000) temp.integer_digits = 4;
+    temp.integer_digits = 4;
+
     temp.upper_left_point   = make_point(x, y);
     temp.color              = color; 
     temp.lib_id             = 0x00;
     temp.font_size          = font_size;
     temp.alignment          = 0x02; 
-    temp.integer_digits     = 0x02;
-    temp.decimal_places     = 0x01;
+    
+    temp.decimal_places     = decimal_places;
     temp.variable_data_type = 0x00; //int
     temp.len_unit           = strlen(units);
 
@@ -240,10 +252,10 @@ u16 Draw_Number(u16 x, u16 y, u16 n, u8 *units, u8 font_size, u16 color)
     {
         u16 cur_sp = data_variables_sp[all_data_variabl_cnt];
         all_data_variabl_cnt++;
-        temp.vp = data_variables_sp + 1;
+        temp.vp = cur_sp + sizeof(dgus_data_variable_display_t) / 2;
         
-        write_dgus_vp(temp.vp, (u8*) &n, 1);
-        write_dgus_vp(data_variables_sp, (u8*) &temp, sizeof(temp) / 2);
+        write_dgus_vp(temp.vp, (u8*) &n, 1); //запись числа на отображение
+        write_dgus_vp(cur_sp, (u8*) &temp, sizeof(temp) / 2);
         
         return cur_sp;
     }
@@ -252,5 +264,10 @@ u16 Draw_Number(u16 x, u16 y, u16 n, u8 *units, u8 font_size, u16 color)
 void change_number_color(u16 sp, u16 new_color) 
 {
     write_dgus_vp(sp + 3, (u8*) &new_color, 1);  //смещение к адресу цвета  в структуре dgus_data_variable_display_t
+}
+
+void change_number_value(u16 sp, u16 new_value)
+{
+    write_dgus_vp(sp + (sizeof(dgus_data_variable_display_t) / 2), (u8*) &new_value, 1);
 }
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________

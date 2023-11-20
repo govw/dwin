@@ -56,9 +56,10 @@ extern u16     draw_filled_rect    (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 extern u16     draw_line           (u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color);
 extern void    clear_lines         (void);
 extern u16     draw_image          (u16 x, u16 y, u16 image_id); 
-extern u16     Draw_Number         (u16 x, u16 y, u16 n, u8 *units, u8 font_size, u16 color);
+extern void    image_change_id     (u16 sp, u16 new_image_id); 
+extern u16     Draw_Number         (u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color);
 extern void    change_number_color (u16 sp, u16 new_color); 
-
+extern void    change_number_value (u16 sp, u16 new_value);
 
 
 

@@ -4,11 +4,12 @@
 #include "drawing.h"
 
 
-const u8 LINE_HIGHT   = 13;//px
-const u8 LINE_WIDTH   = 150;//px
-const u8 LEVEL_HEIGHT = 120;//px
-const u8 TOUCH_HEIGHT = 100;//px
-const u16 TIME_Y_LEVEL = 800 - 230;
+code const u8 LINE_HIGHT   = 13;//px
+idata u16 LINE_WIDTH  = 150;//px
+idata u16 FONT_SIZE = 24;
+code const u8 LEVEL_HEIGHT = 120;//px
+code const u8 TOUCH_HEIGHT = 100;//px
+code const u16 TIME_Y_LEVEL = 800 - 230;
 
 typedef enum { //для id картинок //не адресации в списке параметров
     EIID_TIG,       EIID_TIG_SPOT, EIID_MMA,
@@ -36,6 +37,7 @@ typedef enum { //для id картинок //не адресации в спи�
     EIID_POST_FLOW_T8, //Т8  время продувки в конце, с
     EIDD_KZ_I5,        //I5  ток короткого замыкания, %
     EIID_BASE2_I2X,    //I2х второй ток базы (только в 4Т+), А
+    EIID_SIZE,
 };
 
 enum {
@@ -112,6 +114,8 @@ u8 cur_menu_size;
 u8 cur_active_items_id = TIG;
 
 u8 curent_selected_param_img_id = 0;
+
+u16 controllsp[EIID_SIZE]; //массив sp идентификаторов линий, картинок, чисел
 
 idata u8 cur_par_id = 28; //номер текущего параметра к отображению
 code const u16 ICON_RECT_SZ = 128;
@@ -282,100 +286,154 @@ void add_touch_place(u16 x0, u16 y0, u16 x1, u16 y1, u8 touch_id)
 // LEVEL_HEIGHT = 120;//px
 // TOUCH_HEIGHT = 100;//px
    
-point_t dummy_vertical_line(point_t p)
+point_t dummy_line_up(point_t p)
 {
-    
+    point_t p2; 
+    p2 = make_point(p.x, p.y - LEVEL_HEIGHT);
+    draw_line(p.x, p.y, p2.x, p2.y, LINE_HIGHT, GREEN);
+    return p2;
+}
+
+point_t dummy_line_down(point_t p)
+{
+    point_t p2; 
+    p2 = make_point(p.x, p.y + LEVEL_HEIGHT);
+    draw_line(p.x, p.y, p2.x, p2.y, LINE_HIGHT, GREEN);
+    return p2;
 }
 
 point_t add_t_preflow(point_t p) //возвращает конечную точку после отрисовки данного участка
 {
-    point_t p2 = make_point(p.x + LINE_WIDTH, p.y);
+    point_t p2;
+    p2 = make_point(p.x + LINE_WIDTH, p.y);
+
     draw_line(p.x, p.y, p2.x, p2.y, LINE_HIGHT, GREEN);
 
-    Draw_Number(p.x, p.y + LINE_WIDTH, p2.x, TIME_Y_LEVEL, 100, 24, CYAN); //время продувки
     add_touch_place(p.x, p.y, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT, EIID_PRE_FLOW_T1);//создание области касания для настройки времени продувки
+   
+    Draw_Number(p.x, TIME_Y_LEVEL, 99 , 1, "S", FONT_SIZE, CYAN); //время продувки
     return p2;    
 }
 
 point_t add_t_start_i(point_t p) 
 {
-    point_t p2 = make_point(p.x, p.y + LEVEL_HEIGHT);
+    point_t p2; 
+    p2 = make_point(p.x + LINE_WIDTH, p.y);
+    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
-    draw_line(p.x, p.y, p2.y, p2.x,  LINE_HIGHT, GREEN);
+    Draw_Number(p.x, p.y - (FONT_SIZE * 2) - LINE_HIGHT, 99, 0, "A", FONT_SIZE, RED);      //начальный ток
+    Draw_Number(p.x, TIME_Y_LEVEL, 99, 1, "S", FONT_SIZE, CYAN); //время начального тока
 
-    Draw_Number(p[2].x + LINE_HIGHT, y_for_times, 100, 24, CYAN); //время начального тока
-    Draw_Number(p[2].x + LINE_HIGHT, p[3].y - 64, 100, 24, RED); //начальный ток
-    
-    add_touch_place(p[2].x, y_for_times, p[3].x, y_for_times + TOUCH_HEIGHT, EIID_START_T2);//создание области касания для настройки времени начального тока
-    add_touch_place(p[2].x, p[2].y - TOUCH_HEIGHT, p[3].x, p[3].y, EIID_START_I1); //область касания начальный ток
+    add_touch_place(p.x, TIME_Y_LEVEL, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT, EIID_START_T2);//создание области касания для настройки времени начального тока
+    add_touch_place(p.x, p.y - TOUCH_HEIGHT, p2.x, p2.y, EIID_START_I1); //область касания начальный ток
+
+    return p2;
 }
+
 
 point_t add_t_up(point_t p) 
 {
-    Draw_Number(p[3].x + LINE_HIGHT, y_for_times, 100, 24, CYAN); //время наростания
-    p[4] = make_point(p[3].x + LINE_WIDTH,   p[3].y - LEVEL_HEIGHT);
-    add_touch_place(p[3].x, y_for_times, p[4].x, y_for_times + TOUCH_HEIGHT, EIID_UP_T3); //область касания время наростания
-
-    draw_line(p[i].x, p[i].y, p[i+1].x, p[i+1].y, LINE_HIGHT, GREEN);
-}
-
-point_t add_base_i1_i2_t(point_t) 
-{
-    Draw_Number(p[4].x + LINE_HIGHT, y_for_times, 100, 24, CYAN); //время базы
-    Draw_Number(p[4].x + LINE_HIGHT, p[4].y - 64, 100, 24, RED); //ток базы
-    Draw_Number(p[4].x + LINE_HIGHT, p[4].y + 32, 100, 24, RED); //второй ток базы
+    point_t p2;
+    p2 = make_point(p.x + LINE_WIDTH, p.y - LEVEL_HEIGHT);
+    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    p[5] = make_point(p[4].x + LINE_WIDTH,   p[4].y); 
-    add_touch_place(p[4].x, p[4].y - TOUCH_HEIGHT, p[5].x, p[5].y, EIID_BASE_I2); //область касания ток базы
-    add_touch_place(p[4].x, p[4].y, p[5].x, p[5].y + TOUCH_HEIGHT, EIID_BASE2_I2X); //область касания второй ток базы
+    Draw_Number(p.x, TIME_Y_LEVEL, 99, 1, "S", FONT_SIZE, CYAN); //время наростания
+    add_touch_place(p.x, TIME_Y_LEVEL, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT, EIID_UP_T3); //область касания время наростания
 
-    add_touch_place(p[4].x, y_for_times, p[5].x, y_for_times + TOUCH_HEIGHT, EIID_BASE_T4); //область касания время базы
-
-    draw_line(p[i].x, p[i].y, p[i+1].x, p[i+1].y, LINE_HIGHT, GREEN);
+    return p2;
 }
 
-point_t add_i_t_impulse(point_t) 
+point_t add_base_i1_i2_t(point_t p) 
 {
-    Draw_Number(p[5].x + LINE_HIGHT, y_for_times, 100, 24, CYAN);// время импульса
-    p[6] = make_point(p[5].x , p[5].y + LEVEL_HEIGHT);
-    Draw_Number(p[5].x + LINE_HIGHT, p[6].y - 64, 100, 24, RED); //ток импульса
-    p[7] = make_point(p[6].x + LINE_WIDTH, p[6].y);
-    add_touch_place(p[6].x, p[6].y - TOUCH_HEIGHT, p[7].x, p[7].y, EIID_IMPULSE_I3); //область касания ток импульса
-    add_touch_place(p[6].x, y_for_times, p[7].x, y_for_times + TOUCH_HEIGHT, EIID_IMPULSE_T5); //область касания время тока импульса
+    point_t p2;
+    u16 half_height = LINE_HIGHT / 2;
+    p2 = make_point(p.x + LINE_WIDTH, p.y);
 
-    draw_line(p[i].x, p[i].y, p[i+1].x, p[i+1].y, LINE_HIGHT, GREEN);
-}
+    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
-point_t add_t_down(point_t)
-{
-    Draw_Number(p[7].x + LINE_HIGHT, y_for_times, 100, 24, CYAN); //время спада
-    p[8] = make_point(p[7].x,  p[7].y - LEVEL_HEIGHT);
-    p[9] = make_point(p[8].x + LINE_WIDTH, p[8].y + LEVEL_HEIGHT);
-    add_touch_place(p[8].x, y_for_times, p[9].x, y_for_times + TOUCH_HEIGHT, EIID_DOWN_T6); //область касания время спада
-
-    draw_line(p[i].x, p[i].y, p[i+1].x, p[i+1].y, LINE_HIGHT, GREEN);
-}
-
-point_t add_end_i_t(point_t)
-{
-    Draw_Number(p[9].x + LINE_HIGHT, y_for_times, 100, 24, CYAN); //время конечного тока
-    Draw_Number(p[9].x + LINE_HIGHT, p[9].y - 64, 100, 24, RED); //конечный ток
-
-    p[10] = make_point(p[9].x + LINE_WIDTH, p[9].y);
-    add_touch_place(p[9].x, p[9].y - TOUCH_HEIGHT, p[10].x, p[10].y, EIID_END_I4); //область касания конечный ток
-    add_touch_place(p[9].x, y_for_times, p[10].x, y_for_times + TOUCH_HEIGHT, EIID_END_T7); //область касания время конечного ток
+    Draw_Number(p.x, TIME_Y_LEVEL,  99, 1, "S", FONT_SIZE, CYAN); //время базы
+    Draw_Number(p.x, p.y - half_height - (FONT_SIZE * 2), 99, 0,"A", FONT_SIZE, RED); //ток базы
+    Draw_Number(p.x, p.y + half_height , 99, 0,"A", FONT_SIZE, RED); //второй ток базы
     
-    draw_line(p[i].x, p[i].y, p[i+1].x, p[i+1].y, LINE_HIGHT, GREEN);
+    add_touch_place(p.x, p.y - TOUCH_HEIGHT, p2.x, p2.y,  EIID_BASE_I2);   //область касания ток базы
+    add_touch_place(p.x, p.y, p2.x, p2.y + TOUCH_HEIGHT,  EIID_BASE2_I2X); //область касания второй ток базы
+    
+    add_touch_place(p.x, TIME_Y_LEVEL, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT,EIID_BASE_T4);   //область касания время базы
+
+    return p2;
 }
 
-point_t add_t_postflow(point_t)
+point_t add_i_t_impulse(point_t p) 
 {
-    Draw_Number(p[10].x + LINE_HIGHT, y_for_times, 100, 24, CYAN);//время конечной продувки
-    p[11] = make_point(p[10].x, p[10].y + LEVEL_HEIGHT);
-    p[12] = make_point(p[11].x + LINE_WIDTH, p[11].y);
-    add_touch_place(p[11].x, y_for_times, p[12].x, y_for_times + TOUCH_HEIGHT, EIID_POST_FLOW_T8); //область касания время конечной продувки
+    point_t p2;
+    p2 = make_point(p.x + LINE_WIDTH, p.y);
 
-    draw_line(p[i].x, p[i].y, p[i+1].x, p[i+1].y, LINE_HIGHT, GREEN);
+    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
+
+    Draw_Number(p.x, TIME_Y_LEVEL, 99, 1, "S", FONT_SIZE, CYAN);// время импульса
+    Draw_Number(p.x, p.y + (LINE_HIGHT / 2), 99, 0, "A", FONT_SIZE, RED);  //ток импульса
+    
+    add_touch_place(p.x, p.y - TOUCH_HEIGHT, p2.x, p2.y, EIID_IMPULSE_I3); //область касания ток импульса
+    add_touch_place(p.x, TIME_Y_LEVEL, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT,EIID_IMPULSE_T5); //область касания время тока импульса
+
+    return p2;
+}
+
+point_t add_t_down(point_t p)
+{
+    point_t p2;
+    p2 = make_point(p.x + LINE_WIDTH, p.y + LEVEL_HEIGHT);
+
+    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
+
+    Draw_Number(p.x, TIME_Y_LEVEL, 99, 1, "S", FONT_SIZE, CYAN); //время спада
+
+    add_touch_place(p.x, TIME_Y_LEVEL, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT, EIID_DOWN_T6); //область касания время спада
+
+    return p2;
+}
+
+point_t add_end_i_t(point_t p)
+{
+    point_t p2;
+    p2 = make_point(p.x + LINE_WIDTH, p.y);
+
+    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
+    
+    Draw_Number(p.x, TIME_Y_LEVEL, 99, 1, "S", FONT_SIZE, CYAN); //время конечного тока
+    Draw_Number(p.x, p.y + (LINE_HIGHT / 2), 99, 0, "A", FONT_SIZE, RED); //конечный ток
+
+    add_touch_place(p.x, p.y - TOUCH_HEIGHT, p2.x, p2.y, EIID_END_I4); //область касания конечный ток
+    add_touch_place(p.x, TIME_Y_LEVEL, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT, EIID_END_T7); //область касания время конечного ток
+    
+    return p2;
+}
+
+point_t add_t_postflow(point_t p)
+{
+    point_t p2;
+    p2 = make_point(p.x + LINE_WIDTH, p.y);
+
+    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
+    
+    Draw_Number(p.x, TIME_Y_LEVEL, 99, 1, "S", FONT_SIZE, CYAN);//время конечной продувки
+    add_touch_place(p.x, TIME_Y_LEVEL, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT, EIID_POST_FLOW_T8); //область касания время конечной продувки
+
+    return p2;
+}
+
+
+point_t add_i_kz(point_t p)
+{
+    point_t p2;
+    p2 = make_point(p.x + LINE_WIDTH, p.y);
+
+    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
+    
+    Draw_Number(p.x, p.y - (LINE_HIGHT / 2), 99, 0, "%", FONT_SIZE, RED); //конечный ток
+
+    add_touch_place(p.x, p.y - TOUCH_HEIGHT, p2.x, p2.y, EIDD_KZ_I5); //область касания конечный ток
+    return p2;   
 }
 
 
@@ -383,10 +441,7 @@ point_t add_t_postflow(point_t)
 void place_numbers_on_cyclogramm(void) 
 {
     point_t p;
-    const u8 LINE_HIGHT   = 13;//px
-    const u8 LINE_WIDTH   = 150;//px
-    const u8 LEVEL_HEIGHT = 120;//px
-    const u8 TOUCH_HEIGHT = 100;//px
+   
     u16 i;
     u16 x = 40;
     u16 y = 550;
@@ -394,19 +449,51 @@ void place_numbers_on_cyclogramm(void)
     u8 prev;
     u8 next;
     
+   
     drawing_init();
+    {//tig pulse ac
+        point_t p;
+        LINE_WIDTH = 150;
+        FONT_SIZE = 36; 
+        p = add_t_preflow(make_point(x, y));
+        p = dummy_line_up(p);
+        p = add_t_start_i(p);
+        p = add_t_up(p);
+        p = add_base_i1_i2_t(p);
+        p = dummy_line_down(p);
+        p = add_i_t_impulse(p);
+        p = dummy_line_up(p);
+        p = add_t_down(p);
+        p = add_end_i_t(p);
+        p = dummy_line_down(p);
+        p = add_t_postflow(p);
+    }
+    
 
-    p = make_point(x,y);
-    p = add_t_preflow(p);
+    // {//mma
+    //     point_t p;
+    //     LINE_WIDTH = 300;
+    //     FONT_SIZE = 48;
+    //     p = dummy_line_up(make_point(x, y));
+    //     p = add_t_start_i(p);
+    //     p = dummy_line_down(p);
+    //     p = add_base_i1_i2_t(p);
+    //     p = dummy_line_up(p);
+    //     p = add_i_t_impulse(p);
+    //     p = dummy_line_up(p);
+    //     p = add_i_kz(p);
+    //     p = dummy_line_down(p);
+    //     p = dummy_line_down(p);
+    // }
 
 
 
-
-    Draw_Number(0, 0, 100, 64, RED, 0x5000); //Текущий настраиваемый параметр
+    Draw_Number(0,0, 999, 0, "A", 64, PINK);
+    
     
         
-    // cur_menu_fanc = do_nothing;   
-    // draw_bottom_menu();
+    cur_menu_fanc = do_nothing;   
+    //draw_bottom_menu();
 }
 
 
