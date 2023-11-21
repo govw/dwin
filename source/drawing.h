@@ -11,6 +11,9 @@
 #define GREEN 0x07E0
 
 
+static code u16 SCREEN_WIDTH = 1279;
+static code u16 SCREEN_HEIGHT = 799;
+
 typedef struct {
     u16 x;
     u16 y;
@@ -49,6 +52,7 @@ typedef struct {
 
 extern point_t make_point          (u16 x, u16 y);
 extern void    drawing_init        (void);
+extern void    Drawing_Clear_Screen (void);
 extern u8      chack_screen_bounds (u16 x, u16 y);
 extern u16     draw_line_1px       (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 extern void    clear_line_1px      (void);
@@ -56,7 +60,8 @@ extern u16     draw_filled_rect    (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 extern u16     draw_line           (u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color);
 extern void    clear_lines         (void);
 extern u16     draw_image          (u16 x, u16 y, u16 image_id); 
-extern void    image_change_id     (u16 sp, u16 new_image_id); 
+extern void    image_change_id     (u16 sp, u16 new_image_id);
+extern void    image_change_pos    (u16 sp, point_t p);  
 extern u16     Draw_Number         (u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color);
 extern void    change_number_color (u16 sp, u16 new_color); 
 extern void    change_number_value (u16 sp, u16 new_value);
