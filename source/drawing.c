@@ -31,7 +31,8 @@ void image_change_id(u16 sp, u16 new_image_id);
 void image_change_pos(u16 sp, point_t p); 
 u16 Draw_Number(u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color);
 void clear_numbers(void);
-void change_number_color(u16 sp, u16 new_color); 
+void change_number_color(u16 sp, u16 new_color);
+u16 read_number_color(u16 sp);
 void change_number_value(u16 sp, u16 new_value);
 
 
@@ -314,6 +315,13 @@ void clear_numbers(void)
 void change_number_color(u16 sp, u16 new_color) 
 {
     write_dgus_vp(sp + 3, (u8*) &new_color, 1);  //смещение к адресу цвета  в структуре dgus_data_variable_display_t
+}
+
+u16 read_number_color(u16 sp)
+{
+    u16 tmp;
+    read_dgus_vp(sp + 3, (u8*) &tmp, 1);
+    return tmp;   
 }
 
 void change_number_value(u16 sp, u16 new_value)

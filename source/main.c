@@ -214,33 +214,33 @@ while(1)
 
    while(1)
    {    
-            read_dgus_vp(0x16,(u8*)&touch_data, sizeof(touch_data) / 2); //info about touch status and coords
+        read_dgus_vp(0x16,(u8*)&touch_data, sizeof(touch_data) / 2); //info about touch status and coords
          
-            // if(roteate_state)
-            // {
-            //     switch (roteate_state)
-            //     {
-            //         case ENC_L0:
-            //         {
-            //             tmp--;
-            //         }break;
-            //         case ENC_L1:
-            //         {
-            //             tmp-= 5;
-            //         }break;
-            //         case ENC_R0:
-            //         {
-            //             tmp++;
-            //         }break;
-            //         case ENC_R1:
-            //         {
-            //             tmp += 5;
-            //         }break;  
-            //     }
-            //     roteate_state = ENC_STOP;
-            //     //write_dgus_vp(0x5000, (u8*) &tmp, 1);
-            // }
-            
+        // if(roteate_state)
+        // {
+        //     switch (roteate_state)
+        //     {
+        //         case ENC_L0:
+        //         {
+        //             tmp--;
+        //         }break;
+        //         case ENC_L1:
+        //         {
+        //             tmp-= 5;
+        //         }break;
+        //         case ENC_R0:
+        //         {
+        //             tmp++;
+        //         }break;
+        //         case ENC_R1:
+        //         {
+        //             tmp += 5;
+        //         }break;  
+        //     }
+        //     roteate_state = ENC_STOP;
+        //     //write_dgus_vp(0x5000, (u8*) &tmp, 1);
+        // }
+        
     //    {
     //         static u16 tmp;
                 
