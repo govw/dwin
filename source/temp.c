@@ -2,7 +2,7 @@
 #include "sys.h"
 #include "string.h"
 #include "drawing.h"
-
+#include "encoder.h"
 
 code const u8 LINE_HIGHT   = 13;//px
 idata u16 LINE_WIDTH  = 150;//px
@@ -236,7 +236,7 @@ point_t add_t_start_i(point_t p)
     p2 = make_point(p.x + LINE_WIDTH, p.y);
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    draw_number_centered_on_line(p, 99, 0, "A", FONT_SIZE, YELLOW, EIID_START_I1);//начальный ток
+    draw_number_centered_on_line(p, 100, 0, "A", FONT_SIZE, YELLOW, EIID_START_I1);//начальный ток
     draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 99, 1, "s", 30, CYAN, EIID_START_T2);//время начального тока
 
     return p2;
@@ -263,8 +263,8 @@ point_t add_base_i1_i2_t(point_t p)
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
     draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 99, 1, "s", 30, CYAN, EIID_BASE_T4); //время базы
-    draw_number_centered_on_line(p, 99, 0, "A", FONT_SIZE, YELLOW, EIID_BASE_I2); //ток базы
-    draw_number_centered_on_line(make_point(p.x, p.y + (FONT_SIZE * 2) + (LINE_HIGHT * 2)), 99, 0, "A", FONT_SIZE, YELLOW, EIID_BASE2_I2X); //второй ток базы
+    draw_number_centered_on_line(p, 100, 0, "A", FONT_SIZE, PINK, EIID_BASE_I2); //ток базы
+    draw_number_centered_on_line(make_point(p.x, p.y + (FONT_SIZE * 2) + (LINE_HIGHT * 2)), 100, 0, "A", FONT_SIZE, YELLOW, EIID_BASE2_I2X); //второй ток базы
     return p2;
 }
 
@@ -276,7 +276,7 @@ point_t add_i_t_impulse(point_t p)
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
     draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 99, 1, "s", 30, CYAN, EIID_IMPULSE_T5);// время импульса
-    draw_number_centered_on_line(p, 99, 0, "A", FONT_SIZE, YELLOW, EIID_IMPULSE_I3);  //ток импульса
+    draw_number_centered_on_line(p, 100, 0, "A", FONT_SIZE, YELLOW, EIID_IMPULSE_I3);  //ток импульса
 
     return p2;
 }
@@ -369,7 +369,7 @@ void make_bottom_menu(void)
 
 
 
-void par_change_value(u8 pair_id);
+void par_select(u8 pair_id);
 
 void bottom_level_controls(u8 item_pos)
 { //вызовется после выбора элемента в горизонтальном меню
@@ -425,7 +425,7 @@ void bottom_level_controls(u8 item_pos)
     } else { //еслы выбор из вертикального меню //елси позция болше 10
         
         if(item_pos > 15)  { //вбор из настройки параметров
-           par_change_value(cur_menu[item_pos].ico);
+           par_select(cur_menu[item_pos].ico);
            return;
         }
 
@@ -490,27 +490,41 @@ void bottom_level_controls(u8 item_pos)
     
 }
 
-
-
-
-
-void par_change_value(u8 par_id)
+void cur_par_value_change(u16 cur_par_id, s8 shift)
 {
-    static idata old_id = EIID_SIZE;
-    static old_color;
+    static u16 i;
+    change_number_value(number_sp[cur_par_id], i += shift);
+}
 
-    if(old_id == par_id) {
-        return;    
-    } else {
-        // change_number_color(number_sp[old_id], old_color);
-        // old_id = par_id;
-        
-        // change_number_color(number_sp[par_id], PINK);
-        // old_color = read_number_color(number_sp[par_id]);
+void Process_Encoder(u8 state)
+{
+    code const s8 shifts[] = {-1, -5, +1, +5}; 
+    static u16 cnt;
+    {
+        static u16 cnt;
+        write_dgus_vp(0x4002, (u8*) &cnt, cnt++);
     }
+    
+    //change_number_color(number_sp[cur_par_id], cnt++);
+    
+    cur_par_value_change(cur_par_id, shifts[state]);
 }
 
 
+
+void par_select(u8 new_par_id)
+{
+    static idata u16 old_color = YELLOW;
+
+    if(cur_par_id == new_par_id) 
+        return;
+    else {
+        change_number_color(number_sp[cur_par_id], old_color);
+        old_color = read_number_color(number_sp[new_par_id]); //запомнить старый цвет
+        change_number_color(number_sp[new_par_id], PINK); //заменить на цвет "выбранного элемента"
+        cur_par_id = new_par_id;
+    }      
+}
 
 
 
@@ -519,7 +533,7 @@ void place_numbers_on_cyclogramm(void)
 {
     u16 x = 40;
     u16 y = 550;
-      u8 i;
+    u8 i;
     //Drawing_Clear_Screen();
   
     cur_active_items_id = TIG;
@@ -529,13 +543,13 @@ void place_numbers_on_cyclogramm(void)
         icon_sp_bottom_menu[i] = draw_image(0, 0, 0xffff); // создание пула картинок без отображения картинки
     }
 
-
+    
     make_bottom_menu();
 
     {//tig pulse ac
         point_t p;
         LINE_WIDTH = 150;
-        FONT_SIZE = 37; 
+        FONT_SIZE = 35; 
         p = add_t_preflow(make_point(x, y));
         p = dummy_line_up(p);
         p = add_t_start_i(p);
@@ -548,9 +562,13 @@ void place_numbers_on_cyclogramm(void)
         p = add_end_i_t(p);
         p = dummy_line_down(p);
         p = add_t_postflow(p);
+
+        cur_par_id = EIID_BASE_I2;
     }
     
      
+
+
     // {//mma
     //     point_t p;
     //     LINE_WIDTH = 300;

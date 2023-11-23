@@ -17,6 +17,12 @@
         "sys.h": "c",
         "system_error": "c",
         "ui.h": "c",
-        "STRING.H": "cpp"
+        "STRING.H": "cpp",
+        "stdio.h": "c",
+        "canbus.h": "c",
+        "dwin8283.h": "c",
+        "uart.h": "c",
+        "encoder.h": "c",
+        "timer.h": "c"
     }
 }

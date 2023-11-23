@@ -328,4 +328,26 @@ void change_number_value(u16 sp, u16 new_value)
 {
     write_dgus_vp(sp + (sizeof(dgus_data_variable_display_t) / 2), (u8*) &new_value, 1);
 }
+
+void change_number_value_centered(u16 sp, u16 new_value)
+{
+    u16 old_value;
+    point_t p;
+
+    struct {
+        u8 lib_id;
+        u8 font_size;
+    } info;
+
+    
+    read_dgus_vp(sp + 4, (u8*) &info, 1); //прочитать текущий шрифт
+  
+    //read_dgus_vp(sp + (sizeof(dgus_data_variable_display_t) / 2), (u8*) &old_value, 1);//считать текущее значение переменной
+    
+    if(new_value >= 100)
+
+
+    write_dgus_vp(sp + 1, (u8*) &p, sizeof(point_t) / 2);//установить новые координаты для центрирования
+    write_dgus_vp(sp + (sizeof(dgus_data_variable_display_t) / 2), (u8*) &new_value, 1);//установить новое
+}
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________

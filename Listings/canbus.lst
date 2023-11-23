@@ -1,4 +1,4 @@
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 1   
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE CANBUS
@@ -62,7 +62,7 @@ line level    source
   52   1              DATA2 = 0;
   53   1              DATA1 = 0;
   54   1              DATA0 = 0;                      //配置验收寄存器ACR
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 2   
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 2   
 
   55   1              APP_EN = 1;       
   56   1              while(APP_EN);
@@ -126,7 +126,7 @@ line level    source
  114   1              DATA2 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID>>16);
  115   1              DATA1 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID>>8);
  116   1              DATA0 = (u8)(CanData.BusTXbuf[CanData.CanTxTail].ID);                   
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 3   
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 3   
 
  117   1              APP_EN = 1;
  118   1              while(APP_EN);          //写入ID数据
@@ -190,7 +190,7 @@ line level    source
  176   3                              CanData.BusTXbuf[CanData.CanTxHead].ID = idtmp;
  177   3                              CanData.BusTXbuf[CanData.CanTxHead].status = statustmp | framoffset;
  178   3                              for(j=0;j<framoffset;j++)
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 4   
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 4   
 
  179   3                              {
  180   4                                      CanData.BusTXbuf[CanData.CanTxHead].candata[j] = pData[k];
@@ -254,7 +254,7 @@ line level    source
  238   3                              while(APP_EN);
  239   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[0] = DATA3;
  240   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[1] = DATA2;
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 5   
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 5   
 
  241   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[2] = DATA1;
  242   3                              CanData.BusRXbuf[CanData.CanRxHead].candata[3] = DATA0;
@@ -318,7 +318,7 @@ line level    source
  300          //              DATA1 = 0;
  301          //              DATA0 = 0;                      
  302          //              APP_EN = 1;
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 6   
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 6   
 
  303          //              while(APP_EN);          //写入RTR,IDE,DLC等数据
  304          //              DATA3 = (u8)(tmp32>>24);
@@ -354,7 +354,7 @@ line level    source
  334          //              }
  335          //      }
  336          // }
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 7   
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 7   
 
 ASSEMBLY LISTING OF GENERATED OBJECT CODE
 
@@ -418,7 +418,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0045 F5FA              MOV     DATA3,A
                                            ; SOURCE LINE # 45
 0047 900001            MOV     DPTR,#01H
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 8   
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 8   
 
 004A 120000      E     LCALL   ?C?CLDOPTR
 004D F5FB              MOV     DATA2,A
@@ -482,7 +482,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
              ; FUNCTION _CanBusInit (END)
 
              ; FUNCTION CanErrorReset (BEGIN)
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 9   
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 9   
 
                                            ; SOURCE LINE # 84
                                            ; SOURCE LINE # 85
@@ -546,7 +546,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 109
 002A F5FC              MOV     DATA1,A
                                            ; SOURCE LINE # 110
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 10  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 10  
 
 002C F5FD              MOV     DATA0,A
                                            ; SOURCE LINE # 111
@@ -610,7 +610,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 007E 75F00D            MOV     B,#0DH
 0081 A4                MUL     AB
 0082 2400        R     ADD     A,#LOW CanData+0D01H
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 11  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 11  
 
 0084 F582              MOV     DPL,A
 0086 E5F0              MOV     A,B
@@ -674,7 +674,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00DB F583              MOV     DPH,A
 00DD E0                MOVX    A,@DPTR
 00DE F5FB              MOV     DATA2,A
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 12  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 12  
 
                                            ; SOURCE LINE # 121
 00E0 900000      R     MOV     DPTR,#CanData+01A03H
@@ -738,7 +738,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 013D A4                MUL     AB
 013E 2400        R     ADD     A,#LOW CanData+0D0BH
 0140 F582              MOV     DPL,A
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 13  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 13  
 
 0142 E5F0              MOV     A,B
 0144 3400        R     ADDC    A,#HIGH CanData+0D0BH
@@ -802,7 +802,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0024 FC                MOV     R4,A
 0025 A3                INC     DPTR
 0026 E0                MOVX    A,@DPTR
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 14  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 14  
 
 0027 FD                MOV     R5,A
 0028 A3                INC     DPTR
@@ -866,7 +866,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0070 EA                MOV     A,R2
 0071 A4                MUL     AB
 0072 2400        R     ADD     A,#LOW CanData+0D01H
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 15  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 15  
 
 0074 F582              MOV     DPL,A
 0076 E5F0              MOV     A,B
@@ -930,7 +930,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00C2 FE                MOV     R6,A
 00C3 900000      R     MOV     DPTR,#statustmp
 00C6 120000      E     LCALL   ?C?LSTXDATA
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 16  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 16  
 
                                            ; SOURCE LINE # 163
 00C9 E4                CLR     A
@@ -994,7 +994,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 011D 3400        R     ADDC    A,#HIGH CanData+0D00H
 011F F583              MOV     DPH,A
 0121 EF                MOV     A,R7
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 17  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 17  
 
 0122 F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 167
@@ -1058,7 +1058,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0176 900000      R     MOV     DPTR,#CanData+01A02H
 0179 E0                MOVX    A,@DPTR
 017A 04                INC     A
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 18  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 18  
 
 017B F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 173
@@ -1122,7 +1122,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 01CF F583              MOV     DPH,A
 01D1 EF                MOV     A,R7
 01D2 F0                MOVX    @DPTR,A
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 19  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 19  
 
                                            ; SOURCE LINE # 178
 01D3 E4                CLR     A
@@ -1186,7 +1186,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 183
 022A         ?C0041:
 022A 900000      R     MOV     DPTR,#j
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 20  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 20  
 
 022D E0                MOVX    A,@DPTR
 022E FF                MOV     R7,A
@@ -1250,7 +1250,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
              ; FUNCTION _CanTx (END)
 
              ; FUNCTION Can_Isr (BEGIN)
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 21  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 21  
 
 0000 C0E0              PUSH    ACC
 0002 C0F0              PUSH    B
@@ -1314,7 +1314,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0051 900000      R     MOV     DPTR,#CanData+01A00H
 0054 E0                MOVX    A,@DPTR
 0055 75F00D            MOV     B,#0DH
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 22  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 22  
 
 0058 A4                MUL     AB
 0059 2400        R     ADD     A,#LOW CanData
@@ -1378,7 +1378,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00B2 A3                INC     DPTR
 00B3 E0                MOVX    A,@DPTR
 00B4 FA                MOV     R2,A
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 23  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 23  
 
 00B5 A3                INC     DPTR
 00B6 E0                MOVX    A,@DPTR
@@ -1442,7 +1442,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0110 E0                MOVX    A,@DPTR
 0111 F9                MOV     R1,A
 0112 A3                INC     DPTR
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 24  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 24  
 
 0113 E0                MOVX    A,@DPTR
 0114 FA                MOV     R2,A
@@ -1506,7 +1506,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 016E F8                MOV     R0,A
 016F A3                INC     DPTR
 0170 E0                MOVX    A,@DPTR
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 25  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 25  
 
 0171 F9                MOV     R1,A
 0172 A3                INC     DPTR
@@ -1570,7 +1570,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 01CB C082              PUSH    DPL
 01CD E0                MOVX    A,@DPTR
 01CE F8                MOV     R0,A
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 26  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 26  
 
 01CF A3                INC     DPTR
 01D0 E0                MOVX    A,@DPTR
@@ -1634,7 +1634,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0225 A4                MUL     AB
 0226 2400        R     ADD     A,#LOW CanData+01H
 0228 F582              MOV     DPL,A
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 27  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 27  
 
 022A E5F0              MOV     A,B
 022C 3400        R     ADDC    A,#HIGH CanData+01H
@@ -1698,7 +1698,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 241
 0282 75F00D            MOV     B,#0DH
 0285 EF                MOV     A,R7
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 28  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 28  
 
 0286 A4                MUL     AB
 0287 2400        R     ADD     A,#LOW CanData+07H
@@ -1762,7 +1762,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 02E4 F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 248
 02E5 75F00D            MOV     B,#0DH
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 29  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 29  
 
 02E8 EF                MOV     A,R7
 02E9 A4                MUL     AB
@@ -1826,7 +1826,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0327 E591              MOV     A,CAN_IR
 0329 30E303            JNB     ACC.3,?C0063
                                            ; SOURCE LINE # 271
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 30  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 30  
 
                                            ; SOURCE LINE # 272
 032C 5391F7            ANL     CAN_IR,#0F7H
@@ -1863,7 +1863,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0359 32                RETI    
              ; FUNCTION Can_Isr (END)
 
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 31  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 31  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -1926,7 +1926,7 @@ MNORFLASH. . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  12
   Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
 _mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
   Mode . . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 32  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 32  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -1989,7 +1989,7 @@ _can8283 . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  260
   Can8283RxHead. . . . . . . . . . . .  MEMBER   -----  U_INT    0100H  2
   Can8283RxTail. . . . . . . . . . . .  MEMBER   -----  U_INT    0102H  2
 _candataunit . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  13
-C51 COMPILER V9.53.0.0   CANBUS                                                            11/20/2023 07:55:15 PAGE 33  
+C51 COMPILER V9.53.0.0   CANBUS                                                            11/23/2023 13:10:02 PAGE 33  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====

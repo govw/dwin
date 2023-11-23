@@ -29,4 +29,5 @@ extern void (*cur_menu_fanc)(u8 item_pos);
 
 extern void draw_cyclogramm(void);
 extern void place_numbers_on_cyclogramm(void);
+void Process_Encoder(u8 state); 
 #endif //TEMP_H

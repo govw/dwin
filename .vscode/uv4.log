@@ -1,6 +1,7 @@
 Build target 'Target 1'
 compiling temp.c...
 source\temp.c(141): warning C280: 'item_pos': unreferenced local variable
+source\temp.c(502): warning C280: 'cnt': unreferenced local variable
 linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?RESETT5L?SYS
@@ -51,9 +52,6 @@ linking...
     SEGMENT: ?PR?CANERRORRESET?CANBUS
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?SETUP_EXT_INT0?MAIN
-
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?CO?MAIN
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
@@ -87,10 +85,25 @@ linking...
     SEGMENT: ?PR?CLEAR_LINES?DRAWING
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_CHANGE_NUMBER_VALUE?DRAWING
+    SEGMENT: ?PR?_CHANGE_NUMBER_VALUE_CENTERED?DRAWING
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?PRINTF?PRINTF
+
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_PROCESS_ENCODER?TEMP
+    CALLER1: ?PR?EXT_INT0?MAIN
+    CALLER2: ?PR?EXT_INT1?MAIN
+
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_WRITE_DGUS_VP?SYS
+    CALLER1: ?PR?EXT_INT0?MAIN
+    CALLER2: ?PR?EXT_INT1?MAIN
+
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_CHANGE_NUMBER_VALUE?DRAWING
+    CALLER1: ?PR?EXT_INT0?MAIN
+    CALLER2: ?PR?EXT_INT1?MAIN
 
 *** WARNING L15: MULTIPLE CALL TO SEGMENT
     SEGMENT: ?PR?_DELAY_MS?SYS
@@ -102,7 +115,12 @@ linking...
     CALLER1: ?PR?EXT_INT1?MAIN
     CALLER2: ?C_C51STARTUP
 
-Program Size: data=52.2 xdata=17135 code=23524
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_WRITE_DGUS_VP?SYS
+    CALLER1: ?PR?EXT_INT1?MAIN
+    CALLER2: ?C_C51STARTUP
+
+Program Size: data=52.2 xdata=17172 code=23836
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
 
@@ -110,8 +128,8 @@ c:\Users\OGK5-7\Desktop\dwin>cd objects
 
 c:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x5B75, got 0x515E)
+    (expected >= 0x5CC0, got 0x527F)
 
 c:\Users\OGK5-7\Desktop\dwin\Objects>echo.
 
-".\Objects\T5L51" - 0 Error(s), 33 Warning(s).
+".\Objects\T5L51" - 0 Error(s), 37 Warning(s).

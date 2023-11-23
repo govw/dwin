@@ -9,7 +9,7 @@
 
 
 #include "temp.h"
-
+#include "encoder.h"
 
 #define UART_INIT 	{state = inbufind=0;  begfl=endfl=0;} 
 #define UART_INIT_1 {state=1; inbufind=0; begfl=endfl=0;}
@@ -42,51 +42,14 @@ void io_init()
  
 
 
-void setup_ext_int0(void)
-{
-    //int0
-    IP0 &= 0xFE;//Clear bit0
-	IP1 &= 0xFE;//Clear bit0
-	IE0 = 0;//Clear the interrupt flag bit of external interrupt 0
-	
-	IT0 = 1;//1 is set as falling edge trigger, 0 is set as low level trigger
-	EX0 = 1;//Enable external interrupt 0, the corresponding pin is P3.0
-    
-   
-    //int1
-    IE1 = 0;
-    
-    IT1 = 1;
-    EX1 = 1;
-
-    
-//EA = 0;   
-//    //Interrupt Allow Register IE
-//    //EA = 1;     //Open the total interrupt
-//      EX0 = 1;     //Open the external interrupt of the 0
-//    //Control register TCON
-//      IT0 = 1;     //Set external interrupt trigger mode 
-//                   //0 - low level trigger
-//                   //1 - Negative jump trigger
-//       
-////    P0 |= (1 << 6);
-////    P0 |= (1 << 7);
-//    SetPinIn(0,6);    
-//    SetPinIn(0,7);
-//    EA = 1;	
-}
 
 
 
-enum {
-    ENC_STOP,
-    ENC_L0,
-    ENC_L1,
-    ENC_R0,
-    ENC_R1,
-};
-static xdata u8 roteate_state;
-static xdata u16 tmp = 0;
+
+
+u8 val; 
+
+
 void ext_int0() interrupt 0
 { //p3.0
     EA = 0;// моежет и не нужно сдесь
@@ -109,10 +72,10 @@ void ext_int0() interrupt 0
    
     
     if((P3 & (1 << 1)) == 0) {
-        if(encoder_ticks > 80) 
-            //roteate_state = ENC_L1;
-        //else
-            //roteate_state = ENC_L0;
+        if(encoder_ticks > 80)
+           Process_Encoder(ENC_L1);
+        else
+            Process_Encoder(ENC_L0);
         encoder_ticks = 100;
     }
     delay_ms(1);
@@ -144,13 +107,14 @@ void ext_int1() interrupt 2
     }
     while((P3 & (1 << 1)) == 0);
     
-   
+    
+    
     
     if((P3 & (1 << 0)) == 0) {
         if(encoder_ticks > 80) 
-            //roteate_state = ENC_R1;
-        //else
-            //roteate_state = ENC_R0;
+            Process_Encoder(ENC_R1);
+       else
+            Process_Encoder(ENC_R0);
         encoder_ticks = 100;
     }
     delay_ms(1);
@@ -163,24 +127,43 @@ void ext_int1() interrupt 2
 
 
 
-
-u8 val; 
 void main()
 {
 	INIT_CPU();            //CPU ��ʼ����ע���ʼ�������л������xdata������ʼ����0����������ı����г�ʼֵ����Ҫ�ڸú����������¸�ֵ
-	T0_Init();						 //��ʱ��0��ʼ��
-    //setup_ext_int0();
-	EA = 1; //interrupt on
+    T0_Init();						 //��ʱ��0��ʼ��
+	EA = 0; //interrupt off
+
+    
+  
+
+     //int0
+    IP0 &= 0xFE;//Clear bit0
+	IP1 &= 0xFE;//Clear bit0
+    
+	IE0 = 0;//Clear the interrupt flag bit of external interrupt 0
+	
+	IT0 = 1;//1 is set as falling edge trigger, 0 is set as low level trigger
+	EX0 = 1;//Enable external interrupt 0, the corresponding pin is P3.0
+    
+   
+    //int1
+    IE1 = 0;
+    
+    IT1 = 1;
+    EX1 = 1;
+    EA = 1;   
+    
+
     //StartTimer(0,100);
 	//StartTimer(1,50);
 	//-------------------
 	io_init();
 //	delay_ms(20);
 	ssd2828_init();
-//________________________________________________________________________ __________	
+//__________________________________________________________________________________	
 	UartInit(UART5, 115200);
 	UART_INIT //MARCROS
-	  
+//__________________________________________________________________________________		  
     
     // draw_cyclogramm();
     
@@ -215,89 +198,52 @@ while(1)
    while(1)
    {    
         read_dgus_vp(0x16,(u8*)&touch_data, sizeof(touch_data) / 2); //info about touch status and coords
-         
-        // if(roteate_state)
-        // {
-        //     switch (roteate_state)
-        //     {
-        //         case ENC_L0:
-        //         {
-        //             tmp--;
-        //         }break;
-        //         case ENC_L1:
-        //         {
-        //             tmp-= 5;
-        //         }break;
-        //         case ENC_R0:
-        //         {
-        //             tmp++;
-        //         }break;
-        //         case ENC_R1:
-        //         {
-        //             tmp += 5;
-        //         }break;  
-        //     }
-        //     roteate_state = ENC_STOP;
-        //     //write_dgus_vp(0x5000, (u8*) &tmp, 1);
-        // }
+        if(touch_data.status == 0x5A) //if status byte 0x05 some action done
+        {
+            touch_data.status = 0x00;
+            write_dgus_vp(0x16, (u8*) &touch_data.x, 1); //clear status byte to 00;
+            {
+                    u16 action = touch_data.action_type; 
+                    write_dgus_vp(0x4000, (u8*) &touch_data.x, 2); //show coords of touch point
+                    write_dgus_vp(0x4002, (u8*) &action, 1); //show action type
+            }
         
-    //    {
-    //         static u16 tmp;
-                
-    //         tmp++;
-    //         if(tmp >= 40) tmp = 0;
-            
-    //         //delay_ms(100);
-    //    }
-        
-
-
-       if(touch_data.status == 0x5A) //if status byte 0x05 some action done
-       {
-           touch_data.status = 0x00;
-           write_dgus_vp(0x16, (u8*) &touch_data.x, 1); //clear status byte to 00;
-           {
-                u16 action = touch_data.action_type; 
-                write_dgus_vp(0x4000, (u8*) &touch_data.x, 2); //show coords of touch point
-                write_dgus_vp(0x4002, (u8*) &action, 1); //show action type
-           }
-    
-           switch(touch_data.action_type)
-           {
-               case ETPS_RELEASE:
-               {
-                   u8 i;
-                   for(i = 0; i < cur_menu_size; i++) { //if touch coords in recatnle area                        
-                        if( touch_data.x >= cur_menu[i].r.x0 && touch_data.x <= cur_menu[i].r.x1 &&  
-                            touch_data.y >= cur_menu[i].r.y0 && touch_data.y <= cur_menu[i].r.y1 ) {
-                                cur_menu_fanc(i);
-                                break;  
+            switch(touch_data.action_type)
+            {
+                case ETPS_RELEASE:
+                {
+                    u8 i;
+                    for(i = 0; i < cur_menu_size; i++) { //if touch coords in recatnle area                        
+                            if( touch_data.x >= cur_menu[i].r.x0 && touch_data.x <= cur_menu[i].r.x1 &&  
+                                touch_data.y >= cur_menu[i].r.y0 && touch_data.y <= cur_menu[i].r.y1 ) {
+                                    cur_menu_fanc(i);
+                                    break;  
+                            }
                         }
-                    }
+                        
+                        {//для отладки
+                            u16 dummy = i;
+                            write_dgus_vp(0x4003, (u8*) &dummy, 1); //отобразить код выбранной функции
+                        }
+                    break;
+                }
                     
-                    {//для отладки
-                        u16 dummy = i;
-                        write_dgus_vp(0x4003, (u8*) &dummy, 1); //отобразить код выбранной функции
-                    }
-                   break;
-               }
-                   
-               case ETPS_FIRST_PRESS:
-               {
-                   
+                case ETPS_FIRST_PRESS:
+                {
+                    
+                        break;
+                }
+                case ETPS_LIFT:
                     break;
-               }
-               case ETPS_LIFT:
-                   break;
 
-               case ETPS_PRESSING:
-               {
+                case ETPS_PRESSING:
+                {
+                        break;
+                }
+                default:
                     break;
-               }
-               default:
-                   break;
-           }
-       }
+            }
+        }
        
    }
 }
@@ -305,6 +251,15 @@ while(1)
       
         
   
+
+
+
+
+
+
+
+
+
     
     // while(1)
     // {
@@ -314,13 +269,11 @@ while(1)
     
    
     while(1)
-    {//обработчик кнопок
-        
+    {
         //обработчик uart
         //delay_ms(100);
         if(Uart_Struct[UART5].tx_flag == 0) //если передача завершена
 		{
-           
             static u8 buf_idx = 0;            
             EA = 0;	
             while(Uart_Struct[UART5].rx_tail != Uart_Struct[UART5].rx_head)
