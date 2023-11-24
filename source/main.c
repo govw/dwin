@@ -52,15 +52,14 @@ u8 val;
 
 void ext_int0() interrupt 0
 { //p3.0
-    EA = 0;// моежет и не нужно сдесь
     do
     {
-        delay_us(800);
+        delay_us(600);
     }
     while((P3 & (1 << 0)) == 0);
     do
     {
-        delay_us(800);
+        delay_us(600);
     }
     while((P3 & (1 << 0)) == 0);
     do
@@ -73,7 +72,7 @@ void ext_int0() interrupt 0
     
     if((P3 & (1 << 1)) == 0) {
         if(encoder_ticks > 80)
-           Process_Encoder(ENC_L1);
+            Process_Encoder(ENC_L1);
         else
             Process_Encoder(ENC_L0);
         encoder_ticks = 100;
@@ -83,22 +82,20 @@ void ext_int0() interrupt 0
     
     IE0 = 0;
     IE1 = 0;
-    EA = 1;
-    
 }
 
 
 void ext_int1() interrupt 2
 {//p3.1
-    EA = 0;
+   
     do
     {
-        delay_us(800);
+        delay_us(600);
     }
     while((P3 & (1 << 1)) == 0);
     do
     {
-        delay_us(800);
+        delay_us(600);
     }
     while((P3 & (1 << 1)) == 0);
     do
@@ -122,7 +119,6 @@ void ext_int1() interrupt 2
     
     IE0 = 0;
     IE1 = 0;
-    EA = 1;
 }
 
 

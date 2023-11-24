@@ -18,7 +18,7 @@ static u8 all_data_variabl_cnt   = 0;
 void Drawing_Clear_Screen(void);
 point_t make_point(u16 x, u16 y);
 void drawing_init(void);
-u8 chack_screen_bounds(u16 x, u16 y);
+u8 check_screen_bounds(u16 x, u16 y);
 u16 draw_line_1px(u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 void clear_line_1px(void);
 u16 draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
@@ -32,6 +32,7 @@ void image_change_pos(u16 sp, point_t p);
 u16 Draw_Number(u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color);
 void clear_numbers(void);
 void change_number_color(u16 sp, u16 new_color);
+void change_number_pos(u16 sp, point_t p);
 u16 read_number_color(u16 sp);
 void change_number_value(u16 sp, u16 new_value);
 
@@ -64,7 +65,7 @@ void Drawing_Clear_Screen(void)
 }
 
 
-u8 chack_screen_bounds(u16 x, u16 y)
+u8 check_screen_bounds(u16 x, u16 y)
 {
     if(x < SCREEN_WIDTH && y < SCREEN_HEIGHT)
         return 1; // correct points
@@ -77,7 +78,7 @@ u16 draw_line_1px(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
 {
     u16 cmd[8];
     
-    if(!(chack_screen_bounds(x0, y0) && chack_screen_bounds(x1, y1)))  return 0;
+    if(!(check_screen_bounds(x0, y0) && check_screen_bounds(x1, y1)))  return 0;
      
     cmd[2] = color;
     cmd[3] = x0;
@@ -108,7 +109,7 @@ void clear_line_1px(void)
 u16 draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
 {
     u16 cmd[8];
-    if(!(chack_screen_bounds(x0, y0) && chack_screen_bounds(x1, y1))) return 0;
+    if(!(check_screen_bounds(x0, y0) && check_screen_bounds(x1, y1))) return 0;
     
     cmd[2] = x0;
     cmd[3] = y0;
@@ -206,7 +207,7 @@ u16 draw_image(u16 x, u16 y, u16 image_id)
     dgus_variables_icon_t d;
 
     if(all_img_cnt >= ARR_SIZE(var_icon_sp)) return 0;
-    if(!chack_screen_bounds(x, y)) return 0;
+    if(!check_screen_bounds(x, y)) return 0;
 
     d.upper_left_point = make_point(x,y); 
     d.v_min            = 0;     
@@ -301,6 +302,11 @@ u16 Draw_Number(u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size,
     }
 }
 
+// void Redraw_Number(point_t p){
+
+//     /////////////////////////////////////
+// }
+
 void clear_numbers(void)
 {
     u8 i;
@@ -312,10 +318,43 @@ void clear_numbers(void)
     }
 }
 
+
+void change_number_value(u16 sp, u16 new_value)
+{
+    u16 places;
+    if      (new_value < 10)    places = 1;
+    else if (new_value < 100)   places = 2;
+    else if (new_value < 1000)  places = 3;
+    else if (new_value < 10000) places = 4;
+
+    {
+        struct {
+            u8 alignment;
+            u8 integer_digits;
+            u8 decimal_places;
+            u8 variable_data_type;
+        }info;
+
+        read_dgus_vp(sp + 5, (u8*) &info, sizeof(info) / 2);
+        
+        info.integer_digits  =  info.decimal_places + places;
+        
+        write_dgus_vp(sp + 5, (u8*) &info, sizeof(info) / 2);
+    }
+   
+    write_dgus_vp(sp + (sizeof(dgus_data_variable_display_t) / 2), (u8*) &new_value, 1);
+}
+
 void change_number_color(u16 sp, u16 new_color) 
 {
     write_dgus_vp(sp + 3, (u8*) &new_color, 1);  //смещение к адресу цвета  в структуре dgus_data_variable_display_t
 }
+
+void change_number_pos(u16 sp, point_t p)
+{
+    write_dgus_vp(sp + 1, (u8*) &p, sizeof(point_t) / 2);    
+}
+
 
 u16 read_number_color(u16 sp)
 {
@@ -324,30 +363,7 @@ u16 read_number_color(u16 sp)
     return tmp;   
 }
 
-void change_number_value(u16 sp, u16 new_value)
-{
-    write_dgus_vp(sp + (sizeof(dgus_data_variable_display_t) / 2), (u8*) &new_value, 1);
-}
-
-void change_number_value_centered(u16 sp, u16 new_value)
-{
-    u16 old_value;
-    point_t p;
-
-    struct {
-        u8 lib_id;
-        u8 font_size;
-    } info;
-
-    
-    read_dgus_vp(sp + 4, (u8*) &info, 1); //прочитать текущий шрифт
-  
-    //read_dgus_vp(sp + (sizeof(dgus_data_variable_display_t) / 2), (u8*) &old_value, 1);//считать текущее значение переменной
-    
-    if(new_value >= 100)
 
 
-    write_dgus_vp(sp + 1, (u8*) &p, sizeof(point_t) / 2);//установить новые координаты для центрирования
-    write_dgus_vp(sp + (sizeof(dgus_data_variable_display_t) / 2), (u8*) &new_value, 1);//установить новое
-}
+
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________

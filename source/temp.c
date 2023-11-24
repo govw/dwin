@@ -4,12 +4,12 @@
 #include "drawing.h"
 #include "encoder.h"
 
-code const u8 LINE_HIGHT   = 13;//px
-idata u16 LINE_WIDTH  = 150;//px
-idata u16 FONT_SIZE = 24;
-code const u8 LEVEL_HEIGHT = 120;//px
-code const u8 TOUCH_HEIGHT = 100;//px
-idata u16 TIME_Y_LEVEL = 800 - 150;
+code const u8  LINE_HIGHT   = 13;//px
+idata      u16 LINE_WIDTH   = 150;//px
+idata      u16 FONT_SIZE    = 24;
+code const u8  LEVEL_HEIGHT = 120;//px
+code const u8  TOUCH_HEIGHT = 100;//px
+idata      u16 TIME_Y_LEVEL = 800 - 150;
 code const u16 ICON_RECT_SZ = 128;
 
 
@@ -80,8 +80,6 @@ code const u32 active_items[] = {
 
     ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_TIG_SPOT) | ((u32)1 << EIID_MMA)     |
     ((u32)1 << EIID_AC)        | ((u32)1 << EIID_DC_MINUS) | ((u32)1 << EIID_DC_PLUS) |
-
-
     ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON),     //mma
 };
 
@@ -113,12 +111,26 @@ icon_t cur_menu[48];
 u32 cur_menu_active;
 u8 cur_menu_size;
 
-u8 cur_active_items_id = TIG;
+u8 idata cur_active_items_id = TIG;
 
 
 u16 number_sp[EIID_SIZE]; //массив sp идентификаторов линий, картинок, чисел
-u16 par[EIID_SIZE];
+s16 par[EIID_SIZE];
 u16 cur_par_id; //номер текущего параметра к отображению
+
+typedef struct {
+    s16 min;
+    s16 max;
+}lim_t;
+lim_t par_lim[EIID_SIZE];
+s16   par_step[EIID_SIZE];
+
+struct {
+    point_t p;
+    u8 desimal_pleaces;
+    u16 font_size;
+}number_info[EIID_SIZE];
+
 
 
 u16 icon_sp_bottom_menu[16]; //sp картинок нижнего горизонтального меню // для их изменения
@@ -129,12 +141,10 @@ void make_menu_bar(u8 is_vertical, u16 start_x, u16 start_y, u32 id_bm, void (*c
 
 
 
-
-
-
-
-
-
+void make_lim(lim_t *lim, s16 min, s16 max) {
+    lim->min = min;
+    lim->max = max;
+}
 
 
 
@@ -171,10 +181,8 @@ void add_touch_place(u16 x0, u16 y0, u16 x1, u16 y1, u8 touch_id)
 
 
 
-// LINE_HIGHT   = 13;//px
-// LINE_WIDTH   = 150;//px
-// LEVEL_HEIGHT = 120;//px
-// TOUCH_HEIGHT = 100;//px
+
+
 
 void draw_number_centered_on_line(point_t line_start, u16 n, u8 decimal_places, u8* units, u16 font_size, u16 color, u8 touch_id)
 {
@@ -185,11 +193,14 @@ void draw_number_centered_on_line(point_t line_start, u16 n, u8 decimal_places, 
     else if (n < 1000)  integer_digits = 3;
     else if (n < 10000) integer_digits = 4;
 
-    integer_digits += strlen(units) + decimal_places;
+    number_info[touch_id].desimal_pleaces = strlen(units) + decimal_places;
+    number_info[touch_id].p = make_point(line_start.x, line_start.y - (font_size * 2) - LINE_HIGHT);
+    number_info[touch_id].font_size = font_size;
 
-    
+    integer_digits += number_info[touch_id].desimal_pleaces;
+
     number_sp[touch_id] = Draw_Number(line_start.x + ((LINE_WIDTH - (integer_digits * font_size)) / 2L), 
-                                    line_start.y - (font_size * 2) - LINE_HIGHT, 
+                                    number_info[touch_id].p.y, 
                                     n, 
                                     decimal_places, 
                                     units, 
@@ -199,7 +210,25 @@ void draw_number_centered_on_line(point_t line_start, u16 n, u8 decimal_places, 
     add_touch_place(line_start.x, line_start.y - (font_size * 2), line_start.x + LINE_WIDTH, line_start.y, touch_id);
 }
 
+
    
+void redraw_number_centered(u8 id, u16 n)
+{
+    u16 places;
+
+    if      (n < 10)    places = 1;
+    else if (n < 100)   places = 2;
+    else if (n < 1000)  places = 3;
+    else if (n < 10000) places = 4;
+    
+    places += number_info[id].desimal_pleaces;  
+
+    change_number_pos(number_sp[id], make_point(number_info[id].p.x + ((LINE_WIDTH - (places * number_info[id].font_size)) / 2L), number_info[id].p.y));
+    change_number_value(number_sp[id], n);
+}
+
+
+
 point_t dummy_line_up(point_t p)
 {
     point_t p2; 
@@ -224,7 +253,7 @@ point_t add_t_preflow(point_t p) //возвращает конечную точ�
     draw_line(p.x, p.y, p2.x, p2.y, LINE_HIGHT, GREEN);
 
     //add_touch_place(p.x, p.y, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT, EIID_PRE_FLOW_T1);//создание области касания для настройки времени продувки
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 10 , 1, "s", 30, CYAN, EIID_PRE_FLOW_T1); //время продувки
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_PRE_FLOW_T1] , 1, "s", 30, CYAN, EIID_PRE_FLOW_T1); //время продувки
     return p2;    
 }
 
@@ -236,8 +265,8 @@ point_t add_t_start_i(point_t p)
     p2 = make_point(p.x + LINE_WIDTH, p.y);
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    draw_number_centered_on_line(p, 100, 0, "A", FONT_SIZE, YELLOW, EIID_START_I1);//начальный ток
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 99, 1, "s", 30, CYAN, EIID_START_T2);//время начального тока
+    draw_number_centered_on_line(p, par[EIID_START_I1], 0, "A", FONT_SIZE, YELLOW, EIID_START_I1);//начальный ток
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_START_T2], 1, "s", 30, CYAN, EIID_START_T2);//время начального тока
 
     return p2;
 }
@@ -249,7 +278,7 @@ point_t add_t_up(point_t p)
     p2 = make_point(p.x + LINE_WIDTH, p.y - LEVEL_HEIGHT);
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 99, 1, "s", 30, CYAN, EIID_UP_T3); //время наростания
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_UP_T3], 1, "s", 30, CYAN, EIID_UP_T3); //время наростания
 
     return p2;
 }
@@ -262,9 +291,9 @@ point_t add_base_i1_i2_t(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 99, 1, "s", 30, CYAN, EIID_BASE_T4); //время базы
-    draw_number_centered_on_line(p, 100, 0, "A", FONT_SIZE, PINK, EIID_BASE_I2); //ток базы
-    draw_number_centered_on_line(make_point(p.x, p.y + (FONT_SIZE * 2) + (LINE_HIGHT * 2)), 100, 0, "A", FONT_SIZE, YELLOW, EIID_BASE2_I2X); //второй ток базы
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_BASE_T4], 3, "s", 20, CYAN, EIID_BASE_T4); //время базы
+    draw_number_centered_on_line(p, par[EIID_BASE_I2], 0, "A", FONT_SIZE, PINK, EIID_BASE_I2); //ток базы
+    draw_number_centered_on_line(make_point(p.x, p.y + (FONT_SIZE * 2) + (LINE_HIGHT * 2)), par[EIID_BASE2_I2X], 0, "A", FONT_SIZE, YELLOW, EIID_BASE2_I2X); //второй ток базы
     return p2;
 }
 
@@ -275,8 +304,8 @@ point_t add_i_t_impulse(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 99, 1, "s", 30, CYAN, EIID_IMPULSE_T5);// время импульса
-    draw_number_centered_on_line(p, 100, 0, "A", FONT_SIZE, YELLOW, EIID_IMPULSE_I3);  //ток импульса
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_IMPULSE_T5], 3, "s", 20, CYAN, EIID_IMPULSE_T5);// время импульса
+    draw_number_centered_on_line(p, par[EIID_IMPULSE_I3], 0, "A", FONT_SIZE, YELLOW, EIID_IMPULSE_I3);  //ток импульса
 
     return p2;
 }
@@ -288,7 +317,7 @@ point_t add_t_down(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 99, 1, "s", 30, CYAN, EIID_DOWN_T6); //время спада
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_DOWN_T6], 1, "s", 30, CYAN, EIID_DOWN_T6); //время спада
     return p2;
 }
 
@@ -299,8 +328,8 @@ point_t add_end_i_t(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 99, 1, "s", 30, CYAN, EIID_END_T7); //время конечного тока
-    draw_number_centered_on_line(p, 99, 0, "A", FONT_SIZE, YELLOW, EIID_END_I4); //конечный ток
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_END_T7], 1, "s", 30, CYAN, EIID_END_T7); //время конечного тока
+    draw_number_centered_on_line(p, par[EIID_END_I4], 0, "A", FONT_SIZE, YELLOW, EIID_END_I4); //конечный ток
     return p2;
 }
 
@@ -311,7 +340,7 @@ point_t add_t_postflow(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), 99, 1, "s", 30, CYAN, EIID_POST_FLOW_T8);//время конечной продувки
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_POST_FLOW_T8], 0, "s", 30, CYAN, EIID_POST_FLOW_T8);//время конечной продувки
     return p2;
 }
 
@@ -319,8 +348,10 @@ point_t add_t_postflow(point_t p)
 point_t add_i_kz(point_t p)
 {
     point_t p2;
-    p2 = make_point(p.x + LINE_WIDTH, p.y);
+    p2 = make_point(p.x + LINE_WIDTH, p.y - LEVEL_HEIGHT);
+    draw_line(p.x, p.y, p2.x, p2.y, LINE_HIGHT, GREEN);
 
+    draw_number_centered_on_line(make_point(p.x, p2.y), par[EIDD_KZ_I5], 0, "%", FONT_SIZE, YELLOW, EIDD_KZ_I5);//время конечной продувки
     return p2;   
 }
 
@@ -490,24 +521,71 @@ void bottom_level_controls(u8 item_pos)
     
 }
 
+
+// void draw_par_value(u16 par_id, u16 new_value) 
+// {
+  
+// }
+
+
+
 void cur_par_value_change(u16 cur_par_id, s8 shift)
 {
-    static u16 i;
-    change_number_value(number_sp[cur_par_id], i += shift);
+    par[cur_par_id] += ((s16)par_step[cur_par_id] * shift); 
+
+    if(par[cur_par_id] > par_lim[cur_par_id].max)       par[cur_par_id] = par_lim[cur_par_id].max;
+    else if(par[cur_par_id] < par_lim[cur_par_id].min) par[cur_par_id] = par_lim[cur_par_id].min;
+
+
+    {
+        s16 tmp;
+
+        switch (cur_par_id)
+        {
+            case EIID_PRE_FLOW_T1:
+            case EIID_START_T2   :
+            case EIID_UP_T3      :
+            case EIID_DOWN_T6    :
+            case EIID_END_T7     : {
+                if(par[cur_par_id] >= 1000)
+                    tmp = par[cur_par_id] / 1000; 
+                if(par[cur_par_id] >= 100) 
+                    tmp = par[cur_par_id] / 100; 
+            }break;
+            
+            // case EIID_BASE_T4   :
+            // case EIID_IMPULSE_T5: {
+            //     // if(par[cur_par_id] >= 1000)
+            //     //     tmp = par[cur_par_id] / 1000; 
+            //     // if(par[cur_par_id] >= 100) 
+            //     //     tmp = par[cur_par_id] / 100;  
+            // }break;
+    
+            default:
+                tmp = par[cur_par_id];
+        }
+            
+        redraw_number_centered(cur_par_id, tmp);     
+    }
+   
+  
+
+
+   
 }
+
 
 void Process_Encoder(u8 state)
 {
-    code const s8 shifts[] = {-1, -5, +1, +5}; 
-    static u16 cnt;
-    {
-        static u16 cnt;
-        write_dgus_vp(0x4002, (u8*) &cnt, cnt++);
-    }
+    code const s8 shifts[] = {-1, -5, +1, +5};
+    cur_par_value_change(cur_par_id, shifts[state]);     
+    // static u16 cnt;
+    // {
+    //     static u16 cnt;
+    //     write_dgus_vp(0x4002, (u8*) &cnt, cnt++);
+    // }
     
-    //change_number_color(number_sp[cur_par_id], cnt++);
-    
-    cur_par_value_change(cur_par_id, shifts[state]);
+    // //change_number_color(number_sp[cur_par_id], cnt++);  
 }
 
 
@@ -527,6 +605,52 @@ void par_select(u8 new_par_id)
 }
 
 
+void par_init(void)
+{
+    make_lim(&par_lim[EIID_PRE_FLOW_T1],  100, 10000); //Т1  время предв. продувки, с 
+    make_lim(&par_lim[EIID_START_I1],     5,   350  );
+    make_lim(&par_lim[EIID_START_T2],     100, 10000);
+    make_lim(&par_lim[EIID_UP_T3],        100, 10000);
+    make_lim(&par_lim[EIID_BASE_I2],      5,   350  );
+    make_lim(&par_lim[EIID_BASE_T4],      1,   10000);
+    make_lim(&par_lim[EIID_IMPULSE_I3],   5,   350  );
+    make_lim(&par_lim[EIID_IMPULSE_T5],   1,   10000);
+    make_lim(&par_lim[EIID_FREQ_F1],      20,  200  );
+    make_lim(&par_lim[EIID_BALANCE_D1],   30,  80   );
+    make_lim(&par_lim[EIID_DOWN_T6],      100, 10000);
+    make_lim(&par_lim[EIID_END_I4],       5,   350  );
+    make_lim(&par_lim[EIID_END_T7],       100, 10000);
+    make_lim(&par_lim[EIID_POST_FLOW_T8], 1,   60   );
+    make_lim(&par_lim[EIDD_KZ_I5],        0,   100  );
+    make_lim(&par_lim[EIID_BASE2_I2X],    5,   350  );
+
+    par_step[EIID_PRE_FLOW_T1]  =  100; //ms
+    par_step[EIID_START_I1]     =  1  ; //A  
+    par_step[EIID_START_T2]     =  100; //ms  
+    par_step[EIID_UP_T3]        =  100; //ms     
+    par_step[EIID_BASE_I2]      =  1  ; //A    
+    par_step[EIID_BASE_T4]      =  1  ; //ms   
+    par_step[EIID_IMPULSE_I3]   =  1  ; //A
+    par_step[EIID_IMPULSE_T5]   =  1  ; //ms 
+    par_step[EIID_FREQ_F1]      =  1  ;   
+    par_step[EIID_BALANCE_D1]   =  5  ;
+    par_step[EIID_DOWN_T6]      =  100; //ms   
+    par_step[EIID_END_I4]       =  1  ; //A     
+    par_step[EIID_END_T7]       =  100; //ms    
+    par_step[EIID_POST_FLOW_T8] =  1  ; //
+    par_step[EIDD_KZ_I5]        =  1  ; //%     
+    par_step[EIID_BASE2_I2X]    =  1  ; //A 
+
+
+    {
+        u16 *temp_ptr = par;
+        u8 i;
+        for(i = 0; i < ARR_SIZE(par); i++) {
+            *temp_ptr++ = 10;
+        }
+    }
+}
+
 
 
 void place_numbers_on_cyclogramm(void) 
@@ -534,10 +658,12 @@ void place_numbers_on_cyclogramm(void)
     u16 x = 40;
     u16 y = 550;
     u8 i;
-    //Drawing_Clear_Screen();
-  
-    cur_active_items_id = TIG;
-    cur_par_id = 0;
+    
+    
+    Drawing_Clear_Screen();
+    par_init();
+    
+    
 
     for(i = 0; i < ARR_SIZE(icon_sp_bottom_menu); i++) {
         icon_sp_bottom_menu[i] = draw_image(0, 0, 0xffff); // создание пула картинок без отображения картинки
@@ -545,6 +671,8 @@ void place_numbers_on_cyclogramm(void)
 
     
     make_bottom_menu();
+
+    cur_par_id = EIID_BASE_I2;
 
     {//tig pulse ac
         point_t p;
@@ -562,24 +690,22 @@ void place_numbers_on_cyclogramm(void)
         p = add_end_i_t(p);
         p = dummy_line_down(p);
         p = add_t_postflow(p);
-
-        cur_par_id = EIID_BASE_I2;
     }
     
      
-
+    
 
     // {//mma
     //     point_t p;
+        
     //     LINE_WIDTH = 300;
-    //     FONT_SIZE = 64;
+    //     FONT_SIZE = 48;
     //     p = dummy_line_up(make_point(40, 450));
     //     p = add_t_start_i(p);
     //     p = dummy_line_down(p);
     //     p = add_base_i1_i2_t(p);
     //     p = dummy_line_up(p);
     //     p = add_i_t_impulse(p);
-    //     p = dummy_line_up(p);
     //     p = add_i_kz(p);
     //     p = dummy_line_down(p);
     //     p = dummy_line_down(p);
@@ -604,17 +730,6 @@ void place_numbers_on_cyclogramm(void)
     //         delay_ms(300);
     //     }
     // }
-
-   
-    
-  
-    
-   
-        
-    
-     
-   
-   
 
     
         
