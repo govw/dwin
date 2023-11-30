@@ -3,10 +3,10 @@
         {
             "name": "Target 1",
             "includePath": [
-                "c:\\Users\\OGK5-7\\Desktop\\dwin\\driver",
-                "c:\\Users\\OGK5-7\\Desktop\\dwin\\source",
+                "c:\\Users\\OGK5-7\\Desktop\\dwin_old\\driver",
+                "c:\\Users\\OGK5-7\\Desktop\\dwin_old\\source",
                 "D:\\DWIN\\Keil_v5\\C51\\INC",
-                "c:\\Users\\OGK5-7\\Desktop\\dwin"
+                "c:\\Users\\OGK5-7\\Desktop\\dwin_old"
             ],
             "defines": [
                 "__C51__",

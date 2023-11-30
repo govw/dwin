@@ -27,7 +27,10 @@ extern icon_t cur_menu[];
 extern u8  cur_menu_size;
 extern void (*cur_menu_fanc)(u8 item_pos);
 
+extern xdata s16 par[];
+
+
 extern void draw_cyclogramm(void);
-extern void place_numbers_on_cyclogramm(void);
+extern void make_scene(void);
 void Process_Encoder(u8 state); 
 #endif //TEMP_H

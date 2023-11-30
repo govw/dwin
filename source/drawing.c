@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include "drawing.h"
 
 #define FILLED_RECT_VP 0x1000
@@ -12,31 +13,13 @@ static u8 all_filled_rect_cnt    = 0;
 static u8 all_img_cnt            = 0;
 static u8 all_line_1px_cnt       = 0;
 static u8 all_data_variabl_cnt   = 0;
+static u8 all_text_display_cnt   = 0;
 
-
-
-void Drawing_Clear_Screen(void);
-point_t make_point(u16 x, u16 y);
-void drawing_init(void);
-u8 check_screen_bounds(u16 x, u16 y);
-u16 draw_line_1px(u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
-void clear_line_1px(void);
-u16 draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
-void clear_filled_rects(void);
-u16 draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color);
-void clear_lines(void);
-u16 draw_image(u16 x, u16 y, u16 image_id);
 void clear_images(void);
-void image_change_id(u16 sp, u16 new_image_id);
-void image_change_pos(u16 sp, point_t p); 
-u16 Draw_Number(u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color);
 void clear_numbers(void);
-void change_number_color(u16 sp, u16 new_color);
-void change_number_pos(u16 sp, point_t p);
-u16 read_number_color(u16 sp);
-void change_number_value(u16 sp, u16 new_value);
-
-
+void clear_filled_rects(void);
+void clear_lines(void);
+void Draw_text_clear_all(void); 
 
 
 point_t make_point(u16 x, u16 y) 
@@ -53,15 +36,17 @@ void drawing_init(void)
     all_img_cnt            = 0;
     all_line_1px_cnt       = 0;
     all_data_variabl_cnt   = 0;
+    all_text_display_cnt   = 0;
 }
 
 
-void Drawing_Clear_Screen(void)
+void Draw_clear_screen(void)
 {
     clear_line_1px();
     clear_images();
     clear_numbers();
     clear_filled_rects();
+    Draw_text_clear_all();
 }
 
 
@@ -367,3 +352,108 @@ u16 read_number_color(u16 sp)
 
 
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+//__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+code u16 text_display_sp[] = {    //0x2000 text drawing start
+        0x2000, 0x2030, 0x2060, 0x2090,
+        0x2120, 0x2150, 0x2180, 0x2210,
+        0x2240, 0x2270, 0x2300, 0x2330,
+        0x2360, 0x2390, 0x2420, 0x2450,
+    };
+u16 Draw_text(u16 x0, u16 y0, u16 x1, u16 y1, u8 *str, u8 font_size, u16 color)
+{
+    dgus_text_display_t t;
+    u8 buf[10];
+    u8 i;
+    if(all_text_display_cnt >= ARR_SIZE(text_display_sp)) return 0; 
+
+    //5000  01f5  00d1   f81f   01f5 00d1 0299 0114  00 04   00 00     40 80 52        00       00       00
+    //vp    p0 	         color  p0	      p1         len     font_loc  x  y  enc_mode  hor_dis  ver_dis  undef
+   
+    t.start_pos   =  make_point(x0, y0);
+    t.color       =  color;        
+    t.lh          =  t.start_pos; 
+    t.rl          =  make_point(x1, y1); 
+    t.text_len    =  strlen(str);       
+    t.font0_id    =  0;
+    t.font1_id    =  0;
+    t.font_x_dots =  font_size;
+    t.font_y_dots =  (font_size * 2);
+    t.encode_mode =  0x52;
+    t.hor_dis     =  0;
+    t.ver_dis     =  0;
+    t.undef       =  0;          
+
+    if(t.text_len > ARR_SIZE(buf) - 2) return;
+
+    t.vp = text_display_sp[all_text_display_cnt] + sizeof(dgus_text_display_t) / 2; //адрес сторки для отображения
+  
+    for(i = 0; i < t.text_len; i++) {
+        buf[i] = str[i]; 
+    }
+    str[i++] = 0;
+    str[i] = 0;    
+    write_dgus_vp(t.vp, (u8*)&buf, ARR_SIZE(buf) / 2); //запись id картинки
+    {
+        u16 cur_sp = text_display_sp[all_text_display_cnt];
+        write_dgus_vp(cur_sp, (u8*)&t, sizeof(t) / 2);
+        all_text_display_cnt++;
+        return cur_sp;
+    }       
+}
+void Draw_text_clear_all(void) 
+{
+    u8 i;
+    u16 dummy = 0;
+    for(i = 0; i < ARR_SIZE(text_display_sp); i++) {
+        write_dgus_vp(text_display_sp[i] + 8, (u8*) &dummy, sizeof(dummy) / 2);
+    }
+}
+void Draw_text_change_color(u16 sp, u16 new_color)
+{
+    write_dgus_vp(sp + 3, (u8*) &new_color, sizeof(new_color) / 2);
+}
+u16 Draw_text_get_color(u16 sp) 
+{   
+    u16 color;
+    read_dgus_vp(sp + 3, (u8*) &color, sizeof(color) / 2);
+    return color;
+}
+void Draw_text_num_to_text(u16 sp, u16 n, u8* units) 
+{
+    u8 buf[10];
+    u16 len;
+
+    sprintf(buf, "%d%s",n, units);
+    len = strlen(buf);
+    write_dgus_vp(sp + (sizeof(dgus_text_display_t) / 2), (u8*) &buf, ARR_SIZE(buf) / 2);
+    write_dgus_vp(sp + 8, (u8*) &len, sizeof(len) / 2); //set new text len
+}
+void Draw_text_point_num_to_text(u16 sp, u16 n, u8 point_pos, u8* units) 
+{
+    u8 buf[10];
+    u8 str[10];
+    u8 i, j;
+    u16 len;
+    sprintf(buf, "%d%s", n, units);
+    len = strlen(buf);
+
+    if(point_pos > 0) {
+        for(i = 0; i < point_pos; i++)
+            str[i] = buf[i];
+        str[i] = '.';
+        j = i + 1;
+        for(;i < len;i++,j++)
+            str[j] = buf[i];
+        str[j++] = 0;
+        str[j]   = 0;
+        len++;
+        write_dgus_vp(sp + (sizeof(dgus_text_display_t) / 2), (u8*) &str, ARR_SIZE(str) / 2);
+    } else {
+        write_dgus_vp(sp + (sizeof(dgus_text_display_t) / 2), (u8*) &buf, ARR_SIZE(buf) / 2);
+    }
+
+    write_dgus_vp(sp + 8, (u8*) &len, sizeof(len) / 2); //set new text len
+}
+//__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+//__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+

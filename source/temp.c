@@ -1,6 +1,7 @@
 #include "temp.h"
 #include "sys.h"
 #include "string.h"
+#include "stdio.h"
 #include "drawing.h"
 #include "encoder.h"
 
@@ -13,7 +14,7 @@ idata      u16 TIME_Y_LEVEL = 800 - 150;
 code const u16 ICON_RECT_SZ = 128;
 
 
-typedef enum { //для id картинок //не адресации в списке параметров
+typedef enum { //для id картинок 
     EIID_TIG,       EIID_TIG_SPOT, EIID_MMA,
     EIID_AC,        EIID_AC_MIX,   EIID_DC_MINUS, EIID_DC_PLUS,
     EIID_2T,        EIID_4T,       EIID_4T_PLUS,
@@ -114,9 +115,9 @@ u8 cur_menu_size;
 u8 idata cur_active_items_id = TIG;
 
 
-u16 number_sp[EIID_SIZE]; //массив sp идентификаторов линий, картинок, чисел
-s16 par[EIID_SIZE];
-u16 cur_par_id; //номер текущего параметра к отображению
+xdata u16 text_sp[EIID_SIZE]; //массив sp идентификаторов линий, картинок, чисел
+xdata s16 par[EIID_SIZE];
+xdata u16 cur_par_id; //номер текущего параметра к отображению
 
 typedef struct {
     s16 min;
@@ -147,7 +148,6 @@ void make_lim(lim_t *lim, s16 min, s16 max) {
 }
 
 
-
 void do_nothing(u8 item_pos)
 {
     static u8 sw = 0;
@@ -160,7 +160,6 @@ void do_nothing(u8 item_pos)
     sw++;
     return;
 }
-
 
 
 void add_touch_place(u16 x0, u16 y0, u16 x1, u16 y1, u8 touch_id)
@@ -187,7 +186,7 @@ void add_touch_place(u16 x0, u16 y0, u16 x1, u16 y1, u8 touch_id)
 void draw_number_centered_on_line(point_t line_start, u16 n, u8 decimal_places, u8* units, u16 font_size, u16 color, u8 touch_id)
 {
     u16 integer_digits;
-
+    u8 buf[20];
     if      (n < 10)    integer_digits = 1;
     else if (n < 100)   integer_digits = 2;
     else if (n < 1000)  integer_digits = 3;
@@ -199,15 +198,19 @@ void draw_number_centered_on_line(point_t line_start, u16 n, u8 decimal_places, 
 
     integer_digits += number_info[touch_id].desimal_pleaces;
 
-    number_sp[touch_id] = Draw_Number(line_start.x + ((LINE_WIDTH - (integer_digits * font_size)) / 2L), 
-                                    number_info[touch_id].p.y, 
-                                    n, 
-                                    decimal_places, 
-                                    units, 
-                                    font_size, 
-                                    color);
-
+    sprintf(buf, "%d%s", n, units);
+    
+    text_sp[touch_id] = Draw_text(line_start.x - 50, line_start.y - (font_size * 2), line_start.x + LINE_WIDTH + 50, line_start.y, buf, font_size, color);
     add_touch_place(line_start.x, line_start.y - (font_size * 2), line_start.x + LINE_WIDTH, line_start.y, touch_id);
+    // number_sp[touch_id] = Draw_Number(line_start.x + ((LINE_WIDTH - (integer_digits * font_size)) / 2L), 
+    //                                 number_info[touch_id].p.y, 
+    //                                 n, 
+    //                                 decimal_places, 
+    //                                 units, 
+    //                                 font_size, 
+    //                                 color);
+
+    
 }
 
 
@@ -223,8 +226,8 @@ void redraw_number_centered(u8 id, u16 n)
     
     places += number_info[id].desimal_pleaces;  
 
-    change_number_pos(number_sp[id], make_point(number_info[id].p.x + ((LINE_WIDTH - (places * number_info[id].font_size)) / 2L), number_info[id].p.y));
-    change_number_value(number_sp[id], n);
+    change_number_pos(text_sp[id], make_point(number_info[id].p.x + ((LINE_WIDTH - (places * number_info[id].font_size)) / 2L), number_info[id].p.y));
+    change_number_value(text_sp[id], n);
 }
 
 
@@ -291,9 +294,10 @@ point_t add_base_i1_i2_t(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_BASE_T4], 3, "s", 20, CYAN, EIID_BASE_T4); //время базы
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_BASE_T4], 3, "ms", 20, CYAN, EIID_BASE_T4); //время базы
     draw_number_centered_on_line(p, par[EIID_BASE_I2], 0, "A", FONT_SIZE, PINK, EIID_BASE_I2); //ток базы
-    draw_number_centered_on_line(make_point(p.x, p.y + (FONT_SIZE * 2) + (LINE_HIGHT * 2)), par[EIID_BASE2_I2X], 0, "A", FONT_SIZE, YELLOW, EIID_BASE2_I2X); //второй ток базы
+    if(main_menu_bm & (u32)1 << EIID_4T_PLUS) 
+        draw_number_centered_on_line(make_point(p.x, p.y + (FONT_SIZE * 2) + (LINE_HIGHT * 2)), par[EIID_BASE2_I2X], 0, "A", FONT_SIZE, YELLOW, EIID_BASE2_I2X); //второй ток базы
     return p2;
 }
 
@@ -304,7 +308,7 @@ point_t add_i_t_impulse(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_IMPULSE_T5], 3, "s", 20, CYAN, EIID_IMPULSE_T5);// время импульса
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_IMPULSE_T5], 3, "ms", 20, CYAN, EIID_IMPULSE_T5);// время импульса
     draw_number_centered_on_line(p, par[EIID_IMPULSE_I3], 0, "A", FONT_SIZE, YELLOW, EIID_IMPULSE_I3);  //ток импульса
 
     return p2;
@@ -473,9 +477,23 @@ void bottom_level_controls(u8 item_pos)
                 {
                     case EIID_TIG:
                     case EIID_TIG_SPOT:
-                    case EIID_MMA:
-                       cur_active_items_id = cur_menu[item_pos].ico;
-                       break;
+                    case EIID_MMA: {
+                        cur_active_items_id = cur_menu[item_pos].ico;
+                        make_scene(); 
+                    } break;
+
+                    case EIID_PULSE_ON :
+                    case EIID_PULSE_OFF: {
+                        make_scene();         
+                    } break;
+
+                    case EIID_2T:
+                    case EIID_4T:
+                    case EIID_4T_PLUS : {
+                        make_scene();         
+                    } break;
+
+                       
                 }
                
                 bm = main_menu_bm & active_items[cur_active_items_id];
@@ -539,7 +557,6 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
 
     {
         s16 tmp;
-
         switch (cur_par_id)
         {
             case EIID_PRE_FLOW_T1:
@@ -547,31 +564,36 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
             case EIID_UP_T3      :
             case EIID_DOWN_T6    :
             case EIID_END_T7     : {
-                if(par[cur_par_id] >= 1000)
-                    tmp = par[cur_par_id] / 1000; 
-                if(par[cur_par_id] >= 100) 
-                    tmp = par[cur_par_id] / 100; 
+                u8 point_pos = 0;
+                if(par[cur_par_id] >= 1000) {
+                    tmp = par[cur_par_id] / 1000;
+                    point_pos = 1; 
+                }
+                if(par[cur_par_id] >= 100) {
+                    tmp = par[cur_par_id] / 100;
+                }
+                Draw_text_point_num_to_text (text_sp[cur_par_id], tmp, point_pos, "s");
+                //Draw_text_num_to_text(text_sp[cur_par_id], tmp, "s");
             }break;
             
-            // case EIID_BASE_T4   :
-            // case EIID_IMPULSE_T5: {
-            //     // if(par[cur_par_id] >= 1000)
-            //     //     tmp = par[cur_par_id] / 1000; 
-            //     // if(par[cur_par_id] >= 100) 
-            //     //     tmp = par[cur_par_id] / 100;  
-            // }break;
-    
-            default:
+            case EIID_BASE_T4   :
+            case EIID_IMPULSE_T5: {
+                // if(par[cur_par_id] >= 1000)
+                //     tmp = par[cur_par_id] / 1000; 
+                // if(par[cur_par_id] >= 100) 
+                //     tmp = par[cur_par_id] / 100;
                 tmp = par[cur_par_id];
-        }
-            
-        redraw_number_centered(cur_par_id, tmp);     
-    }
-   
+                Draw_text_point_num_to_text (text_sp[cur_par_id], tmp, 1, "ms");
+            }break;
+            default:
+            {
+                tmp = par[cur_par_id];
+                Draw_text_num_to_text(text_sp[cur_par_id], tmp, "A");
+            }
   
-
-
-   
+        }
+        
+    }
 }
 
 
@@ -597,15 +619,15 @@ void par_select(u8 new_par_id)
     if(cur_par_id == new_par_id) 
         return;
     else {
-        change_number_color(number_sp[cur_par_id], old_color);
-        old_color = read_number_color(number_sp[new_par_id]); //запомнить старый цвет
-        change_number_color(number_sp[new_par_id], PINK); //заменить на цвет "выбранного элемента"
+        Draw_text_change_color(text_sp[cur_par_id], old_color);  
+        old_color = Draw_text_get_color(text_sp[new_par_id]);//запомнить старый цвет
+        Draw_text_change_color(text_sp[new_par_id], PINK);//заменить на цвет "выбранного элемента"
         cur_par_id = new_par_id;
     }      
 }
 
 
-void par_init(void)
+void init_par_udgu(void)
 {
     make_lim(&par_lim[EIID_PRE_FLOW_T1],  100, 10000); //Т1  время предв. продувки, с 
     make_lim(&par_lim[EIID_START_I1],     5,   350  );
@@ -653,28 +675,27 @@ void par_init(void)
 
 
 
-void place_numbers_on_cyclogramm(void) 
+void make_scene(void) 
 {
     u16 x = 40;
     u16 y = 550;
     u8 i;
+
+    drawing_init();
     
-    
-    Drawing_Clear_Screen();
-    par_init();
-    
-    
+    Draw_clear_screen();
+    init_par_udgu();
 
     for(i = 0; i < ARR_SIZE(icon_sp_bottom_menu); i++) {
         icon_sp_bottom_menu[i] = draw_image(0, 0, 0xffff); // создание пула картинок без отображения картинки
     }
-
     
     make_bottom_menu();
 
     cur_par_id = EIID_BASE_I2;
 
-    {//tig pulse ac
+
+    if(main_menu_bm & (u32)1 << EIID_TIG) {//tig pulse ac
         point_t p;
         LINE_WIDTH = 150;
         FONT_SIZE = 35; 
@@ -690,32 +711,35 @@ void place_numbers_on_cyclogramm(void)
         p = add_end_i_t(p);
         p = dummy_line_down(p);
         p = add_t_postflow(p);
-    }
-    
-     
-    
 
-    // {//mma
-    //     point_t p;
+
+    } else if(main_menu_bm & (u32)1 << EIID_MMA) {//mma
+        point_t p;
+        if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
+            LINE_WIDTH = 300;
+            FONT_SIZE = 48;
+        } else {
+            LINE_WIDTH = 400;
+            FONT_SIZE = 64;
+        }
         
-    //     LINE_WIDTH = 300;
-    //     FONT_SIZE = 48;
-    //     p = dummy_line_up(make_point(40, 450));
-    //     p = add_t_start_i(p);
-    //     p = dummy_line_down(p);
-    //     p = add_base_i1_i2_t(p);
-    //     p = dummy_line_up(p);
-    //     p = add_i_t_impulse(p);
-    //     p = add_i_kz(p);
-    //     p = dummy_line_down(p);
-    //     p = dummy_line_down(p);
-    // }
-  
+        p = dummy_line_up(make_point(40, 450));
+        p = add_t_start_i(p);
+        p = dummy_line_down(p);
+        p = add_base_i1_i2_t(p);
+        if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
+            p = dummy_line_up(p);
+            p = add_i_t_impulse(p);             
+        }
+        p = add_i_kz(p);
+        p = dummy_line_down(p);
+        p = dummy_line_down(p);
+    }
    
-    Draw_Number(0,0, 999, 0, "A", 64, PINK);
+   //Draw_Number(0,0, 999, 0, "A", 64, PINK);
    
     
-   
+    
     // {
     //     u8 i;
     //     u16 new_id = 0;
@@ -739,3 +763,6 @@ void place_numbers_on_cyclogramm(void)
 
 
 
+//To do
+// -Убрать подменю выбора режима сварки режим tig spot
+//  sprt добавить в выбор режима кнопки на горелке
