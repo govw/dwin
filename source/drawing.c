@@ -378,7 +378,7 @@ u16 Draw_text(u16 x0, u16 y0, u16 x1, u16 y1, u8 *str, u8 font_size, u16 color)
     t.font1_id    =  0;
     t.font_x_dots =  font_size;
     t.font_y_dots =  (font_size * 2);
-    t.encode_mode =  0x52;
+    t.encode_mode =  0x61; //0x52 ;//| 0x80;
     t.hor_dis     =  0;
     t.ver_dis     =  0;
     t.undef       =  0;          
@@ -411,6 +411,16 @@ void Draw_text_clear_all(void)
 void Draw_text_change_color(u16 sp, u16 new_color)
 {
     write_dgus_vp(sp + 3, (u8*) &new_color, sizeof(new_color) / 2);
+}
+
+void Draw_text_change_text(u8* format, u16 sp, ...)
+{
+    u8 buf[10];
+    u16 len;
+    len = 10;
+    sprintf(buf, format, *(&sp+1) );
+    write_dgus_vp(sp + (sizeof(dgus_text_display_t) / 2), (u8*) &buf, 5);
+    write_dgus_vp(sp + 8, (u8*) &len, 1); //set new text len
 }
 u16 Draw_text_get_color(u16 sp) 
 {   

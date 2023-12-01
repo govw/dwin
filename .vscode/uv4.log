@@ -1,10 +1,7 @@
 Build target 'Target 1'
 compiling main.c...
 source\ssd2828.h(76): warning C235: parameter 1: different types
-source\main.c(203): warning C280: 'tp_state': unreferenced local variable
-source\main.c(363): warning C280: 'temp_buf': unreferenced local variable
-source\main.c(274): warning C280: 'local_buf': unreferenced local variable
-source\main.c(502): warning C280: 'uart_cmd_show_text_sp': unreferenced local variable
+source\main.c(487): warning C280: 'uart_cmd_show_text_sp': unreferenced local variable
 linking...
 *** WARNING L13: RECURSIVE CALL TO SEGMENT
     SEGMENT: ?PR?MAKE_SCENE?TEMP
@@ -38,13 +35,7 @@ linking...
     SEGMENT: ?PR?_GETTOUCHANCTION?SYS
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_STARTTIMER?TIMER
-
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_KILLTIMER?TIMER
-
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_GETTIMEOUTFLAG?TIMER
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?INIT_RTC?TIMER
@@ -91,30 +82,11 @@ linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_READ_NUMBER_COLOR?DRAWING
 
-*** WARNING L15: MULTIPLE CALL TO SEGMENT
-    SEGMENT: ?PR?_CUR_PAR_VALUE_CHANGE?TEMP
-    CALLER1: ?PR?EXT_INT0?MAIN
-    CALLER2: ?PR?EXT_INT1?MAIN
-
-*** WARNING L15: MULTIPLE CALL TO SEGMENT
-    SEGMENT: ?PR?_DRAW_TEXT_POINT_NUM_TO_TEXT?DRAWING
-    CALLER1: ?PR?EXT_INT0?MAIN
-    CALLER2: ?PR?EXT_INT1?MAIN
-
-*** WARNING L15: MULTIPLE CALL TO SEGMENT
-    SEGMENT: ?PR?PRINTF?PRINTF
-    CALLER1: ?PR?EXT_INT0?MAIN
-    CALLER2: ?PR?EXT_INT1?MAIN
-
-*** WARNING L15: MULTIPLE CALL TO SEGMENT
-    SEGMENT: ?PR?_WRITE_DGUS_VP?SYS
-    CALLER1: ?PR?EXT_INT0?MAIN
-    CALLER2: ?PR?EXT_INT1?MAIN
-
-*** WARNING L15: MULTIPLE CALL TO SEGMENT
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_DRAW_TEXT_NUM_TO_TEXT?DRAWING
-    CALLER1: ?PR?EXT_INT0?MAIN
-    CALLER2: ?PR?EXT_INT1?MAIN
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DRAW_TEXT_POINT_NUM_TO_TEXT?DRAWING
 
 *** WARNING L15: MULTIPLE CALL TO SEGMENT
     SEGMENT: ?PR?_DELAY_MS?SYS
@@ -126,26 +98,16 @@ linking...
     CALLER1: ?PR?EXT_INT1?MAIN
     CALLER2: ?C_C51STARTUP
 
-*** WARNING L15: MULTIPLE CALL TO SEGMENT
-    SEGMENT: ?PR?_WRITE_DGUS_VP?SYS
-    CALLER1: ?PR?EXT_INT1?MAIN
-    CALLER2: ?C_C51STARTUP
-
-*** WARNING L15: MULTIPLE CALL TO SEGMENT
-    SEGMENT: ?PR?PRINTF?PRINTF
-    CALLER1: ?PR?EXT_INT1?MAIN
-    CALLER2: ?C_C51STARTUP
-
-Program Size: data=63.4 xdata=17856 code=28636
+Program Size: data=66.2 xdata=17824 code=30217
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
 
-c:\Users\OGK5-7\Desktop\dwin_old>cd objects 
+c:\Users\OGK5-7\Desktop\dwin>cd objects 
 
-c:\Users\OGK5-7\Desktop\dwin_old\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
+c:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x6F56, got 0x6504)
+    (expected >= 0x7583, got 0x6B85)
 
-c:\Users\OGK5-7\Desktop\dwin_old\Objects>echo.
+c:\Users\OGK5-7\Desktop\dwin\Objects>echo.
 
-".\Objects\T5L51" - 0 Error(s), 42 Warning(s).
+".\Objects\T5L51" - 0 Error(s), 32 Warning(s).

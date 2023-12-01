@@ -1,7 +1,7 @@
 #ifndef INCLUDED_DRAWING_H
 #define INCLUDED_DRAWING_H
 #include "sys.h"
-
+#include <stdarg.h>
 
 #define RED    0xF800
 #define PINK   0xF81F
@@ -89,6 +89,6 @@ extern void    Draw_text_change_color      (u16 sp, u16 new_color);
 extern u16     Draw_text_get_color         (u16 sp);
 extern void    Draw_text_num_to_text       (u16 sp, u16 n, u8* units);
 extern void    Draw_text_point_num_to_text (u16 sp, u16 n, u8 point_pos, u8* units);
-
+extern void    Draw_text_change_text       (u8* format, u16 sp, ...);
 
 #endif //INCLUDED_DRAWING_H

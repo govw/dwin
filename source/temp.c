@@ -256,7 +256,7 @@ point_t add_t_preflow(point_t p) //возвращает конечную точ�
     draw_line(p.x, p.y, p2.x, p2.y, LINE_HIGHT, GREEN);
 
     //add_touch_place(p.x, p.y, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT, EIID_PRE_FLOW_T1);//создание области касания для настройки времени продувки
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_PRE_FLOW_T1] , 1, "s", 30, CYAN, EIID_PRE_FLOW_T1); //время продувки
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_PRE_FLOW_T1] , 1, "s", 36, CYAN, EIID_PRE_FLOW_T1); //время продувки
     return p2;    
 }
 
@@ -269,7 +269,7 @@ point_t add_t_start_i(point_t p)
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
     draw_number_centered_on_line(p, par[EIID_START_I1], 0, "A", FONT_SIZE, YELLOW, EIID_START_I1);//начальный ток
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_START_T2], 1, "s", 30, CYAN, EIID_START_T2);//время начального тока
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_START_T2], 1, "s", 36, CYAN, EIID_START_T2);//время начального тока
 
     return p2;
 }
@@ -281,7 +281,7 @@ point_t add_t_up(point_t p)
     p2 = make_point(p.x + LINE_WIDTH, p.y - LEVEL_HEIGHT);
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_UP_T3], 1, "s", 30, CYAN, EIID_UP_T3); //время наростания
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_UP_T3], 1, "s", 36, CYAN, EIID_UP_T3); //время наростания
 
     return p2;
 }
@@ -294,7 +294,7 @@ point_t add_base_i1_i2_t(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_BASE_T4], 3, "ms", 20, CYAN, EIID_BASE_T4); //время базы
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_BASE_T4], 3, "ms", 30, CYAN, EIID_BASE_T4); //время базы
     draw_number_centered_on_line(p, par[EIID_BASE_I2], 0, "A", FONT_SIZE, PINK, EIID_BASE_I2); //ток базы
     if(main_menu_bm & (u32)1 << EIID_4T_PLUS) 
         draw_number_centered_on_line(make_point(p.x, p.y + (FONT_SIZE * 2) + (LINE_HIGHT * 2)), par[EIID_BASE2_I2X], 0, "A", FONT_SIZE, YELLOW, EIID_BASE2_I2X); //второй ток базы
@@ -308,7 +308,7 @@ point_t add_i_t_impulse(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_IMPULSE_T5], 3, "ms", 20, CYAN, EIID_IMPULSE_T5);// время импульса
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_IMPULSE_T5], 3, "ms", 30, CYAN, EIID_IMPULSE_T5);// время импульса
     draw_number_centered_on_line(p, par[EIID_IMPULSE_I3], 0, "A", FONT_SIZE, YELLOW, EIID_IMPULSE_I3);  //ток импульса
 
     return p2;
@@ -321,7 +321,7 @@ point_t add_t_down(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_DOWN_T6], 1, "s", 30, CYAN, EIID_DOWN_T6); //время спада
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_DOWN_T6], 1, "s", 36, CYAN, EIID_DOWN_T6); //время спада
     return p2;
 }
 
@@ -332,7 +332,7 @@ point_t add_end_i_t(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_END_T7], 1, "s", 30, CYAN, EIID_END_T7); //время конечного тока
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_END_T7], 1, "s", 36, CYAN, EIID_END_T7); //время конечного тока
     draw_number_centered_on_line(p, par[EIID_END_I4], 0, "A", FONT_SIZE, YELLOW, EIID_END_I4); //конечный ток
     return p2;
 }
@@ -344,7 +344,7 @@ point_t add_t_postflow(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_POST_FLOW_T8], 0, "s", 30, CYAN, EIID_POST_FLOW_T8);//время конечной продувки
+    draw_number_centered_on_line(make_point(p.x, TIME_Y_LEVEL), par[EIID_POST_FLOW_T8], 0, "s", 36, CYAN, EIID_POST_FLOW_T8);//время конечной продувки
     return p2;
 }
 
@@ -551,9 +551,12 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
 {
     par[cur_par_id] += ((s16)par_step[cur_par_id] * shift); 
 
-    if(par[cur_par_id] > par_lim[cur_par_id].max)       par[cur_par_id] = par_lim[cur_par_id].max;
-    else if(par[cur_par_id] < par_lim[cur_par_id].min) par[cur_par_id] = par_lim[cur_par_id].min;
 
+
+    if(par[cur_par_id] > par_lim[cur_par_id].max)       
+        par[cur_par_id] = par_lim[cur_par_id].max;
+    else if(par[cur_par_id] < par_lim[cur_par_id].min) 
+        par[cur_par_id] = par_lim[cur_par_id].min;
 
     {
         s16 tmp;
@@ -564,31 +567,24 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
             case EIID_UP_T3      :
             case EIID_DOWN_T6    :
             case EIID_END_T7     : {
-                u8 point_pos = 0;
-                if(par[cur_par_id] >= 1000) {
-                    tmp = par[cur_par_id] / 1000;
-                    point_pos = 1; 
-                }
-                if(par[cur_par_id] >= 100) {
-                    tmp = par[cur_par_id] / 100;
-                }
-                Draw_text_point_num_to_text (text_sp[cur_par_id], tmp, point_pos, "s");
-                //Draw_text_num_to_text(text_sp[cur_par_id], tmp, "s");
-            }break;
+                //Draw_text_change_text("%.1fs", text_sp[cur_par_id], (float)par[cur_par_id] / (float)1000.0);
+            } break;
             
+            case EIID_POST_FLOW_T8: {
+                //Draw_text_change_text("%ds", text_sp[cur_par_id], par[cur_par_id]);    
+            } break;
+
             case EIID_BASE_T4   :
             case EIID_IMPULSE_T5: {
-                // if(par[cur_par_id] >= 1000)
-                //     tmp = par[cur_par_id] / 1000; 
-                // if(par[cur_par_id] >= 100) 
-                //     tmp = par[cur_par_id] / 100;
-                tmp = par[cur_par_id];
-                Draw_text_point_num_to_text (text_sp[cur_par_id], tmp, 1, "ms");
+                if(par[cur_par_id] >= 1000)
+                    tmp = par[cur_par_id] / 1000; 
+                if(par[cur_par_id] >= 100) 
+                    tmp = par[cur_par_id] / 100;
+                //Draw_text_change_text("%dms", text_sp[cur_par_id], par[cur_par_id]);
             }break;
             default:
             {
-                tmp = par[cur_par_id];
-                Draw_text_num_to_text(text_sp[cur_par_id], tmp, "A");
+                Draw_text_change_text("%dA", text_sp[cur_par_id], par[cur_par_id]);
             }
   
         }
@@ -600,14 +596,9 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
 void Process_Encoder(u8 state)
 {
     code const s8 shifts[] = {-1, -5, +1, +5};
+  
     cur_par_value_change(cur_par_id, shifts[state]);     
-    // static u16 cnt;
-    // {
-    //     static u16 cnt;
-    //     write_dgus_vp(0x4002, (u8*) &cnt, cnt++);
-    // }
-    
-    // //change_number_color(number_sp[cur_par_id], cnt++);  
+   
 }
 
 
