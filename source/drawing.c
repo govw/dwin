@@ -415,7 +415,7 @@ void Draw_text_change_color(u16 sp, u16 new_color)
 
 void Draw_text_change_text(u8* format, u16 sp, ...)
 {
-    u8 buf[10];
+    u8 data buf[10];
     u16 len;
     len = 10;
     sprintf(buf, format, *(&sp+1) );

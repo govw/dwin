@@ -14,55 +14,13 @@ idata      u16 TIME_Y_LEVEL = 800 - 150;
 code const u16 ICON_RECT_SZ = 128;
 
 
-typedef enum { //для id картинок 
-    EIID_TIG,       EIID_TIG_SPOT, EIID_MMA,
-    EIID_AC,        EIID_AC_MIX,   EIID_DC_MINUS, EIID_DC_PLUS,
-    EIID_2T,        EIID_4T,       EIID_4T_PLUS,
-    EIID_HF,        EIID_LIFT,
-    EIID_PULSE_OFF, EIID_PULSE_ON,
-    EIID_D_10,      EIID_D_16,     EIID_D_20,     EIID_D_24, EIID_D_32, EIID_D_40,
-    EIID_SIN,       EIID_TRIG,     EIID_RECT,     EIID_TRAP,
-    EIID_H2O_ON,    EIID_H2O_OFF,
-    
-    EIID_PRE_FLOW_T1,  //Т1  время предв. продувки, с
-    EIID_START_I1,     //I1  начальный ток, А
-    EIID_START_T2,     //T2  время начального тока, c
-    EIID_UP_T3,        //Т3  время нарастания, с
-    EIID_BASE_I2,      //I2  сварочный ток (ток базы), А
-    EIID_BASE_T4,      //Т4  время тока базы, с
-    EIID_IMPULSE_I3,   //I3  импульсный ток, А
-    EIID_IMPULSE_T5,   //Т5  время тока импульса, с
-    EIID_FREQ_F1,      //F1  частота, Гц
-    EIID_BALANCE_D1,   //D1  баланс *
-    EIID_DOWN_T6,      //Т6  время спада, с
-    EIID_END_I4,       //I4  ток окончания сварки, А
-    EIID_END_T7,       //T7  время конечного тока, с
-    EIID_POST_FLOW_T8, //Т8  время продувки в конце, с
-    EIDD_KZ_I5,        //I5  ток короткого замыкания, %
-    EIID_BASE2_I2X,    //I2х второй ток базы (только в 4Т+), А
-    EIID_SIZE,
-};
 
-enum {
-    MEN_WELD_MOD, 
-    MEN_BTN_MOD,
-    MEN_POL_MOD, 
-    MEN_IGN_MOD,
-    MEN_PLS_MOD,
-    MEN_PLS_WAVE_SHAPE_MOD,  
-    MEN_D_MOD,   
-    MEN_FLOW_MOD,
-};
 
-enum {
-    TIG,
-    TIG_SPOT,
-    MMA,
-};
 
+//tig_spot только 2t
 code const u32 active_items[] = {
-    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_TIG_SPOT) | ((u32)1 << EIID_MMA)      |
-    ((u32)1 << EIID_2T)        | ((u32)1 << EIID_4T)       | ((u32)1 << EIID_4T_PLUS)  |
+    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_MMA)      |
+    ((u32)1 << EIID_2T)        | ((u32)1 << EIID_4T)       | ((u32)1 << EIID_4T_PLUS)  | ((u32)1 << EIID_TIG_SPOT) |
     ((u32)1 << EIID_AC)        | ((u32)1 << EIID_AC_MIX)   | ((u32)1 << EIID_DC_MINUS) |
     ((u32)1 << EIID_HF)        | ((u32)1 << EIID_LIFT)     |
     ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON) |
@@ -70,23 +28,14 @@ code const u32 active_items[] = {
     ((u32)1 << EIID_D_10)      | ((u32)1 << EIID_D_16)     | ((u32)1 << EIID_D_20)     | ((u32)1 << EIID_D_24) | ((u32)1 << EIID_D_32) | ((u32)1 << EIID_D_40) |
     ((u32)1 << EIID_H2O_OFF)   | ((u32)1 << EIID_H2O_ON),    //tig;
 
-    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_TIG_SPOT) | ((u32)1 << EIID_MMA)      |
-    ((u32)1 << EIID_2T)        | 
-    ((u32)1 << EIID_AC)        | ((u32)1 << EIID_AC_MIX)   | ((u32)1 << EIID_DC_MINUS) |
-    ((u32)1 << EIID_HF)        | ((u32)1 << EIID_LIFT)     |
-    ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON) |
-    ((u32)1 << EIID_SIN)       | ((u32)1 << EIID_TRIG)     | ((u32)1 << EIID_RECT)     | ((u32)1 << EIID_TRAP) |
-    ((u32)1 << EIID_D_10)      | ((u32)1 << EIID_D_16)     | ((u32)1 << EIID_D_20)     | ((u32)1 << EIID_D_24) | ((u32)1 << EIID_D_32) | ((u32)1 << EIID_D_40) |
-    ((u32)1 << EIID_H2O_OFF)   | ((u32)1 << EIID_H2O_ON),     //tig /spot;
-
-    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_TIG_SPOT) | ((u32)1 << EIID_MMA)     |
+    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_MMA)     |
     ((u32)1 << EIID_AC)        | ((u32)1 << EIID_DC_MINUS) | ((u32)1 << EIID_DC_PLUS) |
     ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON),     //mma
 };
 
 code const u32 menu_item_bm[] = { 
-    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_TIG_SPOT) | ((u32)1 << EIID_MMA),      
-    ((u32)1 << EIID_2T)        | ((u32)1 << EIID_4T)       | ((u32)1 << EIID_4T_PLUS),    
+    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_MMA),      
+    ((u32)1 << EIID_2T)        | ((u32)1 << EIID_4T)       | ((u32)1 << EIID_4T_PLUS)  | ((u32)1 << EIID_TIG_SPOT),    
     ((u32)1 << EIID_AC)        | ((u32)1 << EIID_AC_MIX)   | ((u32)1 << EIID_DC_MINUS) | ((u32)1 << EIID_DC_PLUS),                                             
     ((u32)1 << EIID_HF)        | ((u32)1 << EIID_LIFT),
     ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON),
@@ -95,7 +44,7 @@ code const u32 menu_item_bm[] = {
     ((u32)1 << EIID_H2O_OFF)   | ((u32)1 << EIID_H2O_ON),   
 }; 
 
-//те элементы которые будут отображены в горизонтальном меню
+//те элементы которые будут отображены в горизонтальном меню и то какая сейчас настройка
 idata u32 main_menu_bm = (((u32)1 << EIID_TIG)       |
                          ((u32)1 << EIID_2T)        |
                          ((u32)1 << EIID_AC)        |
@@ -115,9 +64,9 @@ u8 cur_menu_size;
 u8 idata cur_active_items_id = TIG;
 
 
-xdata u16 text_sp[EIID_SIZE]; //массив sp идентификаторов линий, картинок, чисел
-xdata s16 par[EIID_SIZE];
-xdata u16 cur_par_id; //номер текущего параметра к отображению
+u16 text_sp[EIID_SIZE]; //массив sp идентификаторов линий, картинок, чисел
+s16 par[EIID_SIZE];
+u16 cur_par_id; //номер текущего параметра к отображению
 
 typedef struct {
     s16 min;
@@ -475,10 +424,20 @@ void bottom_level_controls(u8 item_pos)
 
                 switch (cur_menu[item_pos].ico)
                 {
-                    case EIID_TIG:
-                    case EIID_TIG_SPOT:
+                    case EIID_TIG: {
+                        cur_active_items_id = TIG;
+                        make_scene(); 
+                    } break;
+
+                    case EIID_TIG_SPOT: { //в режиме tig_spot есть только 2_t
+                        cur_active_items_id = TIG;
+                        bm &= ~(menu_item_bm[MEN_BTN_MOD]);
+                        bm |= ((u32)1 << EIID_2T);
+                        make_scene(); 
+                    } break;
+
                     case EIID_MMA: {
-                        cur_active_items_id = cur_menu[item_pos].ico;
+                        cur_active_items_id = MMA;
                         make_scene(); 
                     } break;
 
@@ -489,7 +448,7 @@ void bottom_level_controls(u8 item_pos)
 
                     case EIID_2T:
                     case EIID_4T:
-                    case EIID_4T_PLUS : {
+                    case EIID_4T_PLUS: {
                         make_scene();         
                     } break;
 
@@ -540,17 +499,10 @@ void bottom_level_controls(u8 item_pos)
 }
 
 
-// void draw_par_value(u16 par_id, u16 new_value) 
-// {
-  
-// }
-
-
 
 void cur_par_value_change(u16 cur_par_id, s8 shift)
 {
     par[cur_par_id] += ((s16)par_step[cur_par_id] * shift); 
-
 
 
     if(par[cur_par_id] > par_lim[cur_par_id].max)       
@@ -567,28 +519,22 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
             case EIID_UP_T3      :
             case EIID_DOWN_T6    :
             case EIID_END_T7     : {
-                //Draw_text_change_text("%.1fs", text_sp[cur_par_id], (float)par[cur_par_id] / (float)1000.0);
+                Draw_text_change_text("%.1fs", text_sp[cur_par_id], (float)par[cur_par_id] / (float)10.0);
             } break;
             
             case EIID_POST_FLOW_T8: {
-                //Draw_text_change_text("%ds", text_sp[cur_par_id], par[cur_par_id]);    
+                Draw_text_change_text("%ds", text_sp[cur_par_id], par[cur_par_id]);    
             } break;
 
             case EIID_BASE_T4   :
             case EIID_IMPULSE_T5: {
-                if(par[cur_par_id] >= 1000)
-                    tmp = par[cur_par_id] / 1000; 
-                if(par[cur_par_id] >= 100) 
-                    tmp = par[cur_par_id] / 100;
-                //Draw_text_change_text("%dms", text_sp[cur_par_id], par[cur_par_id]);
+                Draw_text_change_text("%dms", text_sp[cur_par_id], par[cur_par_id]);
             }break;
-            default:
-            {
+
+            default: {
                 Draw_text_change_text("%dA", text_sp[cur_par_id], par[cur_par_id]);
-            }
-  
+            } break;
         }
-        
     }
 }
 
@@ -620,36 +566,36 @@ void par_select(u8 new_par_id)
 
 void init_par_udgu(void)
 {
-    make_lim(&par_lim[EIID_PRE_FLOW_T1],  100, 10000); //Т1  время предв. продувки, с 
+    make_lim(&par_lim[EIID_PRE_FLOW_T1],  1,   100  ); //Т1  время предв. продувки, с 
     make_lim(&par_lim[EIID_START_I1],     5,   350  );
-    make_lim(&par_lim[EIID_START_T2],     100, 10000);
-    make_lim(&par_lim[EIID_UP_T3],        100, 10000);
+    make_lim(&par_lim[EIID_START_T2],     1,   100  );
+    make_lim(&par_lim[EIID_UP_T3],        1,   100  );
     make_lim(&par_lim[EIID_BASE_I2],      5,   350  );
     make_lim(&par_lim[EIID_BASE_T4],      1,   10000);
     make_lim(&par_lim[EIID_IMPULSE_I3],   5,   350  );
     make_lim(&par_lim[EIID_IMPULSE_T5],   1,   10000);
     make_lim(&par_lim[EIID_FREQ_F1],      20,  200  );
     make_lim(&par_lim[EIID_BALANCE_D1],   30,  80   );
-    make_lim(&par_lim[EIID_DOWN_T6],      100, 10000);
+    make_lim(&par_lim[EIID_DOWN_T6],      1,   100  );
     make_lim(&par_lim[EIID_END_I4],       5,   350  );
-    make_lim(&par_lim[EIID_END_T7],       100, 10000);
+    make_lim(&par_lim[EIID_END_T7],       1,   100  );
     make_lim(&par_lim[EIID_POST_FLOW_T8], 1,   60   );
     make_lim(&par_lim[EIDD_KZ_I5],        0,   100  );
     make_lim(&par_lim[EIID_BASE2_I2X],    5,   350  );
 
-    par_step[EIID_PRE_FLOW_T1]  =  100; //ms
+    par_step[EIID_PRE_FLOW_T1]  =  1  ; //ms //100ms
     par_step[EIID_START_I1]     =  1  ; //A  
-    par_step[EIID_START_T2]     =  100; //ms  
-    par_step[EIID_UP_T3]        =  100; //ms     
+    par_step[EIID_START_T2]     =  1  ; //ms //100ms  
+    par_step[EIID_UP_T3]        =  1  ; //ms //100ms     
     par_step[EIID_BASE_I2]      =  1  ; //A    
     par_step[EIID_BASE_T4]      =  1  ; //ms   
     par_step[EIID_IMPULSE_I3]   =  1  ; //A
     par_step[EIID_IMPULSE_T5]   =  1  ; //ms 
     par_step[EIID_FREQ_F1]      =  1  ;   
     par_step[EIID_BALANCE_D1]   =  5  ;
-    par_step[EIID_DOWN_T6]      =  100; //ms   
+    par_step[EIID_DOWN_T6]      =  1  ; //ms //100ms   
     par_step[EIID_END_I4]       =  1  ; //A     
-    par_step[EIID_END_T7]       =  100; //ms    
+    par_step[EIID_END_T7]       =  1  ; //ms //100ms    
     par_step[EIID_POST_FLOW_T8] =  1  ; //
     par_step[EIDD_KZ_I5]        =  1  ; //%     
     par_step[EIID_BASE2_I2X]    =  1  ; //A 

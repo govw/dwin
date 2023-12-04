@@ -6,6 +6,7 @@ enum {
     ENC_L1,
     ENC_R0,
     ENC_R1,
+    ENC_STOP,
 };
 
 
