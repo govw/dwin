@@ -1,8 +1,7 @@
 Build target 'Target 1'
-compiling main.c...
-source\ssd2828.h(76): warning C235: parameter 1: different types
-source\main.c(662): warning C280: 'uart_cmd_show_text_sp': unreferenced local variable
-source\main.c(388): warning C291: not every exit path returns a value
+compiling temp.c...
+source\temp.c(113): warning C280: 'n': unreferenced local variable
+source\temp.c(113): warning C280: 'units': unreferenced local variable
 linking...
 *** WARNING L13: RECURSIVE CALL TO SEGMENT
     SEGMENT: ?PR?MAKE_SCENE?TEMP
@@ -72,19 +71,19 @@ linking...
     SEGMENT: ?PR?_SSD2828_READREG?SSD2828
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_DO_NOTHING?TEMP
-
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_REDRAW_NUMBER_CENTERED?TEMP
-
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?CLEAR_LINES?DRAWING
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_DRAW_NUMBER?DRAWING
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_CHANGE_NUMBER_VALUE?DRAWING
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_CHANGE_NUMBER_COLOR?DRAWING
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_CHANGE_NUMBER_POS?DRAWING
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_READ_NUMBER_COLOR?DRAWING
@@ -105,7 +104,7 @@ linking...
     CALLER1: ?PR?EXT_INT1?MAIN
     CALLER2: ?C_C51STARTUP
 
-Program Size: data=77.2 xdata=17823 code=31101
+Program Size: data=81.2 xdata=17529 code=30297
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
 
@@ -113,8 +112,8 @@ c:\Users\OGK5-7\Desktop\dwin>cd objects
 
 c:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x78F7, got 0x6EEE)
+    (expected >= 0x75DF, got 0x6C23)
 
 c:\Users\OGK5-7\Desktop\dwin\Objects>echo.
 
-".\Objects\T5L51" - 0 Error(s), 35 Warning(s).
+".\Objects\T5L51" - 0 Error(s), 34 Warning(s).

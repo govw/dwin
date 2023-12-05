@@ -353,27 +353,24 @@ u16 read_number_color(u16 sp)
 
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+#define TEXT_INTERVAL
 code u16 text_display_sp[] = {    //0x2000 text drawing start
         0x2000, 0x2030, 0x2060, 0x2090,
         0x2120, 0x2150, 0x2180, 0x2210,
         0x2240, 0x2270, 0x2300, 0x2330,
         0x2360, 0x2390, 0x2420, 0x2450,
     };
-u16 Draw_text(u16 x0, u16 y0, u16 x1, u16 y1, u8 *str, u8 font_size, u16 color)
+u16 Draw_text(u16 x0, u16 y0, u16 x1, u16 y1, u8 font_size, u16 color)
 {
     dgus_text_display_t t;
-    u8 buf[10];
-    u8 i;
+    
     if(all_text_display_cnt >= ARR_SIZE(text_display_sp)) return 0; 
-
-    //5000  01f5  00d1   f81f   01f5 00d1 0299 0114  00 04   00 00     40 80 52        00       00       00
-    //vp    p0 	         color  p0	      p1         len     font_loc  x  y  enc_mode  hor_dis  ver_dis  undef
    
     t.start_pos   =  make_point(x0, y0);
     t.color       =  color;        
     t.lh          =  t.start_pos; 
     t.rl          =  make_point(x1, y1); 
-    t.text_len    =  strlen(str);       
+    t.text_len    =  0;       
     t.font0_id    =  0;
     t.font1_id    =  0;
     t.font_x_dots =  font_size;
@@ -383,16 +380,10 @@ u16 Draw_text(u16 x0, u16 y0, u16 x1, u16 y1, u8 *str, u8 font_size, u16 color)
     t.ver_dis     =  0;
     t.undef       =  0;          
 
-    if(t.text_len > ARR_SIZE(buf) - 2) return;
-
+    
     t.vp = text_display_sp[all_text_display_cnt] + sizeof(dgus_text_display_t) / 2; //адрес сторки для отображения
   
-    for(i = 0; i < t.text_len; i++) {
-        buf[i] = str[i]; 
-    }
-    str[i++] = 0;
-    str[i] = 0;    
-    write_dgus_vp(t.vp, (u8*)&buf, ARR_SIZE(buf) / 2); //запись id картинки
+    
     {
         u16 cur_sp = text_display_sp[all_text_display_cnt];
         write_dgus_vp(cur_sp, (u8*)&t, sizeof(t) / 2);

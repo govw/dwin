@@ -84,7 +84,7 @@ extern void    change_number_color         (u16 sp, u16 new_color);
 extern void    change_number_pos           (u16 sp, point_t p);
 extern u16     read_number_color           (u16 sp); 
 extern void    change_number_value         (u16 sp, u16 new_value);
-extern u16     Draw_text                   (u16 x0, u16 y0, u16 x1, u16 y1, u8 *str, u8 font_size, u16 color);
+extern u16     Draw_text                   (u16 x0, u16 y0, u16 x1, u16 y1, u8 font_size, u16 color);
 extern void    Draw_text_change_color      (u16 sp, u16 new_color);
 extern u16     Draw_text_get_color         (u16 sp);
 extern void    Draw_text_num_to_text       (u16 sp, u16 n, u8* units);

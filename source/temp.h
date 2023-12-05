@@ -34,6 +34,47 @@ typedef enum { //для id картинок
     EIID_SIZE,
 };
 
+enum PAR_ID{
+    EPID_MODES_SUBMODES,//0    режимы/подрежимы
+    EPID_PRE_FLOW_T1,   //1    Т1  время предв. продувки, с
+    EPID_START_I1,      //2    I1  начальный ток, А
+    EPID_START_T2,      //3    T2  время начального тока, c
+    EPID_UP_T3,         //4    Т3  время нарастания, с
+    EPID_BASE_I2,       //5    I2  сварочный ток (ток базы), А
+    EPID_BASE_T4,       //6    Т4  время тока базы, с
+    EPID_IMPULSE_I3,    //7    I3  импульсный ток, А
+    EPID_IMPULSE_T5,    //8    Т5  время тока импульса, с
+    EPID_FREQ_F1,       //9    F1  частота, Гц
+    EPID_BALANCE_D1,    //10   D1  баланс *
+    EPID_DOWN_T6,       //11   Т6  время спада, с
+    EPID_END_I4,        //12   I4  ток окончания сварки, А
+    EPID_END_T7,        //13   T7  время конечного тока, с
+    EPID_POST_FLOW_T8,  //14   Т8  время продувки в конце, с
+    EPID_KZ_I5,         //15   I5  ток короткого замыкания, %
+    EPID_BSN,           //16   БСН - вкл/выкл
+    EPID_2T_4T,         //17   2t/4t
+    EPID_IGNITION_TYPE, //18   Вид поджига - контактный/бесконтактный
+    EPID_FLOW_SENSOR,   //19   Опрос датчика протока - вкл/выкл
+    EPID_POLARITY,      //20   Полярность DC+/DC-
+    EPID_WAVE_FORM,     //22   Тип огибающей
+    EPID_ELECTRODE_D,   //21   Диаметр электрода, мм
+    EPID_SERVICE_PAR,   //23   Служебные параметры (битовые) 
+    EPID_PLUS_PULSE,    //24   + Pulse Between 
+    EPID_MINUS_PULSE,   //25   - Pulse Between
+    EPDI_I_MIN_MINUS,   //26   Imin - 
+    EPID_I_MIN_PLUS,    //27   Imin + 
+    EPID_OSCIL_TYPE,    //28   Тип осциллятора Китай/Завод    
+    EPID_KC_RATIO,      //29   Коэффициент Кс 
+    EPID_I_IGN_PULSE,   //30   I0  ток импульса поджига, А
+    EPID_I_CLEAN,       //31   Ток очистки, А 
+    EPID_T_CLEAN,       //32   Время очистки, мс
+    EPID_IMPULSE_CNT,   //33   Импульсы подпитки, шт
+    EPID_BASE2_I2X,     //I2х второй ток базы (только в 4Т+), А
+    EPID_IS_PLUS_4T,    //35   плюс/не плюс (для 4Т)
+};
+
+
+
 enum {
     MEN_WELD_MOD, 
     MEN_BTN_MOD,
@@ -77,8 +118,9 @@ extern idata u32 main_menu_bm;
 extern void (*cur_menu_fanc)(u8 item_pos);
 
 extern xdata s16 par[];
+extern xdata u16 par_tek[];
 
-
+extern void init_par_udgu(void);
 extern void draw_cyclogramm(void);
 extern void make_scene(void);
 void Process_Encoder(u8 state); 
