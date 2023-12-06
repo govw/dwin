@@ -8,7 +8,7 @@
 code const u8  LINE_HIGHT   = 13;//px
 idata      u16 LINE_WIDTH   = 150;//px
 idata      u16 FONT_SIZE    = 24;
-code const u8  LEVEL_HEIGHT = 120;//px
+code const u8  LEVEL_HEIGHT = 90;//px
 code const u8  TOUCH_HEIGHT = 100;//px
 idata      u16 TIME_Y_LEVEL = 800 - 150;
 code const u16 ICON_RECT_SZ = 128;
@@ -76,9 +76,9 @@ typedef struct {
 lim_t par_lim[EIID_SIZE];
 s16   par_step[EIID_SIZE];
 
-
-
-
+u16 Amp_text_sp; //поле для вывода тока во время сварки
+u16 Volt_text_sp;//поле для вывода напраяжения во время сварки
+u16 Filled_rect_under_par_sp; //прямоугольник под параметрами
 
 u16 icon_sp_bottom_menu[16]; //sp картинок нижнего горизонтального меню // для их изменения
 
@@ -112,7 +112,15 @@ void add_touch_place(u16 x0, u16 y0, u16 x1, u16 y1, u8 touch_id)
 
 void draw_number_wtih_touch_centered(point_t line_start, u16 font_size, u16 color, u8 touch_id)
 {
-    text_sp[touch_id] = Draw_text(line_start.x - 50, line_start.y - (font_size * 2), line_start.x + LINE_WIDTH + 50, line_start.y, font_size, color);
+    text_sp[touch_id] = Draw_text(line_start.x, 
+                                  line_start.y - (font_size * 2), 
+                                  line_start.x + LINE_WIDTH, 
+                                  line_start.y, 
+                                  0,0,
+                                  font_size,
+                                  font_size * 2, 
+                                  TEXT_INTERVAL_1 | TEXT_ALIGNMENT_CENTER | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_BIG5,
+                                  color);
     display_par(touch_id);
     add_touch_place(line_start.x, line_start.y - (font_size * 2), line_start.x + LINE_WIDTH, line_start.y, touch_id);
 }
@@ -166,7 +174,7 @@ point_t add_t_up(point_t p)
 {
     point_t p2;
     p2 = make_point(p.x + LINE_WIDTH, p.y - LEVEL_HEIGHT);
-    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
+    draw_line(p.x, p.y - 1, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
     draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 36, CYAN, EIID_UP_T3); //время наростания
 
@@ -206,7 +214,7 @@ point_t add_t_down(point_t p)
     point_t p2;
     p2 = make_point(p.x + LINE_WIDTH, p.y + LEVEL_HEIGHT);
 
-    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
+    draw_line(p.x + 1, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
 
     draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 36, CYAN, EIID_DOWN_T6); //время спада
     return p2;
@@ -219,7 +227,7 @@ point_t add_end_i_t(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), par[EIID_END_T7], "s", 36, CYAN, EIID_END_T7); //время конечного тока
+    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 36, CYAN, EIID_END_T7); //время конечного тока
     draw_number_wtih_touch_centered(p, FONT_SIZE, YELLOW, EIID_END_I4); //конечный ток
     return p2;
 }
@@ -231,7 +239,7 @@ point_t add_t_postflow(point_t p)
 
     draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
     
-    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), par[EIID_POST_FLOW_T8], "s", 36, CYAN, EIID_POST_FLOW_T8);//время конечной продувки
+    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 36, CYAN, EIID_POST_FLOW_T8);//время конечной продувки
     return p2;
 }
 
@@ -710,8 +718,17 @@ void make_scene(void)
     drawing_init();
     
     Draw_clear_screen();
-    
 
+
+
+    
+    draw_filled_rect(0, 0, 1279, 799, GRAY);//задний фон
+
+    Filled_rect_under_par_sp = draw_filled_rect(40, 280, 190, 650, 0x528A); // рамка под параметрами
+
+    draw_filled_rect(0, 210, 1278, 210 + 10, BLACK);//полоска под напряжением и током
+
+    
     for(i = 0; i < ARR_SIZE(icon_sp_bottom_menu); i++) {
         icon_sp_bottom_menu[i] = draw_image(0, 0, 0xffff); // создание пула картинок без отображения картинки
     }
@@ -762,8 +779,46 @@ void make_scene(void)
         p = dummy_line_down(p);
     }
    
+
+    {
+        
+        Amp_text_sp = Draw_text(
+            0, 
+            0,
+            SCREEN_WIDTH - 300,
+            255,  
+            0,38, 
+            175,255, 
+            TEXT_INTERVAL_1 | TEXT_ALIGNMENT_RIGHT | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_ASCII, //for big unicode font use ascii encode and icl is font id
+            RED); 
+        
+        Volt_text_sp = Draw_text(
+            930, 
+            74,
+            SCREEN_WIDTH,
+            128 + 74, 
+            0,0, 
+            64,128, 
+            TEXT_INTERVAL_1 | TEXT_ALIGNMENT_LEFT | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_GBK, //for big unicode font use ascii encode and icl is font id
+            DARK_GREEN);
+    }
+    
+    
+    {
+        data u8 i;
+        data u16 x = 40;
+        for(i = 0; i < 9; i++) {
+            draw_line(x, 650 - 80, x, 650, 5, 0xDEDB);
+            x+=150;
+        }
+        draw_line(40, 650 - 80, 1240, 650 - 80, 5, 0xDEDB);
+        draw_line(40, 650, 1240, 650, 5, 0xDEDB);
+    }
+
+    
+    
+
    //Draw_Number(0,0, 999, 0, "A", 64, PINK);
-   
     
     
     // {
@@ -781,8 +836,6 @@ void make_scene(void)
     //     }
     // }
 
-    
-        
      
     //draw_bottom_menu();
 }

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 #include "drawing.h"
 
 #define FILLED_RECT_VP 0x1000
@@ -128,7 +129,6 @@ void clear_filled_rects(void)
 u16 draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color)
 {
     u8 half_widht = width / 2;
-     
     if(x0 == x1 || y0 == y1)
     {
         {
@@ -149,11 +149,11 @@ u16 draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color)
         y0 -= half_widht;
         x1 += half_widht;
         y1 += half_widht;
+        
         return draw_filled_rect(x0, y0, x1, y1, color);
 
     } else {
         u8 i;
-
         x0 += half_widht; 
         y0 -= half_widht;
         x1 -= half_widht;
@@ -353,14 +353,16 @@ u16 read_number_color(u16 sp)
 
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-#define TEXT_INTERVAL
+
+
+
 code u16 text_display_sp[] = {    //0x2000 text drawing start
         0x2000, 0x2030, 0x2060, 0x2090,
         0x2120, 0x2150, 0x2180, 0x2210,
         0x2240, 0x2270, 0x2300, 0x2330,
         0x2360, 0x2390, 0x2420, 0x2450,
     };
-u16 Draw_text(u16 x0, u16 y0, u16 x1, u16 y1, u8 font_size, u16 color)
+u16 Draw_text(u16 x0, u16 y0, u16 x1, u16 y1, u8 font0_id, u8 font1_id, u8 font_x_dots, u8 font_y_dots, u16 encode_mode, u16 color)
 {
     dgus_text_display_t t;
     
@@ -371,19 +373,16 @@ u16 Draw_text(u16 x0, u16 y0, u16 x1, u16 y1, u8 font_size, u16 color)
     t.lh          =  t.start_pos; 
     t.rl          =  make_point(x1, y1); 
     t.text_len    =  0;       
-    t.font0_id    =  0;
-    t.font1_id    =  0;
-    t.font_x_dots =  font_size;
-    t.font_y_dots =  (font_size * 2);
-    t.encode_mode =  0x61; //0x52 ;//| 0x80;
+    t.font0_id    =  font0_id;
+    t.font1_id    =  font1_id;
+    t.font_x_dots =  font_x_dots;
+    t.font_y_dots =  font_y_dots;
+    t.encode_mode =  encode_mode;
     t.hor_dis     =  0;
     t.ver_dis     =  0;
     t.undef       =  0;          
-
     
     t.vp = text_display_sp[all_text_display_cnt] + sizeof(dgus_text_display_t) / 2; //адрес сторки для отображения
-  
-    
     {
         u16 cur_sp = text_display_sp[all_text_display_cnt];
         write_dgus_vp(cur_sp, (u8*)&t, sizeof(t) / 2);
@@ -406,9 +405,10 @@ void Draw_text_change_color(u16 sp, u16 new_color)
 
 void Draw_text_change_text(u8* format, u16 sp, ...)
 {
-    u8 data buf[10];
+    u8 xdata buf[10];
     u16 len;
     len = 10;
+    memset(buf, 0, 10);
     sprintf(buf, format, *(&sp+1) );
     write_dgus_vp(sp + (sizeof(dgus_text_display_t) / 2), (u8*) &buf, 5);
     write_dgus_vp(sp + 8, (u8*) &len, 1); //set new text len

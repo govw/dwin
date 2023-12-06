@@ -120,6 +120,9 @@ extern void (*cur_menu_fanc)(u8 item_pos);
 extern xdata s16 par[];
 extern xdata u16 par_tek[];
 
+extern u16 Amp_text_sp; //поле для вывода тока напряжения сварки
+extern u16 Volt_text_sp;//поле для вывода напраяжения во время сварки
+
 extern void init_par_udgu(void);
 extern void draw_cyclogramm(void);
 extern void make_scene(void);

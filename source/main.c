@@ -154,10 +154,13 @@ void print_debug_info(void)
         "End I", "Cleaning", "Flow end",
     };
 
-    //memset(buf, 0, ARR_SIZE(buf));
+    memset(buf, 0, ARR_SIZE(buf));
 
-    sprintf(buf, "%s               %d %d %d %d\n\r%dA\n\r%.1fV\n\r%.1fs\n\rgood: %d\n\rbad: %d",welding_states_tig[welding_state], touch_coord_x, touch_coord_y, touch_state, last_touch_item, amp, (float)volt / 10.0, (float)time / 10.0, good_packages_cnt, bad_packages_cnt);
-    write_dgus_vp(0x2500, (u8*) &buf, sizeof(buf) / 2);  
+    sprintf(buf, "%s               %d %d %d %d\n\r%dA\n\r%.1fV\n\r%.1fs\n\rgood: %d\n\rbad:  %d",welding_states_tig[welding_state], touch_coord_x, touch_coord_y, touch_state, last_touch_item, amp, (float)volt / 10.0, (float)time / 10.0, good_packages_cnt, bad_packages_cnt);
+    write_dgus_vp(0x2500, (u8*) &buf, sizeof(buf) / 2);
+
+    Draw_text_change_text("%dA\r\n", Amp_text_sp,  amp);
+    Draw_text_change_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
 }
 //debug
 

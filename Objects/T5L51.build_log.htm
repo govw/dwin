@@ -26,9 +26,9 @@ Project File Date:  11/23/2023
 
 <h2>Output:</h2>
 Build target 'Target 1'
+compiling main.c...
+source\ssd2828.h(76): warning C235: parameter 1: different types
 compiling temp.c...
-source\temp.c(113): warning C280: 'n': unreferenced local variable
-source\temp.c(113): warning C280: 'units': unreferenced local variable
 linking...
 *** WARNING L13: RECURSIVE CALL TO SEGMENT
     SEGMENT: ?PR?MAKE_SCENE?TEMP
@@ -99,15 +99,15 @@ linking...
     SEGMENT: ?PR?_DELAY_MS?SYS
     CALLER1: ?PR?EXT_INT1?MAIN
     CALLER2: ?C_C51STARTUP
-Program Size: data=81.2 xdata=17529 code=30297
+Program Size: data=74.2 xdata=17545 code=30506
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
 c:\Users\OGK5-7\Desktop\dwin>cd objects 
 c:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x75DF, got 0x6C23)
+    (expected >= 0x76B0, got 0x6CFD)
 c:\Users\OGK5-7\Desktop\dwin\Objects>echo.
-".\Objects\T5L51" - 0 Error(s), 34 Warning(s).
+".\Objects\T5L51" - 0 Error(s), 33 Warning(s).
 </pre>
 </body>
 </html>

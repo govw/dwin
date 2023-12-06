@@ -3,16 +3,37 @@
 #include "sys.h"
 #include <stdarg.h>
 
-#define RED    0xF800
-#define PINK   0xF81F
-#define YELLOW 0xFFE0
-#define CYAN  0x07FF
-#define WHITE 0xFFFF
-#define GREEN 0x07E0
+#define RED        0xF800
+#define PINK       0xF81F
+#define YELLOW     0xFFE0
+#define CYAN       0x07FF
+#define WHITE      0xFFFF
+#define BLACK      0x0000
+#define GREEN      0x07E0
+#define DARK_GREEN 0x4DE5
+#define GRAY       0x6B4D 
+
+#define TEXT_INTERVAL_0                0x80 // без интервала 
+#define TEXT_INTERVAL_1                0x00 // с интервалом 
+
+#define TEXT_ALIGNMENT_LEFT            0X00
+#define TEXT_ALIGNMENT_RIGHT           0X20
+#define TEXT_ALIGNMENT_CENTER          0X40
+#define TEXT_ALIGNMENT_L_TO_R          0X60
+
+#define TEXT_ALIGNMENT_VERTICAL_UP     0X00
+#define TEXT_ALIGNMENT_VERTICAL_CENTER 0X10
+
+#define TEXT_ENC_ASCII                 0X00  
+#define TEXT_ENC_GB2312                0X01
+#define TEXT_ENC_GBK                   0X02
+#define TEXT_ENC_BIG5                  0X03
+#define TEXT_ENC_SJIS                  0X04
+#define TEXT_ENC_UNICODE               0X05
 
 
-static code u16 SCREEN_WIDTH = 1279;
-static code u16 SCREEN_HEIGHT = 799;
+static code u16 SCREEN_WIDTH = 1280;
+static code u16 SCREEN_HEIGHT = 800;
 
 typedef struct {
     u16 x;
@@ -84,7 +105,7 @@ extern void    change_number_color         (u16 sp, u16 new_color);
 extern void    change_number_pos           (u16 sp, point_t p);
 extern u16     read_number_color           (u16 sp); 
 extern void    change_number_value         (u16 sp, u16 new_value);
-extern u16     Draw_text                   (u16 x0, u16 y0, u16 x1, u16 y1, u8 font_size, u16 color);
+extern u16     Draw_text                   (u16 x0, u16 y0, u16 x1, u16 y1, u8 font0_id, u8 font1_id, u8 font_x_dots, u8 font_y_dots, u16 encode_mode, u16 color);
 extern void    Draw_text_change_color      (u16 sp, u16 new_color);
 extern u16     Draw_text_get_color         (u16 sp);
 extern void    Draw_text_num_to_text       (u16 sp, u16 n, u8* units);
