@@ -41,6 +41,14 @@ typedef struct {
 } point_t;
 
 typedef struct {
+    u16 x0;
+    u16 y0;
+    u16 x1;
+    u16 y1;
+} rect_t;
+
+
+typedef struct {
         u16 vp;
         point_t upper_left_point;       
         u16 color;
@@ -95,6 +103,7 @@ extern u8      check_screen_bounds         (u16 x, u16 y);
 extern u16     draw_line_1px               (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 extern void    clear_line_1px              (void);
 extern u16     draw_filled_rect            (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
+extern void    Draw_filled_rect_redraw     (u16 vp, u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 extern u16     draw_line                   (u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color);
 extern void    clear_lines                 (void);
 extern u16     draw_image                  (u16 x, u16 y, u16 image_id); 
@@ -108,6 +117,7 @@ extern void    change_number_value         (u16 sp, u16 new_value);
 extern u16     Draw_text                   (u16 x0, u16 y0, u16 x1, u16 y1, u8 font0_id, u8 font1_id, u8 font_x_dots, u8 font_y_dots, u16 encode_mode, u16 color);
 extern void    Draw_text_change_color      (u16 sp, u16 new_color);
 extern u16     Draw_text_get_color         (u16 sp);
+extern void    Draw_text_get_pos           (u16 sp, rect_t *r);
 extern void    Draw_text_num_to_text       (u16 sp, u16 n, u8* units);
 extern void    Draw_text_point_num_to_text (u16 sp, u16 n, u8 point_pos, u8* units);
 extern void    Draw_text_change_text       (u8* format, u16 sp, ...);

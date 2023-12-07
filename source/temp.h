@@ -92,12 +92,6 @@ enum {
 };
 
 
-typedef struct {
-    u16 x0;
-    u16 y0;
-    u16 x1;
-    u16 y1;
-}rect_t;
 
 typedef struct {
     u8 ico;

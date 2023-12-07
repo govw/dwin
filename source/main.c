@@ -11,12 +11,12 @@
 #include "temp.h"
 #include "encoder.h"
 
-#define UART_INIT 	{state = inbufind=0;  begfl=endfl=0;} 
-#define UART_INIT_1 {state=1; inbufind=0; begfl=endfl=0;}
+#define UART_INIT 	{uart_state = inbufind=0;  begfl=endfl=0;} 
+#define UART_INIT_1 {uart_state=1; inbufind=0; begfl=endfl=0;}
 
-u8 state, inbufind;
-xdata u8 bufin[100];
-xdata u8 bufout[100];
+u8 uart_state, inbufind;
+u8 bufin[100];
+u8 bufout[100];
 u8 uart_len; 
 u8 begfl,endfl;
 
@@ -144,8 +144,8 @@ static data u16 touch_coord_x;
 static data u16 touch_coord_y;
 static data u16 touch_state;
 static data u16 last_touch_item;
-static u16 good_packages_cnt;
-static u16 bad_packages_cnt;
+static data u16 good_packages_cnt;
+static data u16 bad_packages_cnt;
 void print_debug_info(void)
 {
     static u8 buf[100];
@@ -159,8 +159,10 @@ void print_debug_info(void)
     sprintf(buf, "%s               %d %d %d %d\n\r%dA\n\r%.1fV\n\r%.1fs\n\rgood: %d\n\rbad:  %d",welding_states_tig[welding_state], touch_coord_x, touch_coord_y, touch_state, last_touch_item, amp, (float)volt / 10.0, (float)time / 10.0, good_packages_cnt, bad_packages_cnt);
     write_dgus_vp(0x2500, (u8*) &buf, sizeof(buf) / 2);
 
-    Draw_text_change_text("%dA\r\n", Amp_text_sp,  amp);
-    Draw_text_change_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
+
+
+    // Draw_text_change_text("%dA\r\n", Amp_text_sp,  amp); //отображение занчений во время сварки
+    // Draw_text_change_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
 }
 //debug
 
@@ -184,12 +186,12 @@ void process_touch(void)
        ETPS_PRESSING,
    };
    
-   struct {
+    struct {
        u8 status;
        u8 action_type;
        u16 x;
        u16 y;
-   } touch_data;
+    } data touch_data;
     
     read_dgus_vp(0x16,(u8*)&touch_data, sizeof(touch_data) / 2); //info about touch status and coords
         if(touch_data.status == 0x5A) //if status byte 0x05 some action done
@@ -236,22 +238,22 @@ void process_uart(void)
 		{
             while(Uart_Struct[UART5].rx_tail != Uart_Struct[UART5].rx_head)
 			{ 
-                u8 byte = Uart_Struct[UART5].rx_buf[Uart_Struct[UART5].rx_tail];
+                register u8 byte = Uart_Struct[UART5].rx_buf[Uart_Struct[UART5].rx_tail];
                 
 				Uart_Struct[UART5].rx_tail++;
 				Uart_Struct[UART5].rx_tail &= SERIAL_COUNT;
 				
 
-                switch (state)
+                switch (uart_state)
 				{
                     case 0: {
                         if(byte == 0xA5) 
-                            state=1;
+                            uart_state=1;
                     }break;
                         
                     case 1: {
                         if(byte == 0xA5) 
-                            state=4;
+                            uart_state=4;
                         else 
                             UART_INIT
                     }break;
@@ -262,14 +264,14 @@ void process_uart(void)
                         else if(byte == 0x5A)
                             endfl = 1;
                         uart_len = byte; 
-                        state = 6; 
+                        uart_state = 6; 
                         break;  
 
                     case 6:
                         if(byte == 0xA5)
                         {
                             if (begfl == 1) 
-                                state = 4;
+                                uart_state = 4;
                             else           
                                 begfl = 1; 
                         }
@@ -292,14 +294,14 @@ void process_uart(void)
 
                         if(inbufind == uart_len + 2)
                         { 
-                            state = 10;
+                            uart_state = 10;
                         } 
                             
                         break;
 
                     case 10:
                         if(byte == 0x5A) {
-                            state = 11; 
+                            uart_state = 11; 
                             break;
                         }    
                         if(byte == 0xA5) {	

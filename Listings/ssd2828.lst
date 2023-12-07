@@ -1,4 +1,4 @@
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 1   
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE SSD2828
@@ -62,7 +62,7 @@ line level    source
   51   2                      sck=1;
   52   2                      delay_us(5);
   53   2                      ssd2828_id<<=1;
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 2   
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 2   
 
   54   2                      if(sdo)
   55   2                              ssd2828_id|=1;
@@ -126,7 +126,7 @@ line level    source
  113   2              }
  114   1              csx=1;
  115   1              delay_us(5);
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 3   
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 3   
 
  116   1      }
  117          
@@ -190,7 +190,7 @@ line level    source
  175   1              while(lenth--){
  176   2                      temp=*pbuf++;
  177   2                      for(i=0;i<8;i++){
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 4   
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 4   
 
  178   3                              if(temp&0x80)
  179   3                                      sdi=1;
@@ -254,7 +254,7 @@ line level    source
  237          //              ssd2828_regconfig(0xc1,0x0001);         //设置读取mipi slave数据的最大长度
  238          ////            ssd2828_regconfig(0xc0,0x0100);         //停止送图，准备读取mipi slave寄存器
  239          //              ssd2828_regconfig(0xbc,0x0001);         //设置带读取数据包数量
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 5   
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 5   
 
  240          //              ssd2828_regconfig(0xbf,mipi_reg);               //读取mipi slave寄存器
  241          //              ssd2828_regconfig(0xd4,0x00fa);         //复位SPI读寄存器
@@ -318,7 +318,7 @@ line level    source
  299   1              W_COM(0x2d,0x00);       //GCL R 
  300   1              W_COM(0x2e,0x00);       //GCH F        
  301   1              W_COM(0x2f,0x00);       //GCL F       
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 6   
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 6   
 
  302   1              W_COM(0x30,0x00);
  303   1              W_COM(0x31,0x00);
@@ -382,7 +382,7 @@ line level    source
  361   1              W_COM(0x76,0x0D);    
  362   1              W_COM(0x77,0x0C);    
  363   1              W_COM(0x78,0x0C);    
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 7   
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 7   
 
  364   1              W_COM(0x79,0x0F);    
  365   1              W_COM(0x7a,0x0F);     
@@ -446,7 +446,7 @@ line level    source
  423   1              W_COM(0xB2,0x6D);
  424   1              W_COM(0xB3,0x3F);
  425   1              W_COM(0xC0,0x00);
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 8   
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 8   
 
  426   1              W_COM(0xC1,0x12);
  427   1              W_COM(0xC2,0x20);
@@ -510,7 +510,7 @@ line level    source
  485   1      //              return;
  486   1      //#endif
  487   1              //??ssd2828????mipi??,????mipi??
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 9   
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 9   
 
  488   1              ssd2828_regconfig(0xb7,0x0050);
  489   1              ssd2828_regconfig(0xb8,0x0000);
@@ -573,7 +573,7 @@ line level    source
  546   1              ssd2828_cfg_ok=1;
  547   1              
  548   1      }
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 10  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 10  
 
 ASSEMBLY LISTING OF GENERATED OBJECT CODE
 
@@ -637,7 +637,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0046 900000      R     MOV     DPTR,#reg_temp
 0049 E0                MOVX    A,@DPTR
 004A 33                RLC     A
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 11  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 11  
 
 004B F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 45
@@ -701,7 +701,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0096 C3                CLR     C
 0097 9410              SUBB    A,#010H
 0099 40CB              JC      ?C0006
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 12  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 12  
 
 009B         ?C0007:
                                            ; SOURCE LINE # 57
@@ -765,7 +765,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 002D         ?C0014:
                                            ; SOURCE LINE # 74
 002D C292              CLR     sdi
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 13  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 13  
 
 002F         ?C0015:
                                            ; SOURCE LINE # 75
@@ -829,7 +829,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0080 F0                MOVX    @DPTR,A
 0081 900000      R     MOV     DPTR,#reg_value
 0084 E0                MOVX    A,@DPTR
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 14  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 14  
 
 0085 33                RLC     A
 0086 F0                MOVX    @DPTR,A
@@ -893,7 +893,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0015         ?C0021:
                                            ; SOURCE LINE # 104
 0015 900000      R     MOV     DPTR,#ssd2828_cmd
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 15  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 15  
 
 0018 E0                MOVX    A,@DPTR
 0019 30E704            JNB     ACC.7,?C0024
@@ -957,7 +957,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 000B A3                INC     DPTR
 000C F0                MOVX    @DPTR,A
                                            ; SOURCE LINE # 122
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 16  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 16  
 
 000D A3                INC     DPTR
 000E ED                MOV     A,R5
@@ -1021,7 +1021,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0058 120000      E     LCALL   _delay_us
                                            ; SOURCE LINE # 139
 005B E4                CLR     A
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 17  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 17  
 
 005C 900000      R     MOV     DPTR,#i
 005F F0                MOVX    @DPTR,A
@@ -1085,7 +1085,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 156
 00A6 7F05              MOV     R7,#05H
 00A8 7E00              MOV     R6,#00H
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 18  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 18  
 
 00AA 120000      E     LCALL   _delay_us
                                            ; SOURCE LINE # 157
@@ -1149,7 +1149,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 170
 0020 900000      R     MOV     DPTR,#lenth
 0023 E0                MOVX    A,@DPTR
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 19  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 19  
 
 0024 FC                MOV     R4,A
 0025 A3                INC     DPTR
@@ -1213,7 +1213,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 182
 007B C293              CLR     sck
                                            ; SOURCE LINE # 183
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 20  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 20  
 
 007D 7F05              MOV     R7,#05H
 007F 7E00              MOV     R6,#00H
@@ -1277,7 +1277,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 203
 001F FD                MOV     R5,A
 0020 7C00              MOV     R4,#00H
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 21  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 21  
 
 0022 7FBC              MOV     R7,#0BCH
 0024 120000      R     LCALL   _ssd2828_regconfig
@@ -1341,7 +1341,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 007E 8002              SJMP    ?C0057
 0080         ?C0056:
                                            ; SOURCE LINE # 215
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 22  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 22  
 
 0080 C292              CLR     sdi
 0082         ?C0057:
@@ -1405,7 +1405,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0020 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 259
 0023 E4                CLR     A
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 23  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 23  
 
 0024 FD                MOV     R5,A
 0025 7F05              MOV     R7,#05H
@@ -1469,7 +1469,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 007E E4                CLR     A
 007F FD                MOV     R5,A
 0080 7F12              MOV     R7,#012H
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 24  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 24  
 
 0082 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 273
@@ -1533,7 +1533,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00D6 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 285
 00D9 7D80              MOV     R5,#080H
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 25  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 25  
 
 00DB 7F1F              MOV     R7,#01FH
 00DD 120000      R     LCALL   _W_COM
@@ -1597,7 +1597,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0134 E4                CLR     A
 0135 FD                MOV     R5,A
 0136 7F2C              MOV     R7,#02CH
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 26  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 26  
 
 0138 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 299
@@ -1661,7 +1661,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 018C 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 311
 018F E4                CLR     A
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 27  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 27  
 
 0190 FD                MOV     R5,A
 0191 7F39              MOV     R7,#039H
@@ -1725,7 +1725,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 01E3 E4                CLR     A
 01E4 FD                MOV     R5,A
 01E5 7F50              MOV     R7,#050H
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 28  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 28  
 
 01E7 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 324
@@ -1789,7 +1789,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 024C 7D0D              MOV     R5,#0DH
 024E 7F5F              MOV     R7,#05FH
 0250 120000      R     LCALL   _W_COM
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 29  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 29  
 
                                            ; SOURCE LINE # 339
 0253 7D0D              MOV     R5,#0DH
@@ -1853,7 +1853,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 02B9 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 354
 02BC 7D02              MOV     R5,#02H
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 30  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 30  
 
 02BE 7F6F              MOV     R7,#06FH
 02C0 120000      R     LCALL   _W_COM
@@ -1917,7 +1917,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0325 7D02              MOV     R5,#02H
 0327 7F7E              MOV     R7,#07EH
 0329 120000      R     LCALL   _W_COM
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 31  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 31  
 
                                            ; SOURCE LINE # 370
 032C 7D02              MOV     R5,#02H
@@ -1981,7 +1981,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0392 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 385
 0395 7D24              MOV     R5,#024H
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 32  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 32  
 
 0397 7F3A              MOV     R7,#03AH
 0399 120000      R     LCALL   _W_COM
@@ -2045,7 +2045,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 03FD 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 400
 0400 7D84              MOV     R5,#084H
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 33  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 33  
 
 0402 7F55              MOV     R7,#055H
 0404 120000      R     LCALL   _W_COM
@@ -2109,7 +2109,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0466 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 415
 0469 7D28              MOV     R5,#028H
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 34  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 34  
 
 046B 7FAA              MOV     R7,#0AAH
 046D 120000      R     LCALL   _W_COM
@@ -2173,7 +2173,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
                                            ; SOURCE LINE # 430
 04D2 7D27              MOV     R5,#027H
 04D4 7FC5              MOV     R7,#0C5H
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 35  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 35  
 
 04D6 120000      R     LCALL   _W_COM
                                            ; SOURCE LINE # 431
@@ -2237,7 +2237,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 053D 7A00        R     MOV     R2,#HIGH pa_tab8
 053F 7900        R     MOV     R1,#LOW pa_tab8
 0541 120000      R     LCALL   L?0063
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 36  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 36  
 
                                            ; SOURCE LINE # 446
 0544 7BFF              MOV     R3,#0FFH
@@ -2301,7 +2301,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0026 7C05              MOV     R4,#05H
 0028 7FB5              MOV     R7,#0B5H
 002A 020000      R     LJMP    _ssd2828_regconfig
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 37  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 37  
 
              ; FUNCTION lcd_pa_set (END)
 
@@ -2365,7 +2365,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0058 FC                MOV     R4,A
 0059 7FB9              MOV     R7,#0B9H
 005B 120000      R     LCALL   _ssd2828_regconfig
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 38  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 38  
 
                                            ; SOURCE LINE # 519
 005E 7D15              MOV     R5,#015H
@@ -2429,7 +2429,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00C6 7FD6              MOV     R7,#0D6H
 00C8 120000      R     LCALL   _ssd2828_regconfig
                                            ; SOURCE LINE # 538
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 39  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 39  
 
 00CB 7D4B              MOV     R5,#04BH
 00CD 7C02              MOV     R4,#02H
@@ -2445,7 +2445,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00DD 22                RET     
              ; FUNCTION ssd2828_init (END)
 
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 40  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 40  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -2508,7 +2508,7 @@ _mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
   Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
 ssd2828_init . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
 sdc. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0094H  1
-C51 COMPILER V9.53.0.0   SSD2828                                                           12/06/2023 13:49:02 PAGE 41  
+C51 COMPILER V9.53.0.0   SSD2828                                                           12/07/2023 13:44:06 PAGE 41  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====

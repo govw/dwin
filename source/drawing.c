@@ -103,7 +103,6 @@ u16 draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
     cmd[5] = y1;
     cmd[6] = color;
     cmd[7] = 0xFF00;
-
     cmd[0] = 0x0004;       //draw line filled rect
     
     {
@@ -115,13 +114,16 @@ u16 draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
         return cur_object_vp;
     }
 }
-
 void clear_filled_rects(void)
 {
     u16 dummy = 0x0000;
     all_filled_rect_cnt = 0;
 
     write_dgus_vp(FILLED_RECT_VP, (u8*) &dummy, 1);
+}
+void Draw_filled_rect_redraw(u16 vp, u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
+{
+    write_dgus_vp(vp, (u8*) &x0, 5);
 }
 
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
@@ -402,7 +404,6 @@ void Draw_text_change_color(u16 sp, u16 new_color)
 {
     write_dgus_vp(sp + 3, (u8*) &new_color, sizeof(new_color) / 2);
 }
-
 void Draw_text_change_text(u8* format, u16 sp, ...)
 {
     u8 xdata buf[10];
@@ -418,6 +419,10 @@ u16 Draw_text_get_color(u16 sp)
     u16 color;
     read_dgus_vp(sp + 3, (u8*) &color, sizeof(color) / 2);
     return color;
+}
+void Draw_text_get_pos(u16 sp, rect_t *r) 
+{
+    read_dgus_vp(sp + 4, (u8*) r, sizeof(rect_t) / 2); //4 смещение в структуре до координат прямоугольника
 }
 void Draw_text_num_to_text(u16 sp, u16 n, u8* units) 
 {
