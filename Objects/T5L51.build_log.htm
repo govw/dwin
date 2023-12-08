@@ -26,6 +26,8 @@ Project File Date:  11/23/2023
 
 <h2>Output:</h2>
 Build target 'Target 1'
+compiling main.c...
+source\ssd2828.h(76): warning C235: parameter 1: different types
 compiling temp.c...
 linking...
 *** WARNING L13: RECURSIVE CALL TO SEGMENT
@@ -74,7 +76,7 @@ linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_SSD2828_READREG?SSD2828
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?ADD_I_KZ?TEMP
+    SEGMENT: ?PR?DRAWING_INIT?DRAWING
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?CLEAR_LINES?DRAWING
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
@@ -99,15 +101,15 @@ linking...
     SEGMENT: ?PR?_DELAY_MS?SYS
     CALLER1: ?PR?EXT_INT1?MAIN
     CALLER2: ?C_C51STARTUP
-Program Size: data=73.2 xdata=17580 code=30986
+Program Size: data=73.2 xdata=17576 code=31922
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
 c:\Users\OGK5-7\Desktop\dwin>cd objects 
 c:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x787D, got 0x6EEA)
+    (expected >= 0x7C25, got 0x729D)
 c:\Users\OGK5-7\Desktop\dwin\Objects>echo.
-".\Objects\T5L51" - 0 Error(s), 33 Warning(s).
+".\Objects\T5L51" - 0 Error(s), 34 Warning(s).
 </pre>
 </body>
 </html>

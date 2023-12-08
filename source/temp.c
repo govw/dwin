@@ -45,16 +45,7 @@ code const u32 menu_item_bm[] = {
 }; 
 
 //те элементы которые будут отображены в горизонтальном меню и то какая сейчас настройка
-idata u32 main_menu_bm = (((u32)1 << EIID_TIG)       |
-                         ((u32)1 << EIID_2T)        |
-                         ((u32)1 << EIID_AC)        |
-                         ((u32)1 << EIID_HF)        |
-                         ((u32)1 << EIID_PULSE_OFF) |
-                         ((u32)1 << EIID_SIN)       |
-                         ((u32)1 << EIID_D_10)      |
-                         ((u32)1 << EIID_H2O_OFF)      
-                               
-);
+data u32 main_menu_bm;
 //битовая маска горизонтального меню на нижнем экране необходима первоначальная инициализация
 
 icon_t cur_menu[48];
@@ -66,7 +57,7 @@ u8 idata cur_active_items_id = TIG;
 
 u16 text_sp[EIID_SIZE]; //массив sp идентификаторов линий, картинок, чисел
 s16 par[EIID_SIZE];
-xdata u16 par_tek[36];//параметры для силовой части
+xdata s16 par_tek[36];//параметры для силовой части
 u16 cur_par_id; //номер текущего параметра к отображению
 
 typedef struct {
@@ -79,6 +70,7 @@ s16   par_step[EIID_SIZE];
 u16 Amp_text_sp; //поле для вывода тока во время сварки
 u16 Volt_text_sp;//поле для вывода напраяжения во время сварки
 u16 Par_big_text_sp;//поле для вывода значения текущего настраиваемого параметра
+data u8 Welding_state;//текущее состояние силовой части
 u16 Filled_rect_under_par_sp; //прямоугольник под параметрами
 
 u16 icon_sp_bottom_menu[16]; //sp картинок нижнего горизонтального меню // для их изменения
@@ -198,10 +190,12 @@ point_t add_base_i1_i2_t(point_t p)
 
     draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
 
-    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 30, CYAN, EIID_BASE_T4); //время базы
+    if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
+        draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 30, CYAN, EIID_BASE_T4); //время базы
+    }
     draw_number_wtih_touch_centered(p, FONT_SIZE, PINK, EIID_BASE_I2); //ток базы
     if(main_menu_bm & (u32)1 << EIID_4T_PLUS) 
-        draw_number_wtih_touch_centered(make_point(p.x, p.y + (FONT_SIZE * 2) + (LINE_HIGHT * 2)), FONT_SIZE, YELLOW, EIID_BASE2_I2X); //второй ток базы
+        draw_number_wtih_touch_centered(make_point(p.x, p.y + (FONT_SIZE * 2) + (LINE_HIGHT / 2)) , FONT_SIZE, YELLOW, EIID_BASE2_I2X); //второй ток базы
     return p2;
 }
 
@@ -385,7 +379,6 @@ void bottom_level_controls(u8 item_pos)
                 
                 main_menu_bm |= ((u32)1 << cur_menu[item_pos].ico); //вставить текущий выбранный элемент в главное меню
                 
-                
                 cur_par_value_change(cur_menu[item_pos].ico, 0); //изменение параметра для силовой части
 
                 switch (cur_menu[item_pos].ico)
@@ -395,15 +388,19 @@ void bottom_level_controls(u8 item_pos)
                         make_scene(); 
                     } break;
 
-                    case EIID_TIG_SPOT: { //в режиме tig_spot есть только 2_t
+                    case EIID_TIG_SPOT: { 
                         cur_active_items_id = TIG;
-                        bm &= ~(menu_item_bm[MEN_BTN_MOD]);
-                        bm |= ((u32)1 << EIID_2T);
                         make_scene(); 
                     } break;
 
                     case EIID_MMA: {
                         cur_active_items_id = MMA;
+
+                        if(main_menu_bm & ((u32)1 << EIID_AC_MIX)) {//потом это убрать //при переходе в mma менять полрность на dc
+                            main_menu_bm &= ~((u32)1 << EIID_AC_MIX);
+                            main_menu_bm |=  ((u32)1 << EIID_DC_PLUS);
+                        }
+
                         make_scene(); 
                     } break;
 
@@ -417,9 +414,15 @@ void bottom_level_controls(u8 item_pos)
                     case EIID_PULSE_OFF: {
                         make_scene();         
                     } break;
+
                 }
 
                 bm = main_menu_bm & active_items[cur_active_items_id];
+
+                if(main_menu_bm & ((u32)1 << EIID_DC_MINUS) || main_menu_bm & ((u32)1 << EIID_DC_PLUS)) { //если dc+ или dc- убрать выбор формы волны
+                    bm &= ~(menu_item_bm[MEN_PLS_WAVE_SHAPE_MOD]);
+                }
+                    
                 
                 
 
@@ -473,7 +476,7 @@ void display_par(u16 par_id)
     };
     u8 code *format_big[] = {
         "", 
-        "%.1f\r\n", "%.0fs\r\n", "%.0fms\r\n", "%.0fA\r\n",    
+        "%.1fs\r\n", "%.0fs\r\n", "%.0fms\r\n", "%.0fA\r\n",    
     };
     u8 format_id = 0;
     float par_value = par[par_id];
@@ -520,7 +523,10 @@ void display_par(u16 par_id)
 
     if(format_id) {
         Draw_text_change_text(format[format_id], text_sp[par_id], par_value);
-        //Draw_text_change_text(format_big[format_id], Par_big_text_sp, par_value);
+        //если сварка не отображать параметр большими цифрами
+        if(Welding_state == 0) { //Idle state
+            Draw_text_change_text(format_big[format_id], Par_big_text_sp, par_value);
+        }
     }
 }
 
@@ -557,11 +563,6 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
             display_par(cur_par_id);    
         } break;
 
-        case EIID_BASE_T4   :
-        case EIID_IMPULSE_T5: {
-            display_par(cur_par_id);
-        } break;
-       
         case EIID_START_I1  :     
         case EIID_BASE_I2   :
         case EIID_BASE2_I2X :  
@@ -569,7 +570,9 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
         case EIID_END_I4    :
         case EIDD_KZ_I5     :
         case EIID_FREQ_F1   :
-        case EIID_BALANCE_D1: {
+        case EIID_BALANCE_D1:
+        case EIID_BASE_T4   : 
+        case EIID_IMPULSE_T5: {
             u16 tmp = par[cur_par_id];
             switch (cur_par_id)
             {
@@ -580,7 +583,9 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
                 case EIID_END_I4    : par_tek[EPID_END_I4]     = tmp; break;
                 case EIDD_KZ_I5     : par_tek[EPID_KZ_I5]      = tmp; break;
                 case EIID_FREQ_F1   : par_tek[EPID_FREQ_F1]    = tmp; break;
-                case EIID_BALANCE_D1: par_tek[EPID_BALANCE_D1] = tmp; break;   
+                case EIID_BALANCE_D1: par_tek[EPID_BALANCE_D1] = tmp; break;
+                case EIID_BASE_T4   : par_tek[EPID_BASE_T4]    = tmp; break;
+                case EIID_IMPULSE_T5: par_tek[EPID_IMPULSE_T5] = tmp; break;  
             }
             display_par(cur_par_id);        
         }break;
@@ -596,50 +601,50 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
         case EIID_TIG_SPOT : {
             struct mod_submod{
                 u16 d0    : 4; //пусто, не используется.   
-                u16 pulse : 4; //1-пульс 2-не пульс
-                u16 pol   : 4; //1-DC  2-AC  3-MIX
-                u16 mod   : 4; //1-TIG 2-MMA 3-TIG Spot
+                u16 pulse : 4; //0-пульс 1-не пульс
+                u16 pol   : 4; //0-DC  1-AC  2-MIX
+                u16 mod   : 4; //0-TIG 1-MMA 2-TIG Spot
             } tmp;
             *(u16*)&tmp = par_tek[EPID_MODES_SUBMODES]; 
             switch (cur_par_id)
             {
-                case EIID_PULSE_OFF: tmp.pulse = 1; break; 
                 case EIID_PULSE_ON : tmp.pulse = 0; break;
-                case EIID_AC       : tmp.pol = 1;   break;
-                case EIID_AC_MIX   : tmp.pol = 2;   break;
-                case EIID_DC_MINUS : tmp.pol = 0; par_tek[EPID_POLARITY] = 2; break;
-                case EIID_DC_PLUS  : tmp.pol = 0; par_tek[EPID_POLARITY] = 1; break;
-                case EIID_TIG      : tmp.mod = 0;   break;
-                case EIID_MMA      : tmp.mod = 1;   break;
-                case EIID_TIG_SPOT : tmp.mod = 2;   break;
+                case EIID_PULSE_OFF: tmp.pulse = 1; break; 
+
+                case EIID_DC_MINUS : tmp.pol   = 0; par_tek[EPID_POLARITY] = 1; par_tek[EPID_SERVICE_PAR] &= ~0x0002; break;
+                case EIID_DC_PLUS  : tmp.pol   = 0; par_tek[EPID_POLARITY] = 2; par_tek[EPID_SERVICE_PAR] |=  0x0002; break;
+                case EIID_AC       : tmp.pol   = 1; break;
+                case EIID_AC_MIX   : tmp.pol   = 2; break;
+
+                case EIID_TIG      : tmp.mod   = 0; break;
+                case EIID_MMA      : tmp.mod   = 1; break;
+                case EIID_TIG_SPOT : tmp.mod   = 2; break;
             }
             par_tek[EPID_MODES_SUBMODES] = *(u16*)&tmp;
         } break;
     
-        case EIID_2T : par_tek[EPID_2T_4T] = 1; break;
-        case EIID_4T : par_tek[EPID_2T_4T] = 2; par_tek[EPID_IS_PLUS_4T] = 2; break;//4t plus mode off
-        case EIID_4T_PLUS : {
-            par_tek[EPID_IS_PLUS_4T] = 1; //4t plus mode
-        } break;
+        case EIID_2T     : par_tek[EPID_2T_4T] = 1; par_tek[EPID_IS_PLUS_4T] = 1; par_tek[EPID_SERVICE_PAR] &= ~0x0004; break;
+        case EIID_4T     : par_tek[EPID_2T_4T] = 2; par_tek[EPID_IS_PLUS_4T] = 1; par_tek[EPID_SERVICE_PAR] |=  0x0004; par_tek[EPID_SERVICE_PAR] &= ~0x0008; break;
+        case EIID_4T_PLUS: par_tek[EPID_2T_4T] = 2; par_tek[EPID_IS_PLUS_4T] = 2; par_tek[EPID_SERVICE_PAR] |=  0x0008; break;
+      
 
-        case EIID_HF  : par_tek[EPID_IGNITION_TYPE] = 2; break;
-        case EIID_LIFT: par_tek[EPID_IGNITION_TYPE] = 1; break;
+        case EIID_LIFT: par_tek[EPID_IGNITION_TYPE]  = 1; par_tek[EPID_SERVICE_PAR] &= ~0x0001; break;
+        case EIID_HF  : par_tek[EPID_IGNITION_TYPE]  = 2; par_tek[EPID_SERVICE_PAR] |=  0x0001; break;
+        
+        case EIID_H2O_OFF: par_tek[EPID_FLOW_SENSOR] = 1; par_tek[EPID_SERVICE_PAR] &= ~0x0010; break; 
+        case EIID_H2O_ON : par_tek[EPID_FLOW_SENSOR] = 2; par_tek[EPID_SERVICE_PAR] |=  0x0010; break;
 
-        case EIID_H2O_OFF: par_tek[EPID_FLOW_SENSOR] = 1; break; 
-        case EIID_H2O_ON : par_tek[EPID_FLOW_SENSOR] = 2; break;
-
-        case EIID_D_10: par_tek[EPID_ELECTRODE_D] = 1; break;    
-        case EIID_D_16: par_tek[EPID_ELECTRODE_D] = 2; break;
-        case EIID_D_20: par_tek[EPID_ELECTRODE_D] = 3; break;    
-        case EIID_D_24: par_tek[EPID_ELECTRODE_D] = 4; break;
-        case EIID_D_32: par_tek[EPID_ELECTRODE_D] = 5; break;
-        case EIID_D_40: par_tek[EPID_ELECTRODE_D] = 6; break;
-
-        case EIID_SIN : par_tek[EPID_WAVE_FORM] = 1; break;
-        case EIID_RECT: par_tek[EPID_WAVE_FORM] = 2; break;  
-        case EIID_TRIG: par_tek[EPID_WAVE_FORM] = 3; break;
-        case EIID_TRAP: par_tek[EPID_WAVE_FORM] = 4; break;
-
+        case EIID_D_10: par_tek[EPID_ELECTRODE_D]    = 1; break;    
+        case EIID_D_16: par_tek[EPID_ELECTRODE_D]    = 2; break;
+        case EIID_D_20: par_tek[EPID_ELECTRODE_D]    = 3; break;    
+        case EIID_D_24: par_tek[EPID_ELECTRODE_D]    = 4; break;
+        case EIID_D_32: par_tek[EPID_ELECTRODE_D]    = 5; break;
+        case EIID_D_40: par_tek[EPID_ELECTRODE_D]    = 6; break;
+   
+        case EIID_SIN : par_tek[EPID_WAVE_FORM]      = 1; break;
+        case EIID_RECT: par_tek[EPID_WAVE_FORM]      = 2; break;  
+        case EIID_TRIG: par_tek[EPID_WAVE_FORM]      = 3; break;
+        case EIID_TRAP: par_tek[EPID_WAVE_FORM]      = 4; break;
     }
    
 }
@@ -715,44 +720,60 @@ void init_par_udgu(void)
     par_step[EIID_BASE2_I2X]    =  1  ; //A 
 
 
-    par_tek[EPID_MODES_SUBMODES] = 0x0100;
+
+    {
+        u8 i;
+        s16 *p_tmp;
+
+        p_tmp = par; 
+        for (i = 0; i < ARR_SIZE(par); i++)
+            *p_tmp++ = 0;
+        
+        p_tmp = par_tek;
+        for (i = 0; i < ARR_SIZE(par_tek); i++)
+            *p_tmp++ = 0;        
+    }
+ 
+   
+  main_menu_bm = (((u32)1 << EIID_TIG)              |
+                         ((u32)1 << EIID_2T)        |
+                         ((u32)1 << EIID_AC)        |
+                         ((u32)1 << EIID_HF)        |
+                         ((u32)1 << EIID_PULSE_OFF) |
+                         ((u32)1 << EIID_SIN)       |
+                         ((u32)1 << EIID_D_32)      |
+                         ((u32)1 << EIID_H2O_ON)      
+                    );
+    cur_par_value_change(EIID_TIG,        0);
+    cur_par_value_change(EIID_2T,         0);
+    cur_par_value_change(EIID_AC,         0);
+    cur_par_value_change(EIID_HF,         0);
+    cur_par_value_change(EIID_PULSE_OFF,  0);
+    cur_par_value_change(EIID_D_32,       0);
+    cur_par_value_change(EIID_SIN,        0);
+    cur_par_value_change(EIID_H2O_ON,     0);
+
+        
     par[EIID_PRE_FLOW_T1]        = par_tek[EPID_PRE_FLOW_T1]    = 53;   // t gaz
     par[EIID_START_I1]           = par_tek[EPID_START_I1]       = 50;   // I begin
     par[EIID_START_T2]           = par_tek[EPID_START_T2]       = 20;   // t begin
     par[EIID_UP_T3]              = par_tek[EPID_UP_T3]          = 33;   // increase
-    par[EIID_BASE_I2]            = par_tek[EPID_BASE_I2]        = 100;  // I базы
+    par[EIID_BASE_I2]            = par_tek[EPID_BASE_I2]        = 101;  // I базы
     par[EIID_BASE_T4]            = par_tek[EPID_BASE_T4]        = 2;    // t базы
     par[EIID_IMPULSE_I3]         = par_tek[EPID_IMPULSE_I3]     = 150;  // I имп
     par[EIID_IMPULSE_T5]         = par_tek[EPID_IMPULSE_T5]     = 3;    // t имп
-    par[EIID_FREQ_F1]            = par_tek[EPID_FREQ_F1]        = 100;  // F
-    par[EIID_BALANCE_D1]         = par_tek[EPID_BALANCE_D1]     = 6;   // balans
-    par[EIID_DOWN_T6]            = par_tek[EPID_DOWN_T6]        = 11;  // Decrease
+    par[EIID_FREQ_F1]            = par_tek[EPID_FREQ_F1]        = 50;  // F
+    par[EIID_BALANCE_D1]         = par_tek[EPID_BALANCE_D1]     = 60;   // balans
+    par[EIID_DOWN_T6]            = par_tek[EPID_DOWN_T6]        = 11;   // Decrease
     par[EIID_END_I4]             = par_tek[EPID_END_I4]         = 60;   // I end
     par[EIID_END_T7]             = par_tek[EPID_END_T7]         = 11;   // t end
-    par[EIID_POST_FLOW_T8]       = par_tek[EPID_POST_FLOW_T8]   = 3;   // t gaz
-    par[EIDD_KZ_I5]              = par_tek[EPID_KZ_I5]          = 55;  // I kz
-                                   par_tek[EPID_BSN]            = 1;   // BSN 1-off 2-on
-                                   par_tek[EPID_2T_4T]          = 1;   // 2T-4T
-                                   par_tek[EPID_IGNITION_TYPE]  = 2;
-                                   par_tek[EPID_FLOW_SENSOR]    = 1;
-                                   par_tek[EPID_POLARITY]       = 2;
-                                   par_tek[EPID_ELECTRODE_D]    = 3;
-                                   par_tek[EPID_SERVICE_PAR]    = 1;   // sin
-    par_tek[23]=0;                    // flags
-    par_tek[24]=24;
-    par_tek[25]=25;
-    par_tek[26]=26;
-    par_tek[27]=27;
-    par_tek[28]=2;   // Oscill  1-our, 2-China
-    par_tek[29]=29;
-    par_tek[30]=30;
-    par_tek[31]=31;
-    par_tek[32]=32;
-    par_tek[33]=33;
-    par_tek[34]=120; // 4T+ - второй ток базы
-    par_tek[35]=1;   // 4T+  1-off, 2-on  
-
+    par[EIID_POST_FLOW_T8]       = par_tek[EPID_POST_FLOW_T8]   = 3;    // t gaz
+    par[EIDD_KZ_I5]              = par_tek[EPID_KZ_I5]          = 55;   // I kz
+                                   par_tek[EPID_BSN]            = 1;    // BSN 1-off 2-on
   
+
+    par_tek[EPID_MODES_SUBMODES] = 0x0110;
+
 }
 
 
@@ -766,48 +787,27 @@ void make_scene(void)
     u16 x = 40;
     u16 y = 550;
     u8 i;
-
-    drawing_init();
     
     Draw_clear_screen();
     
-    //draw_filled_rect(0, 0, 1279, 799, GRAY);//задний фон
 
     draw_filled_rect(0, 0, 1279, 799, GRAY);//задний фон
-    Filled_rect_under_par_sp = draw_filled_rect(0, 0, 0, 0, 0x528A); // рамка под параметрами создание области под нее
+
+    Filled_rect_under_par_sp = draw_filled_rect(0, 0, 0, 0, 0x528A); // рамка под параметрами создание области под нее заготовка
 
     draw_filled_rect(0, 210, 1278, 210 + 10, BLACK);//полоска под напряжением и током
 
-    
     for(i = 0; i < ARR_SIZE(icon_sp_bottom_menu); i++) {
         icon_sp_bottom_menu[i] = draw_image(0, 0, 0xffff); // создание пула картинок без отображения картинки
     }
-    
+
+    cur_par_id = EIID_BASE_I2; //текущий параметр ток базы
+
     make_bottom_menu();
 
-    cur_par_id = EIID_BASE_I2;
-
+  
     
-
-
-    // if(main_menu_bm & ( (u32)1 << EIID_TIG | (u32)1 << EIID_TIG_SPOT)) {//tig spot
-    //     point_t p;
-    //     if()
-       
-    //     p = make_point(x, y);
-    //     p = add_t_preflow(p);
-    //     p = dummy_line_up(p);
-    //     p = add_t_start_i(p);
-    //     p = add_t_up(p);
-    //     p = add_base_i1_i2_t(p);
-    //     LEVEL_HEIGHT *= 2;
-    //     p = add_t_down(p);
-    //     LEVEL_HEIGHT /= 2;
-    //     p = add_t_postflow(p);
-    //     draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта в конце
-    // } 
-    
-    {
+    if(main_menu_bm & (u32)1 << EIID_TIG) {
         point_t p;
         FONT_SIZE  = 35; 
         if(main_menu_bm & (u32)1 << EIID_TIG_SPOT) {
@@ -841,110 +841,69 @@ void make_scene(void)
             p = add_t_postflow(p);
         }
         draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
+    } else if(main_menu_bm & (u32)1 << EIID_MMA) {//mma
+        point_t p;
+        if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
+            LINE_WIDTH = 300;
+            FONT_SIZE = 38;//48
+        } else {
+            LINE_WIDTH = 400;
+            FONT_SIZE = 38;//64
+        }
+        p = make_point(40, 500);
+        p = dummy_line_up(p);
+        p = add_t_start_i(p);
+        p = dummy_line_down(p);
+        p = add_base_i1_i2_t(p);
+        if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
+            p = dummy_line_up(p);
+            p = add_i_t_impulse(p);
+        }
+        p = add_i_kz(p);
+        p = dummy_line_down(p);
+        draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта в конце
     }
-    
-    // if(main_menu_bm & (u32)1 << EIID_TIG) {//tig pulse ac
-    //     point_t p;
-    //     if(main_menu_bm & (u32)1 << EIID_TIG_SPOT) {
-    //         LINE_WIDTH = 200;
-    //         FONT_SIZE  = 35; 
-    //     } else {
-    //         LINE_WIDTH = 150;
-    //         FONT_SIZE  = 35; 
-    //     }
-    //     p = make_point(x, y);
-    //     p = add_t_preflow(p);
-    //     p = dummy_line_up(p);
-    //     p = add_t_start_i(p);
-    //     p = add_t_up(p);
-    //     p = add_base_i1_i2_t(p);
-    //     if(main_menu_bm & (u32)1 << EIID_TIG_SPOT) {
-    //         LEVEL_HEIGHT *= 2;
-    //         p = add_t_down(p);
-    //         LEVEL_HEIGHT /= 2;
-    //         p = add_t_postflow(p);
-    //     } else {
-    //         p = dummy_line_down(p);
-    //         p = add_i_t_impulse(p);
-    //         p = dummy_line_up(p);
-    //         p = add_t_down(p);
-    //         p = add_end_i_t(p);
-    //         p = dummy_line_down(p);
-    //         p = add_t_postflow(p);
-    //     }
-        
-    //     draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-    // } else if(main_menu_bm & (u32)1 << EIID_MMA) {//mma
-    //     point_t p;
-    //     if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
-    //         LINE_WIDTH = 300;
-    //         FONT_SIZE = 38;//48
-    //     } else {
-    //         LINE_WIDTH = 400;
-    //         FONT_SIZE = 38;//64
-    //     }
-    //     p = make_point(40, 500);
-    //     p = dummy_line_up(p);
-    //     p = add_t_start_i(p);
-    //     p = dummy_line_down(p);
-    //     p = add_base_i1_i2_t(p);
-    //     if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
-    //         p = dummy_line_up(p);
-    //         p = add_i_t_impulse(p);
-    //     }
-    //     p = add_i_kz(p);
-    //     p = dummy_line_down(p);
-    //     draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта в конце
-    // }
-    
-
 
 
     draw_line(40, 650 - 80, 1240, 650 - 80, 5, 0xDEDB);
     draw_line(40, 650, 1240, 650, 5, 0xDEDB);
-    
-
-
-
-    
-    {
-        static u16 cur_welding_state = 0;
-
-        if(cur_welding_state == 1) {
-            // Amp_text_sp = Draw_text(
-            // 0, 
-            // 0,
-            // SCREEN_WIDTH - 300,
-            // 255,  
-            // 0,38, 
-            // 175,255, 
-            // TEXT_INTERVAL_1 | TEXT_ALIGNMENT_RIGHT | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_ASCII, //for big unicode font use ascii encode and icl is font id
-            // RED); 
-
-            // Volt_text_sp = Draw_text(
-            // 930, 
-            // 74,
-            // SCREEN_WIDTH,
-            // 128 + 74, 
-            // 0,0, 
-            // 64,128, 
-            // TEXT_INTERVAL_1 | TEXT_ALIGNMENT_LEFT | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_GBK, //for big unicode font use ascii encode and icl is font id
-            // DARK_GREEN);
-        } else {
-            Par_big_text_sp = Draw_text(
-            0, 
-            0,
-            SCREEN_WIDTH - 1,
-            255,  
-            0,38, 
-            175,255, 
-            TEXT_INTERVAL_1 | TEXT_ALIGNMENT_CENTER | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_ASCII, //for big unicode font use ascii encode and icl is font id
-            PINK); 
+  
+    if(Welding_state == 0) { //режим настройкаи параметров
+        Par_big_text_sp = Draw_text(
+        0, 
+        0,
+        SCREEN_WIDTH - 1,
+        255,  
+        0,38, 
+        175,255, 
+        TEXT_INTERVAL_1 | TEXT_ALIGNMENT_CENTER | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_ASCII, //for big unicode font use ascii encode and icl is font id
+        PINK); 
+        {
+            u16 dummy = 0;
+            write_dgus_vp(Volt_text_sp + (sizeof(dgus_text_display_t) / 2), (u8*) &dummy, 1);
         }
         
+    } else {
+        Amp_text_sp = Draw_text(
+        0, 
+        0,
+        SCREEN_WIDTH - 300,
+        255,  
+        0,38, 
+        175,255, 
+        TEXT_INTERVAL_1 | TEXT_ALIGNMENT_RIGHT | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_ASCII, //for big unicode font use ascii encode and icl is font id
+        RED); 
+
+        Volt_text_sp = Draw_text(
+        930, 
+        74,
+        SCREEN_WIDTH,
+        128 + 74, 
+        0,0, 
+        64,128, 
+        TEXT_INTERVAL_1 | TEXT_ALIGNMENT_LEFT | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_GBK, //for big unicode font use ascii encode and icl is font id
+        DARK_GREEN);
     }
-    //две вертикальных линии
-    
     
 
     par_select(EIID_BASE_I2);

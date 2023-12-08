@@ -67,10 +67,10 @@ void ext_int0() interrupt 0
         delay_us(600);
     } while((P3 & (1 << 0)) == 0);
     do {
-        delay_us(600);
+        //delay_us(600);
     } while((P3 & (1 << 0)) == 0);
     do {
-        delay_us(300);
+        //delay_us(300);
     } while((P3 & (1 << 0)) == 0);
     
     if((P3 & (1 << 1)) == 0) {
@@ -97,10 +97,10 @@ void ext_int1() interrupt 2
         delay_us(600);
     } while((P3 & (1 << 1)) == 0);
     do {
-        delay_us(600);
+        //delay_us(600);
     } while((P3 & (1 << 1)) == 0);
     do {
-        delay_us(300);
+        //delay_us(300);
     } while((P3 & (1 << 1)) == 0);
     
     if((P3 & (1 << 0)) == 0) {
@@ -136,7 +136,7 @@ void ext_int1() interrupt 2
 //dbg
 
 //debug
-static data u8  welding_state;
+
 static data u16 amp;
 static data u16 volt;
 static data u16 time;
@@ -150,19 +150,32 @@ void print_debug_info(void)
 {
     static u8 buf[100];
     code u8 *welding_states_tig[] = {
-        "Preflow", "Nothing", "Ignition", "Begin I", "Increase", "Welding", "Decreaseing",
-        "End I", "Cleaning", "Flow end",
+        /*00*/"IDLE",
+        /*01*/"requesting/receiving parameters", 
+        /*02*/"gas flow before welding",
+        /*03*/"ignition",
+        /*04*/"no current (not ignited)", 
+        /*05*/"no current after ignition (when checking)", 
+        /*06*/"ignition pulse", 
+        /*07*/"pulse time is incorrect", 
+        /*08*/"initial current", 
+        /*09*/"increase",
+        /*10*/"welding", 
+        /*11*/"decrease",
+        /*12*/"end I",
+        /*13*/"cleaning the electrode",
+        /*14*/"gas flow at the end",
+        /*15*/"waiting for the release of the button on the torch",
     };
 
     memset(buf, 0, ARR_SIZE(buf));
 
-    sprintf(buf, "%s               %d %d %d %d\n\r%dA\n\r%.1fV\n\r%.1fs\n\rgood: %d\n\rbad:  %d",welding_states_tig[welding_state], touch_coord_x, touch_coord_y, touch_state, last_touch_item, amp, (float)volt / 10.0, (float)time / 10.0, good_packages_cnt, bad_packages_cnt);
+    sprintf(buf, "%s\n\r%d %d %d %d\n\r%dA\n\r%.1fV\n\r%.1fs\n\rgood: %d\n\rbad:  %d",welding_states_tig[Welding_state], touch_coord_x, touch_coord_y, touch_state, last_touch_item, amp, (float)volt / 10.0, (float)time / 10.0, good_packages_cnt, bad_packages_cnt);
     write_dgus_vp(0x2500, (u8*) &buf, sizeof(buf) / 2);
 
 
 
-    // Draw_text_change_text("%dA\r\n", Amp_text_sp,  amp); //отображение занчений во время сварки
-    // Draw_text_change_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
+    
 }
 //debug
 
@@ -382,19 +395,34 @@ void process_uart(void)
                             } break;       
 
                             case 0x33: {
-                                if(bufin[2] != 88)
-                                    welding_state = bufin[2] - 1;//dbg
+                                if((bufin[2] != 88) && (bufin[2] != 78))
+                                {   
+                                    Welding_state = bufin[2];//dbg
+                                    if(Welding_state == 8) {/*08*///"initial current",
+                                        make_scene();
+                                        Draw_text_change_text("%dA\r\n", Amp_text_sp,  amp);
+                                        Draw_text_change_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
+                                    }
+                                }
+                                else {
+                                    Welding_state = 0;
+                                    make_scene();
+                                }
                             } break;
 
                             case 0x3D: { //запрос на отображение параметра
                                 u16 value = ((unsigned int)(bufin[4]) << 8) + bufin[3];
                                 if(bufin[2] == 0x40) { //amp
                                     amp = value; //dbg
+                                    Draw_text_change_text("%dA\r\n", Amp_text_sp,  amp); //отображение занчений во время сварки
                                 } else if (bufin[2] == 0x41) {//vlots
+                                    Draw_text_change_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
                                     volt = value; //dbg
                                 } else if(bufin[2] == 0x42) { //time
                                     time = value; //dbg
                                 }
+                                
+                                
 
                             } break;
 

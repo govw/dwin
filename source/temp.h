@@ -56,8 +56,8 @@ enum PAR_ID{
     EPID_IGNITION_TYPE, //18   Вид поджига - контактный/бесконтактный
     EPID_FLOW_SENSOR,   //19   Опрос датчика протока - вкл/выкл
     EPID_POLARITY,      //20   Полярность DC+/DC-
-    EPID_WAVE_FORM,     //22   Тип огибающей
     EPID_ELECTRODE_D,   //21   Диаметр электрода, мм
+    EPID_WAVE_FORM,     //22   Тип огибающей
     EPID_SERVICE_PAR,   //23   Служебные параметры (битовые) 
     EPID_PLUS_PULSE,    //24   + Pulse Between 
     EPID_MINUS_PULSE,   //25   - Pulse Between
@@ -108,14 +108,16 @@ void draw_bottom_menu(void);
 
 extern icon_t cur_menu[];
 extern u8  cur_menu_size;
-extern idata u32 main_menu_bm;
+extern data u32 main_menu_bm;
 extern void (*cur_menu_fanc)(u8 item_pos);
 
 extern xdata s16 par[];
-extern xdata u16 par_tek[];
+extern xdata s16 par_tek[];
 
 extern u16 Amp_text_sp; //поле для вывода тока напряжения сварки
 extern u16 Volt_text_sp;//поле для вывода напраяжения во время сварки
+
+extern data u8  Welding_state;
 
 extern void init_par_udgu(void);
 extern void draw_cyclogramm(void);

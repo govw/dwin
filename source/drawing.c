@@ -396,8 +396,9 @@ void Draw_text_clear_all(void)
 {
     u8 i;
     u16 dummy = 0;
-    for(i = 0; i < ARR_SIZE(text_display_sp); i++) {
-        write_dgus_vp(text_display_sp[i] + 8, (u8*) &dummy, sizeof(dummy) / 2);
+    for(i = 0; i <= ARR_SIZE(text_display_sp); i++) {
+        //write_dgus_vp(text_display_sp[i] + 8, (u8*) &dummy, sizeof(dummy) / 2);
+        write_dgus_vp(text_display_sp[i] + (sizeof(dgus_text_display_t) / 2), (u8*) &dummy, sizeof(dummy) / 2);
     }
 }
 void Draw_text_change_color(u16 sp, u16 new_color)
