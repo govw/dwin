@@ -94,7 +94,7 @@ enum {
 
 
 typedef struct {
-    u8 ico;
+    u8 id;
     rect_t r;
 }icon_t; 
 
@@ -107,7 +107,7 @@ void draw_bottom_menu(void);
 
 
 extern icon_t cur_menu[];
-extern u8  cur_menu_size;
+extern u8  touch_rect_cnt;
 extern data u32 main_menu_bm;
 extern void (*cur_menu_fanc)(u8 item_pos);
 
@@ -122,5 +122,5 @@ extern data u8  Welding_state;
 extern void init_par_udgu(void);
 extern void draw_cyclogramm(void);
 extern void make_scene(void);
-void Process_Encoder(u8 state); 
+void Encoder_process_code(u8 state); 
 #endif //TEMP_H

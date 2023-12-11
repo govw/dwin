@@ -11,6 +11,6 @@ enum {
 
 
 extern void Encoder_Init(void);
-void Process_Encoder(u8);
+void Encoder_process_code(u8);
 
 #endif //ENCODER_H

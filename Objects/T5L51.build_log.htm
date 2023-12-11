@@ -21,14 +21,17 @@ Dialog DLL:      DCore51.DLL V2.81.4.0
 Dialog DLL:      TCore51.DLL V2.66.2.1
  
 <h2>Project:</h2>
-c:\Users\OGK5-7\Desktop\dwin\T5L51.uvproj
-Project File Date:  11/23/2023
+c:\Users\OGK5-7\Desktop\dwin new\dwin\T5L51.uvproj
+Project File Date:  12/09/2023
 
 <h2>Output:</h2>
 Build target 'Target 1'
-compiling main.c...
-source\ssd2828.h(76): warning C235: parameter 1: different types
-compiling temp.c...
+compiling drawing.c...
+.\driver\sys.h(115): warning C317: attempt to redefine macro 'NULL'
+source\drawing.c(123): warning C280: 'y0': unreferenced local variable
+source\drawing.c(123): warning C280: 'x1': unreferenced local variable
+source\drawing.c(123): warning C280: 'y1': unreferenced local variable
+source\drawing.c(123): warning C280: 'color': unreferenced local variable
 linking...
 *** WARNING L13: RECURSIVE CALL TO SEGMENT
     SEGMENT: ?PR?MAKE_SCENE?TEMP
@@ -76,21 +79,25 @@ linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_SSD2828_READREG?SSD2828
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?DRAWING_INIT?DRAWING
+    SEGMENT: ?PR?DRAW_CLEAR_SCREEN?DRAWING
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?CLEAR_LINES?DRAWING
+    SEGMENT: ?PR?DRAW_LINES_CLEAR?DRAWING
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DRAW_IMAGE_SET_ID?DRAWING
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_DRAW_IMAGE_SET_POS?DRAWING
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_DRAW_NUMBER?DRAWING
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_CHANGE_NUMBER_VALUE?DRAWING
+    SEGMENT: ?PR?_DRAW_NUMBER_SET_VALUE?DRAWING
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_CHANGE_NUMBER_COLOR?DRAWING
+    SEGMENT: ?PR?_DRAW_NUMBER_SET_COLOR?DRAWING
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_CHANGE_NUMBER_POS?DRAWING
+    SEGMENT: ?PR?_DRAW_NUMBER_SET_POS?DRAWING
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_READ_NUMBER_COLOR?DRAWING
+    SEGMENT: ?PR?_DRAW_NUMBER_GET_COLOR?DRAWING
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_DRAW_TEXT_NUM_TO_TEXT?DRAWING
+    SEGMENT: ?PR?_DRAW_TEXT_GET_COLOR?DRAWING
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_DRAW_TEXT_POINT_NUM_TO_TEXT?DRAWING
 *** WARNING L15: MULTIPLE CALL TO SEGMENT
@@ -101,15 +108,15 @@ linking...
     SEGMENT: ?PR?_DELAY_MS?SYS
     CALLER1: ?PR?EXT_INT1?MAIN
     CALLER2: ?C_C51STARTUP
-Program Size: data=73.2 xdata=17576 code=31922
+Program Size: data=71.2 xdata=17585 code=30481
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
-c:\Users\OGK5-7\Desktop\dwin>cd objects 
-c:\Users\OGK5-7\Desktop\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
-srec_cat: T5L51.hex: 75: warning: data records not in strictly ascending order
-    (expected >= 0x7C25, got 0x729D)
-c:\Users\OGK5-7\Desktop\dwin\Objects>echo.
-".\Objects\T5L51" - 0 Error(s), 34 Warning(s).
+c:\Users\OGK5-7\Desktop\dwin new\dwin>cd objects 
+c:\Users\OGK5-7\Desktop\dwin new\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
+srec_cat: T5L51.hex: 59: warning: data records not in strictly ascending order
+    (expected >= 0x7684, got 0x6D02)
+c:\Users\OGK5-7\Desktop\dwin new\dwin\Objects>echo.
+".\Objects\T5L51" - 0 Error(s), 40 Warning(s).
 </pre>
 </body>
 </html>

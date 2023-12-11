@@ -66,12 +66,12 @@ void ext_int0() interrupt 0
     do {
         delay_us(600);
     } while((P3 & (1 << 0)) == 0);
-    do {
-        //delay_us(600);
-    } while((P3 & (1 << 0)) == 0);
-    do {
-        //delay_us(300);
-    } while((P3 & (1 << 0)) == 0);
+    // do {
+    //     //delay_us(600);
+    // } while((P3 & (1 << 0)) == 0);
+    // do {
+    //     //delay_us(300);
+    // } while((P3 & (1 << 0)) == 0);
     
     if((P3 & (1 << 1)) == 0) {
         if(encoder_ticks > 80)
@@ -96,12 +96,12 @@ void ext_int1() interrupt 2
     do {
         delay_us(600);
     } while((P3 & (1 << 1)) == 0);
-    do {
-        //delay_us(600);
-    } while((P3 & (1 << 1)) == 0);
-    do {
-        //delay_us(300);
-    } while((P3 & (1 << 1)) == 0);
+    // do {
+    //     //delay_us(600);
+    // } while((P3 & (1 << 1)) == 0);
+    // do {
+    //     //delay_us(300);
+    // } while((P3 & (1 << 1)) == 0);
     
     if((P3 & (1 << 0)) == 0) {
         if(encoder_ticks > 80) 
@@ -169,13 +169,8 @@ void print_debug_info(void)
     };
 
     memset(buf, 0, ARR_SIZE(buf));
-
     sprintf(buf, "%s\n\r%d %d %d %d\n\r%dA\n\r%.1fV\n\r%.1fs\n\rgood: %d\n\rbad:  %d",welding_states_tig[Welding_state], touch_coord_x, touch_coord_y, touch_state, last_touch_item, amp, (float)volt / 10.0, (float)time / 10.0, good_packages_cnt, bad_packages_cnt);
     write_dgus_vp(0x2500, (u8*) &buf, sizeof(buf) / 2);
-
-
-
-    
 }
 //debug
 
@@ -190,15 +185,9 @@ void print_debug_info(void)
 
 void process_touch(void)
 {
-   enum ETP_STATE 
-   {
-       ETPS_WAIT,
-       ETPS_RELEASE,
-       ETPS_FIRST_PRESS,
-       ETPS_LIFT,
-       ETPS_PRESSING,
-   };
-   
+    enum ETP_STATE {
+        ETPS_WAIT, ETPS_RELEASE, ETPS_FIRST_PRESS, ETPS_LIFT, ETPS_PRESSING,
+    };
     struct {
        u8 status;
        u8 action_type;
@@ -207,37 +196,35 @@ void process_touch(void)
     } data touch_data;
     
     read_dgus_vp(0x16,(u8*)&touch_data, sizeof(touch_data) / 2); //info about touch status and coords
-        if(touch_data.status == 0x5A) //if status byte 0x05 some action done
-        {
-            touch_data.status = 0x00;
-            write_dgus_vp(0x16, (u8*) &touch_data.x, 1); //clear status byte to 00;
-           
-            //debug
-            touch_coord_x = touch_data.x;
-            touch_coord_y = touch_data.y;
-            touch_state   =  touch_data.action_type;
-            //debug
-            
+    if(touch_data.status == 0x5A) {//if status byte 0x05 some action done
+        touch_data.status = 0x00;
+        write_dgus_vp(0x16, (u8*) &touch_data.x, 1); //clear status byte to 00;
         
-            switch(touch_data.action_type)
-            {
-                case ETPS_RELEASE: {
-                    u8 i;
-                    for(i = 0; i < cur_menu_size; i++) { //if touch coords in recatnle area                        
-                            if( touch_data.x >= cur_menu[i].r.x0 && touch_data.x <= cur_menu[i].r.x1 &&  
-                                touch_data.y >= cur_menu[i].r.y0 && touch_data.y <= cur_menu[i].r.y1 ) {
-                                    cur_menu_fanc(i);
-                                    break;  
-                            }
-                        }
-                        last_touch_item = i; //debug
-                } break;
-                case ETPS_FIRST_PRESS: break;
-                case ETPS_LIFT:        break;
-                case ETPS_PRESSING:    break;
-                default: break;
-            }
+        //debug
+        touch_coord_x = touch_data.x;
+        touch_coord_y = touch_data.y;
+        touch_state   = touch_data.action_type;
+        //debug
+    
+        switch(touch_data.action_type) {
+            case ETPS_RELEASE: {
+                u8 i;
+                for(i = 0; i < touch_rect_cnt; i++) { //if touch coords in recatnle area                        
+                    if( touch_data.x >= cur_menu[i].r.x0 && touch_data.x <= cur_menu[i].r.x1 &&  
+                        touch_data.y >= cur_menu[i].r.y0 && touch_data.y <= cur_menu[i].r.y1 ) {
+                            break;  
+                    }
+                }
+                cur_menu_fanc(i);
+                last_touch_item = i; //debug
+            } break;
+            
+            case ETPS_FIRST_PRESS: break;
+            case ETPS_LIFT:        break;
+            case ETPS_PRESSING:    break;
+            default: break;
         }
+    }
 }
 
 
@@ -328,8 +315,7 @@ void process_uart(void)
                     {
                         u8 i;
                         u8 crc = 0;
-                        if(byte != 0x5A)
-                        {
+                        if(byte != 0x5A) {
                             if(byte == 0xA5) 
                                 UART_INIT_1 
                             else             
@@ -395,13 +381,14 @@ void process_uart(void)
                             } break;       
 
                             case 0x33: {
-                                if((bufin[2] != 88) && (bufin[2] != 78))
+                                u8 tmp = bufin[2];
+                                if((tmp != 88) && (tmp != 78))//если не комнады во время простоя
                                 {   
-                                    Welding_state = bufin[2];//dbg
+                                    Welding_state = tmp;//dbg
                                     if(Welding_state == 8) {/*08*///"initial current",
                                         make_scene();
-                                        Draw_text_change_text("%dA\r\n", Amp_text_sp,  amp);
-                                        Draw_text_change_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
+                                        Draw_text_set_text("%dA\r\n", Amp_text_sp,  amp);
+                                        Draw_text_set_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
                                     }
                                 }
                                 else {
@@ -414,16 +401,16 @@ void process_uart(void)
                                 u16 value = ((unsigned int)(bufin[4]) << 8) + bufin[3];
                                 if(bufin[2] == 0x40) { //amp
                                     amp = value; //dbg
-                                    Draw_text_change_text("%dA\r\n", Amp_text_sp,  amp); //отображение занчений во время сварки
                                 } else if (bufin[2] == 0x41) {//vlots
-                                    Draw_text_change_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
                                     volt = value; //dbg
                                 } else if(bufin[2] == 0x42) { //time
                                     time = value; //dbg
                                 }
-                                
-                                
 
+                                if(Welding_state != 0) {
+                                    Draw_text_set_text("%dA\r\n", Amp_text_sp,  amp); //отображение занчений во время сварки
+                                    Draw_text_set_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
+                                }
                             } break;
 
                             default:
@@ -469,7 +456,6 @@ void main()
     T0_Init();						 //��ʱ��0��ʼ��
 	EA = 0; //interrupt off
   
-
      //int0
     IP0 &= 0xFE;//Clear bit0
 	IP1 &= 0xFE;//Clear bit0
@@ -484,10 +470,8 @@ void main()
     
     IT1 = 1;
     EX1 = 1;
-    EA = 1;   
-    
 
-
+    EA = 1; //interrupt on   
 
     //StartTimer(0,100);
 	//StartTimer(1,50);
@@ -499,9 +483,8 @@ void main()
 	UartInit(UART5, 115200);
 	UART_INIT //MARCROS
 //__________________________________________________________________________________		  
-    
-    //draw_cyclogramm();
-    
+
+
 
     init_par_udgu();
     make_scene();
@@ -510,10 +493,9 @@ void main()
     {
         EA = 0;
         if(encoder_state_adsfl != ENC_STOP) {
-            Process_Encoder(encoder_state_adsfl);
+            Encoder_process_code(encoder_state_adsfl);
             encoder_state_adsfl = ENC_STOP;
         }
-        //Process_Encoder(ENC_R0);
         EA = 1;
 
         process_uart();

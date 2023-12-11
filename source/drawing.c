@@ -3,9 +3,8 @@
 #include <math.h>
 #include "drawing.h"
 
-#define FILLED_RECT_VP 0x1000
-#define LINE_VP        0x3000
-
+#define FILLED_RECT_VP    0x1000
+#define LINE_VP           0x3000
 #define VAR_ICON_START_VP 0xEFF1 //начальный адрес vp для картинок +1 для каждой новой, всего 16 доступно
 
 
@@ -19,7 +18,7 @@ static u8 all_text_display_cnt   = 0;
 void clear_images(void);
 void clear_numbers(void);
 void clear_filled_rects(void);
-void clear_lines(void);
+void Draw_lines_clear(void);
 void Draw_text_clear_all(void); 
 
 
@@ -31,7 +30,7 @@ point_t make_point(u16 x, u16 y)
     return p;
 }
 
-void drawing_init(void)
+void Draw_start(void)
 {
     all_filled_rect_cnt    = 0;
     all_img_cnt            = 0;
@@ -39,6 +38,7 @@ void drawing_init(void)
     all_data_variabl_cnt   = 0;
     all_text_display_cnt   = 0;
 }
+
 
 
 void Draw_clear_screen(void)
@@ -50,7 +50,6 @@ void Draw_clear_screen(void)
     Draw_text_clear_all();
 }
 
-
 u8 check_screen_bounds(u16 x, u16 y)
 {
     if(x < SCREEN_WIDTH && y < SCREEN_HEIGHT)
@@ -60,7 +59,7 @@ u8 check_screen_bounds(u16 x, u16 y)
 }
 
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-u16 draw_line_1px(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
+u16 Draw_line_1px(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
 {
     u16 cmd[8];
     
@@ -92,10 +91,10 @@ void clear_line_1px(void)
 }
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-u16 draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
+u16 Draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
 {
     u16 cmd[8];
-    if(!(check_screen_bounds(x0, y0) && check_screen_bounds(x1, y1))) return 0;
+    //if(!(check_screen_bounds(x0, y0) && check_screen_bounds(x1, y1))) return 0;
     
     cmd[2] = x0;
     cmd[3] = y0;
@@ -125,10 +124,9 @@ void Draw_filled_rect_redraw(u16 vp, u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
 {
     write_dgus_vp(vp, (u8*) &x0, 5);
 }
-
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-u16 draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color)
+u16 Draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color)
 {
     u8 half_widht = width / 2;
     if(x0 == x1 || y0 == y1)
@@ -152,7 +150,7 @@ u16 draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color)
         x1 += half_widht;
         y1 += half_widht;
         
-        return draw_filled_rect(x0, y0, x1, y1, color);
+        return Draw_filled_rect(x0, y0, x1, y1, color);
 
     } else {
         u8 i;
@@ -162,7 +160,7 @@ u16 draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color)
         y1 -= half_widht;
 
         for(i = 0; i <= width; i++) {
-            draw_line_1px(x0, y0, x1,y1, color);
+            Draw_line_1px(x0, y0, x1,y1, color);
             y0++;
             y1++;
         }
@@ -172,7 +170,7 @@ u16 draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color)
     return 0;//если небыло других
 }
 
-void clear_lines(void)
+void Draw_lines_clear(void)
 {
     u16 dummy = 0x0000;
     all_filled_rect_cnt = 0;
@@ -189,7 +187,7 @@ code u16 var_icon_sp[] = {
         0xF090, 0xF070, 0xF050, 0xF030
     };
 
-u16 draw_image(u16 x, u16 y, u16 image_id) 
+u16 Draw_image(u16 x, u16 y, u16 image_id) 
 {             
     dgus_variables_icon_t d;
 
@@ -230,12 +228,12 @@ void clear_images(void)
 }
 
 
-void image_change_id(u16 sp, u16 new_image_id)
+void Draw_image_set_id(u16 sp, u16 new_image_id)
 {
     write_dgus_vp(sp + (sizeof(dgus_variables_icon_t) / 2), (u8*) &new_image_id, 1);
 }
 
-void image_change_pos(u16 sp, point_t p)
+void Draw_image_set_pos(u16 sp, point_t p)
 {
     write_dgus_vp(sp + 1, (u8*) &p, sizeof(p) / 2); //+1 cмещение до  в структуре до координат
 }
@@ -251,7 +249,7 @@ code u16 data_variables_sp[] = {
         0xF2C0, 0xF290, 0xF260, 0xF230,
     };
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-u16 Draw_Number(u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color)
+u16 Draw_number(u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color)
 { 
     dgus_data_variable_display_t temp; //одна структура 30 слов //выделено с запасом
     
@@ -306,7 +304,7 @@ void clear_numbers(void)
 }
 
 
-void change_number_value(u16 sp, u16 new_value)
+void Draw_number_set_value(u16 sp, u16 new_value)
 {
     u16 places;
     if      (new_value < 10)    places = 1;
@@ -332,32 +330,26 @@ void change_number_value(u16 sp, u16 new_value)
     write_dgus_vp(sp + (sizeof(dgus_data_variable_display_t) / 2), (u8*) &new_value, 1);
 }
 
-void change_number_color(u16 sp, u16 new_color) 
+void Draw_number_set_color(u16 sp, u16 new_color) 
 {
     write_dgus_vp(sp + 3, (u8*) &new_color, 1);  //смещение к адресу цвета  в структуре dgus_data_variable_display_t
 }
 
-void change_number_pos(u16 sp, point_t p)
+void Draw_number_set_pos(u16 sp, point_t p)
 {
     write_dgus_vp(sp + 1, (u8*) &p, sizeof(point_t) / 2);    
 }
 
 
-u16 read_number_color(u16 sp)
+u16 Draw_number_get_color(u16 sp)
 {
     u16 tmp;
     read_dgus_vp(sp + 3, (u8*) &tmp, 1);
     return tmp;   
 }
 
-
-
-
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-
-
-
 code u16 text_display_sp[] = {    //0x2000 text drawing start
         0x2000, 0x2030, 0x2060, 0x2090,
         0x2120, 0x2150, 0x2180, 0x2210,
@@ -401,11 +393,11 @@ void Draw_text_clear_all(void)
         write_dgus_vp(text_display_sp[i] + (sizeof(dgus_text_display_t) / 2), (u8*) &dummy, sizeof(dummy) / 2);
     }
 }
-void Draw_text_change_color(u16 sp, u16 new_color)
+void Draw_text_set_color(u16 sp, u16 new_color)
 {
     write_dgus_vp(sp + 3, (u8*) &new_color, sizeof(new_color) / 2);
 }
-void Draw_text_change_text(u8* format, u16 sp, ...)
+void Draw_text_set_text(u8* format, u16 sp, ...)
 {
     u8 xdata buf[10];
     u16 len;
@@ -421,20 +413,12 @@ u16 Draw_text_get_color(u16 sp)
     read_dgus_vp(sp + 3, (u8*) &color, sizeof(color) / 2);
     return color;
 }
+
 void Draw_text_get_pos(u16 sp, rect_t *r) 
 {
     read_dgus_vp(sp + 4, (u8*) r, sizeof(rect_t) / 2); //4 смещение в структуре до координат прямоугольника
 }
-void Draw_text_num_to_text(u16 sp, u16 n, u8* units) 
-{
-    u8 buf[10];
-    u16 len;
 
-    sprintf(buf, "%d%s",n, units);
-    len = strlen(buf);
-    write_dgus_vp(sp + (sizeof(dgus_text_display_t) / 2), (u8*) &buf, ARR_SIZE(buf) / 2);
-    write_dgus_vp(sp + 8, (u8*) &len, sizeof(len) / 2); //set new text len
-}
 void Draw_text_point_num_to_text(u16 sp, u16 n, u8 point_pos, u8* units) 
 {
     u8 buf[10];
@@ -464,3 +448,30 @@ void Draw_text_point_num_to_text(u16 sp, u16 n, u8 point_pos, u8* units)
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
+void Draw_end(void) 
+{
+    u8 i;
+    u16 dummy;
+    // struct {
+    //     u16 cmd;
+    //     u16 cnt;
+    // } filled_rect; //0x0004//draw filled rect cmd
+    // filled_rect.cmd = 0x0004;
+    // filled_rect.cnt = all_filled_rect_cnt;
+    // {
+    //     u16 tmp = 0x0004;
+    //     write_dgus_vp(FILLED_RECT_VP + 2 + (5 * (u16)all_filled_rect_cnt), (u8*) &tmp, 1);
+    // }
+    // write_dgus_vp(FILLED_RECT_VP ,(u8*) &filled_rect, sizeof(filled_rect) / 2); // запись количества элементов и команды
+
+    
+    dummy = 0xFFFF;
+    for(i = all_img_cnt; i < ARR_SIZE(var_icon_sp); i++) {
+        write_dgus_vp(var_icon_sp[i] + (sizeof(dgus_variables_icon_t) / 2)  , (u8*) &dummy, 1);       
+    }
+
+    dummy = 0;
+    for(i = all_text_display_cnt; i < ARR_SIZE(text_display_sp); i++) {
+        write_dgus_vp(text_display_sp[i] + 8, (u8*) &dummy, sizeof(dummy) / 2);//делает длину текстового поля равной 0    
+    }
+}

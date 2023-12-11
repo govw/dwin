@@ -31,7 +31,6 @@
 #define TEXT_ENC_SJIS                  0X04
 #define TEXT_ENC_UNICODE               0X05
 
-
 static code u16 SCREEN_WIDTH = 1280;
 static code u16 SCREEN_HEIGHT = 800;
 
@@ -46,7 +45,6 @@ typedef struct {
     u16 x1;
     u16 y1;
 } rect_t;
-
 
 typedef struct {
         u16 vp;
@@ -79,10 +77,10 @@ typedef struct {
 
 typedef struct {
     u16     vp;            //Text pointer.
-    point_t start_pos; //The starting display position, which displays the coordinates of the upper left corner of the string.
+    point_t start_pos;     //The starting display position, which displays the coordinates of the upper left corner of the string.
     u16     color;         //Display text color
-    point_t lh;        //text box 
-    point_t rl;        //text box 
+    point_t lh;            //text box 
+    point_t rl;            //text box 
     u16     text_len;      //Display the number of bytes, when it encounters 0xFFFF, 0x0000 or displays to the end of the text box, it will no longer be displayed. 
     u8      font0_id;
     u8      font1_id;
@@ -94,32 +92,30 @@ typedef struct {
     u8      undef;          //Write 0x00. 
 } dgus_text_display_t;
 
-
-
 extern point_t make_point                  (u16 x, u16 y);
-extern void    drawing_init                (void);
+extern void    Draw_start                  (void);
+extern void    Draw_end                    (void);
 extern void    Draw_clear_screen           (void);
 extern u8      check_screen_bounds         (u16 x, u16 y);
-extern u16     draw_line_1px               (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
+extern u16     Draw_line_1px               (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 extern void    clear_line_1px              (void);
-extern u16     draw_filled_rect            (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
+extern u16     Draw_filled_rect            (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 extern void    Draw_filled_rect_redraw     (u16 vp, u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
-extern u16     draw_line                   (u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color);
-extern void    clear_lines                 (void);
-extern u16     draw_image                  (u16 x, u16 y, u16 image_id); 
-extern void    image_change_id             (u16 sp, u16 new_image_id);
-extern void    image_change_pos            (u16 sp, point_t p);  
-extern u16     Draw_Number                 (u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color);
-extern void    change_number_color         (u16 sp, u16 new_color);
-extern void    change_number_pos           (u16 sp, point_t p);
-extern u16     read_number_color           (u16 sp); 
-extern void    change_number_value         (u16 sp, u16 new_value);
+extern u16     Draw_line                   (u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color);
+extern void    Draw_lines_clear            (void);
+extern u16     Draw_image                  (u16 x, u16 y, u16 image_id); 
+extern void    Draw_image_set_id           (u16 sp, u16 new_image_id);
+extern void    Draw_image_set_pos          (u16 sp, point_t p);  
+extern u16     Draw_number                 (u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color);
+extern void    Draw_number_set_color       (u16 sp, u16 new_color);
+extern void    Draw_number_set_pos         (u16 sp, point_t p);
+extern u16     Draw_number_get_color       (u16 sp); 
+extern void    Draw_number_set_value       (u16 sp, u16 new_value);
 extern u16     Draw_text                   (u16 x0, u16 y0, u16 x1, u16 y1, u8 font0_id, u8 font1_id, u8 font_x_dots, u8 font_y_dots, u16 encode_mode, u16 color);
-extern void    Draw_text_change_color      (u16 sp, u16 new_color);
+extern void    Draw_text_set_color         (u16 sp, u16 new_color);
 extern u16     Draw_text_get_color         (u16 sp);
 extern void    Draw_text_get_pos           (u16 sp, rect_t *r);
-extern void    Draw_text_num_to_text       (u16 sp, u16 n, u8* units);
 extern void    Draw_text_point_num_to_text (u16 sp, u16 n, u8 point_pos, u8* units);
-extern void    Draw_text_change_text       (u8* format, u16 sp, ...);
+extern void    Draw_text_set_text          (u8* format, u16 sp, ...);
 
 #endif //INCLUDED_DRAWING_H

@@ -432,11 +432,6 @@
               <FileType>1</FileType>
               <FilePath>.\source\drawing.c</FilePath>
             </File>
-            <File>
-              <FileName>encoder.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\source\encoder.c</FilePath>
-            </File>
           </Files>
         </Group>
       </Groups>

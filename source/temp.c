@@ -15,24 +15,6 @@ code const u16 ICON_RECT_SZ = 128;
 
 
 
-
-
-//tig_spot только 2t
-code const u32 active_items[] = {
-    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_MMA)      |
-    ((u32)1 << EIID_2T)        | ((u32)1 << EIID_4T)       | ((u32)1 << EIID_4T_PLUS)  | ((u32)1 << EIID_TIG_SPOT) |
-    ((u32)1 << EIID_AC)        | ((u32)1 << EIID_AC_MIX)   | ((u32)1 << EIID_DC_MINUS) |
-    ((u32)1 << EIID_HF)        | ((u32)1 << EIID_LIFT)     |
-    ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON) |
-    ((u32)1 << EIID_SIN)       | ((u32)1 << EIID_TRIG)     | ((u32)1 << EIID_RECT)     | ((u32)1 << EIID_TRAP) |
-    ((u32)1 << EIID_D_10)      | ((u32)1 << EIID_D_16)     | ((u32)1 << EIID_D_20)     | ((u32)1 << EIID_D_24) | ((u32)1 << EIID_D_32) | ((u32)1 << EIID_D_40) |
-    ((u32)1 << EIID_H2O_OFF)   | ((u32)1 << EIID_H2O_ON),    //tig;
-
-    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_MMA)     |
-    ((u32)1 << EIID_AC)        | ((u32)1 << EIID_DC_MINUS) | ((u32)1 << EIID_DC_PLUS) |
-    ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON),     //mma
-};
-
 code const u32 menu_item_bm[] = { 
     ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_MMA),      
     ((u32)1 << EIID_2T)        | ((u32)1 << EIID_4T)       | ((u32)1 << EIID_4T_PLUS)  | ((u32)1 << EIID_TIG_SPOT),    
@@ -44,13 +26,30 @@ code const u32 menu_item_bm[] = {
     ((u32)1 << EIID_H2O_OFF)   | ((u32)1 << EIID_H2O_ON),   
 }; 
 
+code const u32 active_items[] = {
+    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_MMA)      |
+    ((u32)1 << EIID_2T)        | ((u32)1 << EIID_4T)       | ((u32)1 << EIID_4T_PLUS)  | ((u32)1 << EIID_TIG_SPOT) |
+    ((u32)1 << EIID_AC)        | ((u32)1 << EIID_AC_MIX)   | ((u32)1 << EIID_DC_MINUS) |
+    ((u32)1 << EIID_HF)        | ((u32)1 << EIID_LIFT)     |
+    ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON) |
+    ((u32)1 << EIID_SIN)       | ((u32)1 << EIID_TRIG)     | ((u32)1 << EIID_RECT)     | ((u32)1 << EIID_TRAP) |
+    ((u32)1 << EIID_D_10)      | ((u32)1 << EIID_D_16)     | ((u32)1 << EIID_D_20)     | ((u32)1 << EIID_D_24) | ((u32)1 << EIID_D_32) | ((u32)1 << EIID_D_40) |
+    ((u32)1 << EIID_H2O_OFF)   | ((u32)1 << EIID_H2O_ON),    //tig;
+
+    ((u32)1 << EIID_TIG)       | ((u32)1 << EIID_MMA)      |
+    ((u32)1 << EIID_AC)        | ((u32)1 << EIID_DC_MINUS) | ((u32)1 << EIID_DC_PLUS) |
+    ((u32)1 << EIID_PULSE_OFF) | ((u32)1 << EIID_PULSE_ON),   //mma
+};
+
+
 //те элементы которые будут отображены в горизонтальном меню и то какая сейчас настройка
 data u32 main_menu_bm;
+     u32 vertical_menu_bm = 0;
 //битовая маска горизонтального меню на нижнем экране необходима первоначальная инициализация
 
 icon_t cur_menu[48];
 u32 cur_menu_active;
-u8 cur_menu_size;
+u8 touch_rect_cnt;
 
 u8 idata cur_active_items_id = TIG;
 
@@ -78,405 +77,148 @@ u16 icon_sp_bottom_menu[16]; //sp картинок нижнего горизон
 void (*cur_menu_fanc)(u8 item_pos);
 void cur_par_value_change(u16 cur_par_id, s8 shift);
 void display_par(u16 par_id);
+void par_select(u8 pair_id);
+void bottom_level_controls(u8 item_pos);
+
 
 void make_lim(lim_t *lim, s16 min, s16 max) {
     lim->min = min;
     lim->max = max;
 }
 
-
-
 void add_touch_place(u16 x0, u16 y0, u16 x1, u16 y1, u8 touch_id)
 {
-    if(cur_menu_size > ARR_SIZE(cur_menu)) return;
+    if(touch_rect_cnt > ARR_SIZE(cur_menu)) return;
 
-    cur_menu[cur_menu_size].ico = touch_id;
-    cur_menu[cur_menu_size].r.x0 = x0;
-    cur_menu[cur_menu_size].r.y0 = y0;
-    cur_menu[cur_menu_size].r.x1 = x1;
-    cur_menu[cur_menu_size].r.y1 = y1; // размер кнопки
-    cur_menu_size++;        
+    cur_menu[touch_rect_cnt].id = touch_id;
+    cur_menu[touch_rect_cnt].r.x0 = x0;
+    cur_menu[touch_rect_cnt].r.y0 = y0;
+    cur_menu[touch_rect_cnt].r.x1 = x1;
+    cur_menu[touch_rect_cnt].r.y1 = y1; // размер кнопки
+    touch_rect_cnt++;        
 }
 
 
-
-
-
-
-void draw_number_wtih_touch_centered(point_t line_start, u16 font_size, u16 color, u8 touch_id)
+void draw_number_wtih_touch_centered(u16 x, u16 y, u16 font_size, u8 touch_id)
 {
-    text_sp[touch_id] = Draw_text(line_start.x, 
-                                  line_start.y - (font_size * 2), 
-                                  line_start.x + LINE_WIDTH, 
-                                  line_start.y, 
+    text_sp[touch_id] = Draw_text(x, 
+                                  y - (font_size * 2), 
+                                  x + LINE_WIDTH, 
+                                  y, 
                                   0,0,
                                   font_size,
                                   font_size * 2, 
                                   TEXT_INTERVAL_1 | TEXT_ALIGNMENT_CENTER | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_BIG5,
-                                  color);
+                                  0x0000);
     display_par(touch_id);
-    add_touch_place(line_start.x, line_start.y - (font_size * 2), line_start.x + LINE_WIDTH, line_start.y, touch_id);
+    add_touch_place(x, y - (font_size * 2), x + LINE_WIDTH, y, touch_id);
 }
 
 
 
-point_t dummy_line_up(point_t p)
+void dummy_line_up(point_t *p)
 {
-    point_t p2; 
-    p2 = make_point(p.x, p.y - LEVEL_HEIGHT);
-    draw_line(p.x, p.y, p2.x, p2.y, LINE_HIGHT, GREEN);
-    return p2;
+    Draw_line(p->x, p->y, p->x, (p->y -= LEVEL_HEIGHT), LINE_HIGHT, GREEN);
 }
 
-point_t dummy_line_down(point_t p)
+void dummy_line_down(point_t *p)
 {
-    point_t p2; 
-    p2 = make_point(p.x, p.y + LEVEL_HEIGHT);
-    draw_line(p.x, p.y, p2.x, p2.y, LINE_HIGHT, GREEN);
-    return p2;
+    Draw_line(p->x, p->y, p->x, (p->y += LEVEL_HEIGHT), LINE_HIGHT, GREEN);
 }
 
-point_t add_t_preflow(point_t p) //возвращает конечную точку после отрисовки данного участка
+void add_t_preflow(point_t *p) //возвращает конечную точку после отрисовки данного участка
 {
-    point_t p2;
-    p2 = make_point(p.x + LINE_WIDTH, p.y);
-
-    draw_line(p.x, p.y, p2.x, p2.y, LINE_HIGHT, GREEN);
-    
-    draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-
-    //add_touch_place(p.x, p.y, p2.x, TIME_Y_LEVEL + TOUCH_HEIGHT, EIID_PRE_FLOW_T1);//создание области касания для настройки времени продувки
-    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 36, CYAN, EIID_PRE_FLOW_T1); //время продувки
-    return p2;    
+    Draw_line(p->x, p->y, p->x + LINE_WIDTH, p->y, LINE_HIGHT, GREEN);
+    draw_number_wtih_touch_centered(p->x, TIME_Y_LEVEL, 36, EIID_PRE_FLOW_T1); //время продувки
+    Draw_line(p->x, 650 - 80, p->x, 650, 5, 0xDEDB); //вертикальная черта
+    p->x += LINE_WIDTH;
 }
 
-
-
-point_t add_t_start_i(point_t p) 
+void add_t_start_i(point_t *p) 
 {
-    point_t p2; 
-    p2 = make_point(p.x + LINE_WIDTH, p.y);
-    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
-    
-    draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-
-    draw_number_wtih_touch_centered(p, FONT_SIZE, YELLOW, EIID_START_I1);//начальный ток
-    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 36, CYAN, EIID_START_T2);//время начального тока
-
-    return p2;
+    Draw_line(p->x, p->y, p->x + LINE_WIDTH, p->y,  LINE_HIGHT, GREEN);
+    draw_number_wtih_touch_centered(p->x, p->y, FONT_SIZE, EIID_START_I1);//начальный ток
+    draw_number_wtih_touch_centered(p->x, TIME_Y_LEVEL, 36, EIID_START_T2);//время начального тока
+    Draw_line(p->x, 650 - 80, p->x, 650, 5, 0xDEDB); //вертикальная черта
+    p->x += LINE_WIDTH;
 }
 
-
-point_t add_t_up(point_t p) 
+void add_t_up(point_t *p) 
 {
-    point_t p2;
-    p2 = make_point(p.x + LINE_WIDTH, p.y - LEVEL_HEIGHT);
-    draw_line(p.x, p.y - 1, p2.x, p2.y,  LINE_HIGHT, GREEN);
-    
-    draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-
-    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 36, CYAN, EIID_UP_T3); //время наростания
-
-    return p2;
+    Draw_line(p->x, p->y - 1, p->x + LINE_WIDTH, p->y - LEVEL_HEIGHT,  LINE_HIGHT, GREEN);
+    draw_number_wtih_touch_centered(p->x, TIME_Y_LEVEL, 36, EIID_UP_T3); //время наростания
+    Draw_line(p->x, 650 - 80, p->x, 650, 5, 0xDEDB); //вертикальная черта
+    p->x += LINE_WIDTH;
+    p->y -= LEVEL_HEIGHT;
 }
 
-point_t add_base_i1_i2_t(point_t p) 
+void add_base_i1_i2_t(point_t *p) 
 {
-    point_t p2;
-    u16 half_height = LINE_HIGHT / 2;
-    p2 = make_point(p.x + LINE_WIDTH, p.y);
-
-    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
-
-    draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-
+    Draw_line(p->x, p->y, p->x + LINE_WIDTH, p->y,  LINE_HIGHT, GREEN);
+    draw_number_wtih_touch_centered(p->x, p->y, FONT_SIZE, EIID_BASE_I2); //ток базы
     if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
-        draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 30, CYAN, EIID_BASE_T4); //время базы
+        draw_number_wtih_touch_centered(p->x, TIME_Y_LEVEL, 30, EIID_BASE_T4); //время базы
     }
-    draw_number_wtih_touch_centered(p, FONT_SIZE, PINK, EIID_BASE_I2); //ток базы
     if(main_menu_bm & (u32)1 << EIID_4T_PLUS) 
-        draw_number_wtih_touch_centered(make_point(p.x, p.y + (FONT_SIZE * 2) + (LINE_HIGHT / 2)) , FONT_SIZE, YELLOW, EIID_BASE2_I2X); //второй ток базы
-    return p2;
+        draw_number_wtih_touch_centered(p->x, p->y + (FONT_SIZE * 2) + (LINE_HIGHT / 2) , FONT_SIZE, EIID_BASE2_I2X); //второй ток базы
+    Draw_line(p->x, 650 - 80, p->x, 650, 5, 0xDEDB); //вертикальная черта
+    p->x += LINE_WIDTH;
 }
 
-point_t add_i_t_impulse(point_t p) 
+void add_i_t_impulse(point_t *p) 
 {
-    point_t p2;
-    p2 = make_point(p.x + LINE_WIDTH, p.y);
-
-    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
-
-    draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-
-    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 30, CYAN, EIID_IMPULSE_T5);// время импульса
-    draw_number_wtih_touch_centered(p, FONT_SIZE, YELLOW, EIID_IMPULSE_I3);  //ток импульса
-
-    return p2;
+    Draw_line(p->x, p->y, p->x + LINE_WIDTH, p->y,  LINE_HIGHT, GREEN);
+    draw_number_wtih_touch_centered(p->x, TIME_Y_LEVEL, 30, EIID_IMPULSE_T5);// время импульса
+    draw_number_wtih_touch_centered(p->x, p->y, FONT_SIZE, EIID_IMPULSE_I3);  //ток импульса
+    Draw_line(p->x, 650 - 80, p->x, 650, 5, 0xDEDB); //вертикальная черта
+    p->x += LINE_WIDTH;
 }
 
-point_t add_t_down(point_t p)
+void add_t_down(point_t *p)
 {
-    point_t p2;
-    p2 = make_point(p.x + LINE_WIDTH, p.y + LEVEL_HEIGHT);
-
-    draw_line(p.x + 1, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
-
-    draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-
-    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 36, CYAN, EIID_DOWN_T6); //время спада
-    return p2;
+    Draw_line(p->x + 1, p->y, p->x + LINE_WIDTH, p->y + LEVEL_HEIGHT,  LINE_HIGHT, GREEN);
+    draw_number_wtih_touch_centered(p->x, TIME_Y_LEVEL, 36, EIID_DOWN_T6); //время спада
+    Draw_line(p->x, 650 - 80, p->x, 650, 5, 0xDEDB); //вертикальная черта
+    p->x += LINE_WIDTH;
+    p->y += LEVEL_HEIGHT;
 }
 
-point_t add_end_i_t(point_t p)
+void add_end_i_t(point_t *p)
 {
-    point_t p2;
-    p2 = make_point(p.x + LINE_WIDTH, p.y);
-
-    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
-    
-    draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-
-    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 36, CYAN, EIID_END_T7); //время конечного тока
-    draw_number_wtih_touch_centered(p, FONT_SIZE, YELLOW, EIID_END_I4); //конечный ток
-    return p2;
+    Draw_line(p->x, p->y, p->x + LINE_WIDTH, p->y,  LINE_HIGHT, GREEN);
+    draw_number_wtih_touch_centered(p->x, TIME_Y_LEVEL, 36, EIID_END_T7); //время конечного тока
+    draw_number_wtih_touch_centered(p->x, p->y, FONT_SIZE, EIID_END_I4);  //конечный ток
+    Draw_line(p->x, 650 - 80, p->x, 650, 5, 0xDEDB); //вертикальная черта
+    p->x += LINE_WIDTH;
 }
 
-point_t add_t_postflow(point_t p)
+void add_t_postflow(point_t *p)
 {
-    point_t p2;
-    p2 = make_point(p.x + LINE_WIDTH, p.y);
-
-    draw_line(p.x, p.y, p2.x, p2.y,  LINE_HIGHT, GREEN);
-    
-    draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-
-    draw_number_wtih_touch_centered(make_point(p.x, TIME_Y_LEVEL), 36, CYAN, EIID_POST_FLOW_T8);//время конечной продувки
-    return p2;
+    Draw_line(p->x, p->y, p->x + LINE_WIDTH, p->y,  LINE_HIGHT, GREEN);
+    draw_number_wtih_touch_centered(p->x, TIME_Y_LEVEL, 36, EIID_POST_FLOW_T8);//время конечной продувки
+    Draw_line(p->x, 650 - 80, p->x, 650, 5, 0xDEDB); //вертикальная черта
+    p->x += LINE_WIDTH;
 }
 
-
-point_t add_i_kz(point_t p)
+void add_i_kz(point_t *p)
 {
-    point_t p2;
-    p2 = make_point(p.x + LINE_WIDTH, p.y - LEVEL_HEIGHT);
-    draw_line(p.x, p.y, p2.x, p2.y, LINE_HIGHT, GREEN);
+    Draw_line(p->x, p->y, p->x + LINE_WIDTH, p->y - LEVEL_HEIGHT, LINE_HIGHT, GREEN);
+    draw_number_wtih_touch_centered(p->x, TIME_Y_LEVEL, FONT_SIZE, EIDD_KZ_I5);//время конечной продувки
+    Draw_line(p->x, 650 - 80, p->x, 650, 5, 0xDEDB); //вертикальная черта
+    p->x += LINE_WIDTH;
+    p->y -= LEVEL_HEIGHT;
 
-    draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-
-    draw_number_wtih_touch_centered(make_point(p.x, p2.y), FONT_SIZE, YELLOW, EIDD_KZ_I5);//время конечной продувки
-    return p2;   
 }
-
-
-
-
-void bottom_level_controls(u8 item_pos);
-
-void make_bottom_menu(void)
-{
-    cur_menu_size = 0;
-    {
-        u8 i;
-        u8 id; 
-        u16 start_x = 0;
-        u16 start_y = 800 - ICON_RECT_SZ;
-        u32 id_bm = main_menu_bm;
-        id = 0;
-        i = 0;
-        while (id_bm != 0) {
-            if((u32)id_bm & (u32)1) {
-                add_touch_place(start_x, start_y, start_x + ICON_RECT_SZ, start_y + ICON_RECT_SZ, id);
-                image_change_id(icon_sp_bottom_menu[i], id);
-                image_change_pos(icon_sp_bottom_menu[i], make_point(start_x, start_y));
-                start_x += ICON_RECT_SZ;
-                i++;
-            }
-            id_bm >>= 1;
-            id++;
-        }
-
-        add_touch_place(start_x, start_y, start_x + ICON_RECT_SZ, start_y + ICON_RECT_SZ, i);//резерв
-
-        start_x += ICON_RECT_SZ;
-        add_touch_place(start_x, start_y, start_x + ICON_RECT_SZ, start_y + ICON_RECT_SZ, i);
-        image_change_id(icon_sp_bottom_menu[i], 0);
-        image_change_pos(icon_sp_bottom_menu[i], make_point(start_x, start_y));
-
-        for(i = 0; i < 6; i++) {
-            add_touch_place(0, 0, 0, 0, 0); //резерв для вертикального меню + 6
-        }
-
-        cur_menu_fanc = bottom_level_controls;
-    }
-}
-
-
-
-void par_select(u8 pair_id);
-
-void bottom_level_controls(u8 item_pos)
-{ //вызовется после выбора элемента в горизонтальном меню
-    u32 bm = 0;
-    u8 i;
-    u8 id;     
-    u16 start_x;
-    u16 start_y;
-
-
-    for(i = 10; i < 16; i++) { //зачистка прошлого меню
-        image_change_id(icon_sp_bottom_menu[i], 0xffff);
-        cur_menu[i].r.x0 = 0;
-        cur_menu[i].r.y0 = 0;  
-        cur_menu[i].r.x1 = 0;  
-        cur_menu[i].r.y1 = 0;      
-    }
-    //получить индекс типа меню
-    if(item_pos < 8) { //отризовать вертикальное меню
-        for(i = 0; i < ARR_SIZE(menu_item_bm); i++) {
-            if((u32)menu_item_bm[i] & (u32)((u32)1 << cur_menu[item_pos].ico)) { //поиск меню к которму относится данный элемент
-                bm = active_items[cur_active_items_id] & menu_item_bm[i];//убрать из отображения эелементы которые не доступны в данном режиме 
-                bm &= ~((u32)1 << cur_menu[item_pos].ico); //убрать из отборажения элемент который уже высвечен в нижнем меню
-                if(bm != 0 ) { //если нечего выводить не рисовать горизонтальное меню
-                  
-                    
-                    id = 0;
-                    i = 10;
-                    
-                    start_x = ICON_RECT_SZ * item_pos;
-                    start_y = 800 - (ICON_RECT_SZ * 2);
-                    while (bm != 0) {
-                        if((u32)bm & (u32)1) {
-                            image_change_pos(icon_sp_bottom_menu[i], make_point(start_x, start_y));
-                            image_change_id(icon_sp_bottom_menu[i], id);
-                            
-                            cur_menu[i].r.x0 = start_x;
-                            cur_menu[i].r.y0 = start_y;
-                            cur_menu[i].r.x1 = start_x + ICON_RECT_SZ;
-                            cur_menu[i].r.y1 = start_y + ICON_RECT_SZ;
-                            cur_menu[i].ico  = id;
-                            start_y -= ICON_RECT_SZ; 
-                            i++;
-                        }
-                        bm >>= 1;
-                       
-                        id++;
-                    } 
-                }
-                break;
-            }
-        }
-    } else { //еслы выбор из вертикального меню //елси позция болше 10
-        
-        if(item_pos > 15)  { //вбор из настройки параметров
-           par_select(cur_menu[item_pos].ico);
-           return;
-        }
-
-
-        for(i = 0; i < ARR_SIZE(menu_item_bm); i++) {
-            if(menu_item_bm[i] & (u32)1 << cur_menu[item_pos].ico) {
-                main_menu_bm &= (u32)~menu_item_bm[i]; //очисть область связанную с этим подменю в гавном меню
-                
-                main_menu_bm |= ((u32)1 << cur_menu[item_pos].ico); //вставить текущий выбранный элемент в главное меню
-                
-                cur_par_value_change(cur_menu[item_pos].ico, 0); //изменение параметра для силовой части
-
-                switch (cur_menu[item_pos].ico)
-                {
-                    case EIID_TIG: {
-                        cur_active_items_id = TIG;
-                        make_scene(); 
-                    } break;
-
-                    case EIID_TIG_SPOT: { 
-                        cur_active_items_id = TIG;
-                        make_scene(); 
-                    } break;
-
-                    case EIID_MMA: {
-                        cur_active_items_id = MMA;
-
-                        if(main_menu_bm & ((u32)1 << EIID_AC_MIX)) {//потом это убрать //при переходе в mma менять полрность на dc
-                            main_menu_bm &= ~((u32)1 << EIID_AC_MIX);
-                            main_menu_bm |=  ((u32)1 << EIID_DC_PLUS);
-                        }
-
-                        make_scene(); 
-                    } break;
-
-                    case EIID_2T:
-                    case EIID_4T:
-                    case EIID_4T_PLUS: {
-                        make_scene();         
-                    } break;
-
-                    case EIID_PULSE_ON :
-                    case EIID_PULSE_OFF: {
-                        make_scene();         
-                    } break;
-
-                }
-
-                bm = main_menu_bm & active_items[cur_active_items_id];
-
-                if(main_menu_bm & ((u32)1 << EIID_DC_MINUS) || main_menu_bm & ((u32)1 << EIID_DC_PLUS)) { //если dc+ или dc- убрать выбор формы волны
-                    bm &= ~(menu_item_bm[MEN_PLS_WAVE_SHAPE_MOD]);
-                }
-                    
-                
-                
-
-                for(i = 0; i < 8; i++) { //зачистка прошлого меню
-                    image_change_id(icon_sp_bottom_menu[i], 0xffff);    
-                }
-               
-                id = 0;
-                i = 0;
-                start_x = 0;
-                start_y = 800 - (ICON_RECT_SZ);
-
-                while (bm != 0) { //отрисовка нижнего меню
-                    if((u32)bm & (u32)1) {
-                        image_change_pos(icon_sp_bottom_menu[i], make_point(start_x, start_y));
-                        image_change_id(icon_sp_bottom_menu[i], id);
-                        
-                        cur_menu[i].r.x0 = start_x;
-                        cur_menu[i].r.y0 = start_y;
-                        cur_menu[i].r.x1 = start_x + ICON_RECT_SZ;
-                        cur_menu[i].r.y1 = start_y + ICON_RECT_SZ;
-                        cur_menu[i].ico  = id;
-                        start_x += ICON_RECT_SZ; 
-                        i++;
-                    }
-                    bm >>= 1;
-                    id++;
-                }
-                for(; i < 10; i++) { //зачистка областей касания
-                    cur_menu[i].r.x0 = 0;
-                    cur_menu[i].r.y0 = 0;
-                    cur_menu[i].r.x1 = 0;
-                    cur_menu[i].r.y1 = 0;
-                } 
-               
-                break;
-            }
-        }
-    }
-    
-}
-
-
-
 
 void display_par(u16 par_id) 
 {
     u8 code *format[] = {
         "", 
-        "%.1fs", "%0.0fs", "%0.0fms", "%0.0fA",    
+        "%.1fs", "%0.0fs", "%0.0fms", "%0.0fA", "%.0f",        
     };
     u8 code *format_big[] = {
         "", 
-        "%.1fs\r\n", "%.0fs\r\n", "%.0fms\r\n", "%.0fA\r\n",    
+        "%.1fs\r\n", "%.0fs\r\n", "%.0fms\r\n", "%.0fA\r\n", "%.0f\r\n",    
     };
     u8 format_id = 0;
     float par_value = par[par_id];
@@ -517,78 +259,71 @@ void display_par(u16 par_id)
 
         case EIID_FREQ_F1:      
         case EIID_BALANCE_D1: {
+            format_id = 5;
+        } break; 
 
-        } break;   
+        default: return;  
     }
 
     if(format_id) {
-        Draw_text_change_text(format[format_id], text_sp[par_id], par_value);
+        Draw_text_set_text(format[format_id], text_sp[par_id], par_value);
         //если сварка не отображать параметр большими цифрами
         if(Welding_state == 0) { //Idle state
-            Draw_text_change_text(format_big[format_id], Par_big_text_sp, par_value);
+            Draw_text_set_text(format_big[format_id], Par_big_text_sp, par_value);
         }
     }
 }
 
-void cur_par_value_change(u16 cur_par_id, s8 shift)
+void cur_par_value_change(u16 par_id, s8 shift)
 {
     if(shift != 0) {
-        par[cur_par_id] += ((s16)par_step[cur_par_id] * shift); 
-        if(par[cur_par_id] > par_lim[cur_par_id].max)       
-            par[cur_par_id] = par_lim[cur_par_id].max;
-        else if(par[cur_par_id] < par_lim[cur_par_id].min) 
-            par[cur_par_id] = par_lim[cur_par_id].min;
+        par[par_id] += ((s16)par_step[par_id] * shift); 
+        if(par[par_id] > par_lim[par_id].max)       
+            par[par_id] = par_lim[par_id].max;
+        else if(par[par_id] < par_lim[par_id].min) 
+            par[par_id] = par_lim[par_id].min;
     } 
    
-    switch (cur_par_id)
+    switch (par_id)
     {
-        case EIID_PRE_FLOW_T1:
-        case EIID_START_T2   :
-        case EIID_UP_T3      :
-        case EIID_DOWN_T6    :
-        case EIID_END_T7     : {
-            u16 tmp = par[cur_par_id];
-            switch (cur_par_id)
+        case EIID_PRE_FLOW_T1  :
+        case EIID_START_T2     :
+        case EIID_UP_T3        :
+        case EIID_DOWN_T6      :
+        case EIID_END_T7       :  
+        case EIID_POST_FLOW_T8 : 
+        case EIID_START_I1     :     
+        case EIID_BASE_I2      :
+        case EIID_BASE2_I2X    :  
+        case EIID_IMPULSE_I3   : 
+        case EIID_END_I4       :
+        case EIDD_KZ_I5        :
+        case EIID_FREQ_F1      :
+        case EIID_BALANCE_D1   :
+        case EIID_BASE_T4      : 
+        case EIID_IMPULSE_T5   : {
+            u16 tmp = par[par_id];
+            switch (par_id)
             {
-                case EIID_PRE_FLOW_T1: par_tek[EPID_PRE_FLOW_T1] = tmp; break;    
-                case EIID_START_T2   : par_tek[EPID_START_T2]    = tmp; break;    
-                case EIID_UP_T3      : par_tek[EPID_UP_T3]       = tmp; break;    
-                case EIID_DOWN_T6    : par_tek[EPID_DOWN_T6]     = tmp; break;    
-                case EIID_END_T7     : par_tek[EPID_END_T7]      = tmp; break;     
-            }
-            display_par(cur_par_id);
+                case EIID_PRE_FLOW_T1  : par_tek[EPID_PRE_FLOW_T1]  = tmp; break;    
+                case EIID_START_T2     : par_tek[EPID_START_T2]     = tmp; break;    
+                case EIID_UP_T3        : par_tek[EPID_UP_T3]        = tmp; break;    
+                case EIID_DOWN_T6      : par_tek[EPID_DOWN_T6]      = tmp; break;    
+                case EIID_END_T7       : par_tek[EPID_END_T7]       = tmp; break;
+                case EIID_POST_FLOW_T8 : par_tek[EPID_POST_FLOW_T8] = tmp; break;
+                case EIID_START_I1     : par_tek[EPID_START_I1]     = tmp; break;    
+                case EIID_BASE_I2      : par_tek[EPID_BASE_I2]      = tmp; break;
+                case EIID_BASE2_I2X    : par_tek[EPID_BASE2_I2X]    = tmp; break; 
+                case EIID_IMPULSE_I3   : par_tek[EPID_IMPULSE_I3]   = tmp; break;
+                case EIID_END_I4       : par_tek[EPID_END_I4]       = tmp; break;
+                case EIDD_KZ_I5        : par_tek[EPID_KZ_I5]        = tmp; break;
+                case EIID_FREQ_F1      : par_tek[EPID_FREQ_F1]      = tmp; break;
+                case EIID_BALANCE_D1   : par_tek[EPID_BALANCE_D1]   = tmp; break;
+                case EIID_BASE_T4      : par_tek[EPID_BASE_T4]      = tmp; break;
+                case EIID_IMPULSE_T5   : par_tek[EPID_IMPULSE_T5]   = tmp; break;    
+            }  
+            display_par(par_id);
         } break;
-        
-        case EIID_POST_FLOW_T8: {
-            display_par(cur_par_id);    
-        } break;
-
-        case EIID_START_I1  :     
-        case EIID_BASE_I2   :
-        case EIID_BASE2_I2X :  
-        case EIID_IMPULSE_I3: 
-        case EIID_END_I4    :
-        case EIDD_KZ_I5     :
-        case EIID_FREQ_F1   :
-        case EIID_BALANCE_D1:
-        case EIID_BASE_T4   : 
-        case EIID_IMPULSE_T5: {
-            u16 tmp = par[cur_par_id];
-            switch (cur_par_id)
-            {
-                case EIID_START_I1  : par_tek[EPID_START_I1]   = tmp; break;    
-                case EIID_BASE_I2   : par_tek[EPID_BASE_I2]    = tmp; break;
-                case EIID_BASE2_I2X : par_tek[EPID_BASE2_I2X]  = tmp; break; 
-                case EIID_IMPULSE_I3: par_tek[EPID_IMPULSE_I3] = tmp; break;
-                case EIID_END_I4    : par_tek[EPID_END_I4]     = tmp; break;
-                case EIDD_KZ_I5     : par_tek[EPID_KZ_I5]      = tmp; break;
-                case EIID_FREQ_F1   : par_tek[EPID_FREQ_F1]    = tmp; break;
-                case EIID_BALANCE_D1: par_tek[EPID_BALANCE_D1] = tmp; break;
-                case EIID_BASE_T4   : par_tek[EPID_BASE_T4]    = tmp; break;
-                case EIID_IMPULSE_T5: par_tek[EPID_IMPULSE_T5] = tmp; break;  
-            }
-            display_par(cur_par_id);        
-        }break;
 
         case EIID_PULSE_OFF:
         case EIID_PULSE_ON :
@@ -606,7 +341,7 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
                 u16 mod   : 4; //0-TIG 1-MMA 2-TIG Spot
             } tmp;
             *(u16*)&tmp = par_tek[EPID_MODES_SUBMODES]; 
-            switch (cur_par_id)
+            switch (par_id)
             {
                 case EIID_PULSE_ON : tmp.pulse = 0; break;
                 case EIID_PULSE_OFF: tmp.pulse = 1; break; 
@@ -645,12 +380,14 @@ void cur_par_value_change(u16 cur_par_id, s8 shift)
         case EIID_RECT: par_tek[EPID_WAVE_FORM]      = 2; break;  
         case EIID_TRIG: par_tek[EPID_WAVE_FORM]      = 3; break;
         case EIID_TRAP: par_tek[EPID_WAVE_FORM]      = 4; break;
+        default : return;
     }
-   
 }
 
 
-void Process_Encoder(u8 state)
+
+
+void Encoder_process_code(u8 state) 
 {
     code const s8 shifts[] = {-1, -5, +1, +5};
     cur_par_value_change(cur_par_id, shifts[state]);     
@@ -658,28 +395,44 @@ void Process_Encoder(u8 state)
 
 
 
-void redraw_rect_under_par(u16 par_id)
-{
-    rect_t r;
-    Draw_text_get_pos(text_sp[par_id], &r);
-    Draw_filled_rect_redraw(Filled_rect_under_par_sp, r.x0, 220, r.x1, SCREEN_HEIGHT - ICON_RECT_SZ, 0x528A);
-}
 
-void par_select(u8 new_par_id)
+void par_select(u8 par_id) 
 {
-    static idata u16 old_color = YELLOW;
+    u16 main_color;
+    if(cur_par_id == par_id) return;
+    
+    switch (par_id) { //вернуть цвет в невыбранном состоянии
+        case EIID_PRE_FLOW_T1: case EIID_START_T2: case EIID_UP_T3:  case EIID_BASE_T4:
+        case EIID_IMPULSE_T5:  case EIID_DOWN_T6:  case EIID_END_T7: case EIID_POST_FLOW_T8: {
+            main_color = CYAN;
+        } break;
 
-    redraw_rect_under_par(new_par_id);
-    if(cur_par_id == new_par_id) 
-        return;
-    else {
-        Draw_text_change_color(text_sp[cur_par_id], old_color);  
-        old_color = Draw_text_get_color(text_sp[new_par_id]);//запомнить старый цвет
-        Draw_text_change_color(text_sp[new_par_id], PINK);//заменить на цвет "выбранного элемента"
-        cur_par_id = new_par_id;
+        case EIID_START_I1: case EIID_BASE_I2: case EIID_BASE2_I2X: case EIID_IMPULSE_I3:
+        case EIID_END_I4:   case EIDD_KZ_I5: {
+            main_color = YELLOW;
+        } break;
+
+        case EIID_FREQ_F1: case EIID_BALANCE_D1  : {
+            main_color = RED;
+        } break;
+        default: return;
     }
-    display_par(new_par_id);      
+
+    {//перерисовать прямоугольник под параметрами
+        rect_t r;
+        Draw_text_get_pos(text_sp[par_id], &r);
+        Draw_filled_rect_redraw(Filled_rect_under_par_sp, r.x0, 220, r.x1, SCREEN_HEIGHT - ICON_RECT_SZ, 0x528A);
+    }
+    Draw_text_set_color(text_sp[cur_par_id], main_color);//заменить вернуть основоной цвет
+    Draw_text_set_color(text_sp[par_id], PINK);//заменить на цвет "выбранного элемента"
+    cur_par_id = par_id;
+
+    display_par(par_id);  
 }
+
+
+
+
 
 
 
@@ -736,7 +489,7 @@ void init_par_udgu(void)
  
    
   main_menu_bm = (((u32)1 << EIID_TIG)              |
-                         ((u32)1 << EIID_2T)        |
+                         ((u32)1 << EIID_4T)        |
                          ((u32)1 << EIID_AC)        |
                          ((u32)1 << EIID_HF)        |
                          ((u32)1 << EIID_PULSE_OFF) |
@@ -745,7 +498,7 @@ void init_par_udgu(void)
                          ((u32)1 << EIID_H2O_ON)      
                     );
     cur_par_value_change(EIID_TIG,        0);
-    cur_par_value_change(EIID_2T,         0);
+    cur_par_value_change(EIID_4T,         0);
     cur_par_value_change(EIID_AC,         0);
     cur_par_value_change(EIID_HF,         0);
     cur_par_value_change(EIID_PULSE_OFF,  0);
@@ -754,120 +507,209 @@ void init_par_udgu(void)
     cur_par_value_change(EIID_H2O_ON,     0);
 
         
-    par[EIID_PRE_FLOW_T1]        = par_tek[EPID_PRE_FLOW_T1]    = 53;   // t gaz
+    par[EIID_PRE_FLOW_T1]        = par_tek[EPID_PRE_FLOW_T1]    = 1;   // t gaz
     par[EIID_START_I1]           = par_tek[EPID_START_I1]       = 50;   // I begin
-    par[EIID_START_T2]           = par_tek[EPID_START_T2]       = 20;   // t begin
-    par[EIID_UP_T3]              = par_tek[EPID_UP_T3]          = 33;   // increase
+    par[EIID_START_T2]           = par_tek[EPID_START_T2]       = 1;   // t begin
+    par[EIID_UP_T3]              = par_tek[EPID_UP_T3]          = 1;   // increase
     par[EIID_BASE_I2]            = par_tek[EPID_BASE_I2]        = 101;  // I базы
     par[EIID_BASE_T4]            = par_tek[EPID_BASE_T4]        = 2;    // t базы
     par[EIID_IMPULSE_I3]         = par_tek[EPID_IMPULSE_I3]     = 150;  // I имп
     par[EIID_IMPULSE_T5]         = par_tek[EPID_IMPULSE_T5]     = 3;    // t имп
     par[EIID_FREQ_F1]            = par_tek[EPID_FREQ_F1]        = 50;  // F
     par[EIID_BALANCE_D1]         = par_tek[EPID_BALANCE_D1]     = 60;   // balans
-    par[EIID_DOWN_T6]            = par_tek[EPID_DOWN_T6]        = 11;   // Decrease
+    par[EIID_DOWN_T6]            = par_tek[EPID_DOWN_T6]        = 1;   // Decrease
     par[EIID_END_I4]             = par_tek[EPID_END_I4]         = 60;   // I end
-    par[EIID_END_T7]             = par_tek[EPID_END_T7]         = 11;   // t end
-    par[EIID_POST_FLOW_T8]       = par_tek[EPID_POST_FLOW_T8]   = 3;    // t gaz
+    par[EIID_END_T7]             = par_tek[EPID_END_T7]         = 1;    // t end
+    par[EIID_POST_FLOW_T8]       = par_tek[EPID_POST_FLOW_T8]   = 1;    // t gaz
     par[EIDD_KZ_I5]              = par_tek[EPID_KZ_I5]          = 55;   // I kz
                                    par_tek[EPID_BSN]            = 1;    // BSN 1-off 2-on
   
 
     par_tek[EPID_MODES_SUBMODES] = 0x0110;
+}
 
+
+
+void bottom_level_controls(u8 item_pos)
+{ //вызовется после выбора элемента в горизонтальном меню
+    if(item_pos == touch_rect_cnt) return;
+    switch (cur_menu[item_pos].id) {
+        case EIID_TIG: case EIID_MMA:  case EIID_AC:        case EIID_AC_MIX:   case EIID_DC_MINUS: case EIID_DC_PLUS: case EIID_2T:   case EIID_4T:   case EIID_4T_PLUS: case EIID_TIG_SPOT:
+        case EIID_HF:  case EIID_LIFT: case EIID_PULSE_OFF: case EIID_PULSE_ON: case EIID_D_10:     case EIID_D_16:    case EIID_D_20: case EIID_D_24: case EIID_D_32:    case EIID_D_40:
+        case EIID_SIN: case EIID_TRIG: case EIID_RECT:      case EIID_TRAP:     case EIID_H2O_ON:   case EIID_H2O_OFF: {
+            //изменение параметра для индикации, горизонтальнео меню
+            u8 i;
+            u8 id;
+            id = cur_menu[item_pos].id;
+            
+            if(id == EIID_TIG)
+                cur_active_items_id = TIG;
+            else if(id == EIID_MMA) {
+                cur_active_items_id = MMA;
+                main_menu_bm &= ~(menu_item_bm[MEN_POL_MOD]);
+                main_menu_bm |= (u32)1 << EIID_DC_MINUS;
+                cur_par_value_change(EIID_DC_MINUS, 0); //принудительный переход в режим dc в mma .. Пока будет так, потом убрать
+            }
+
+            if(main_menu_bm & ((u32)1 << id)) {//если выбор был сделан из горизонтального меню , сделать битовое поле для вертикального меню
+                for(i = 0; i < ARR_SIZE(menu_item_bm); i++) {
+                    if((u32)menu_item_bm[i] & (u32)((u32)1 << id)) { //поиск меню к которму относится данный элемент
+                        vertical_menu_bm = active_items[cur_active_items_id] & menu_item_bm[i];//убрать из отображения эелементы которые не доступны в данном режиме 
+                        break;
+                    }
+                }
+            } else { //выбор был из вертикального меню
+                for(i = 0; i < ARR_SIZE(menu_item_bm); i++) {
+                    if( menu_item_bm[i] & (u32)1 << id) {
+                        main_menu_bm &= (u32)~menu_item_bm[i]; //очисть область связанную с этим подменю в гавном меню
+                        main_menu_bm |= ((u32)1 << id); //вставить текущий выбранный элемент в главное меню
+                        break;
+                    }
+                }
+            }
+            cur_par_value_change(cur_menu[item_pos].id, 0); //изменение параметра для силовой части
+            make_scene();
+        } break;
+
+        case EIID_PRE_FLOW_T1:  case EIID_START_I1:   case EIID_START_T2: case  EIID_UP_T3:     case EIID_BASE_I2: case EIID_BASE_T4:
+        case EIID_IMPULSE_I3:   case EIID_IMPULSE_T5: case EIID_FREQ_F1:  case EIID_BALANCE_D1: case EIID_DOWN_T6: case EIID_END_I4: case EIID_END_T7:       
+        case EIID_POST_FLOW_T8: case EIDD_KZ_I5:      case EIID_BASE2_I2X: {
+            par_select(cur_menu[item_pos].id);
+        } break;
+
+        default: return;
+    }    
 }
 
 
 
 
-
-
-
-void make_scene(void) 
+void make_scene(void)
 {
-    u16 x = 40;
-    u16 y = 550;
-    u8 i;
+    Draw_start();
+    touch_rect_cnt = 0; //убрать все области касания
+
+    Draw_filled_rect(0, 0, 1279, 799, GRAY);//прямоугольник под задний фон 
+
+    Filled_rect_under_par_sp = Draw_filled_rect(0, 0, 0, 0, 0x528A); // рамка под параметрами создание области под нее заготовка   
     
-    Draw_clear_screen();
+    Draw_filled_rect(0, 210, 1279, 210 + 10, BLACK);//полоска под напряжением и током
+
     
+    {
+        u16 start_x;
+        u16 start_y;
+        u32 bm;
+        u8 i;
+        u8 id; 
 
-    draw_filled_rect(0, 0, 1279, 799, GRAY);//задний фон
+        bm = main_menu_bm & active_items[cur_active_items_id];
 
-    Filled_rect_under_par_sp = draw_filled_rect(0, 0, 0, 0, 0x528A); // рамка под параметрами создание области под нее заготовка
+        if(main_menu_bm & ((u32)1 << EIID_DC_MINUS) || main_menu_bm & ((u32)1 << EIID_DC_PLUS)) { //если dc+ или dc- убрать выбор формы волны
+            bm &= ~(menu_item_bm[MEN_PLS_WAVE_SHAPE_MOD]);
+        }
 
-    draw_filled_rect(0, 210, 1278, 210 + 10, BLACK);//полоска под напряжением и током
+        if(main_menu_bm & ((u32)1 << EIID_TIG_SPOT)) { //в режиме tig spot нет выбора pulse
+            bm &= ~(menu_item_bm[MEN_PLS_MOD]);  
+        }
 
-    for(i = 0; i < ARR_SIZE(icon_sp_bottom_menu); i++) {
-        icon_sp_bottom_menu[i] = draw_image(0, 0, 0xffff); // создание пула картинок без отображения картинки
+        start_x = 0;
+        start_y = SCREEN_HEIGHT - ICON_RECT_SZ;
+        i = 0;
+        id = 0;
+        while (bm != 0) {//создание , отрисовка горизонтального меню
+            if((u32)bm & (u32)1) { 
+                if(vertical_menu_bm & ((u32)1 << id)) { //если при отрисовке горизонтального меню в в вертикальном меню есть подбный элемент отрисовать над этим элементом вертикально меню
+                    u8 v_id = 0;
+                    u16 v_start_x = ICON_RECT_SZ * i;
+                    u16 v_start_y = SCREEN_HEIGHT - (ICON_RECT_SZ * 2);
+                    vertical_menu_bm &= ~((u32)1 << id);//убрать из вертикального меню текущий элемен горизонтального меню
+                    while (vertical_menu_bm != 0) {//создание , отрисовка вертикального меню
+                        if((u32)vertical_menu_bm & (u32)1) {
+                            add_touch_place(v_start_x, v_start_y, v_start_x + ICON_RECT_SZ, v_start_y + ICON_RECT_SZ, v_id);
+                            Draw_image(v_start_x, v_start_y, v_id);
+                            v_start_y -= ICON_RECT_SZ; 
+                        }
+                        vertical_menu_bm >>= 1; //после отрисовки вертикальное меню будет пустым и его не надо принудительно обнулять
+                        v_id++;      
+                    }
+                }
+                
+                add_touch_place(start_x, start_y, start_x + ICON_RECT_SZ, start_y + ICON_RECT_SZ, id);
+                Draw_image(start_x, start_y, id);
+                start_x += ICON_RECT_SZ;
+                i++;
+            }
+            bm >>= 1;
+            id++;
+        }
+        cur_menu_fanc = bottom_level_controls;//функция которая вызывается при касании по области touch
     }
 
-    cur_par_id = EIID_BASE_I2; //текущий параметр ток базы
 
-    make_bottom_menu();
 
-  
-    
-    if(main_menu_bm & (u32)1 << EIID_TIG) {
+    //отрисовка циклограммы
+    {
         point_t p;
-        FONT_SIZE  = 35; 
+        point_t start_p;
+        if(main_menu_bm & (u32)1 << EIID_TIG) {
+            FONT_SIZE  = 35; 
+            if(main_menu_bm & (u32)1 << EIID_TIG_SPOT) {
+                LINE_WIDTH = 200;
+            } else {
+                if(main_menu_bm & (u32)1 << EIID_PULSE_ON)
+                    LINE_WIDTH = 150;
+                else
+                    LINE_WIDTH = 171;
+            }
+            start_p = p = make_point(40, 550);
+            add_t_preflow(&p);
+            dummy_line_up(&p);
+            add_t_start_i(&p);
+            add_t_up(&p);
+            add_base_i1_i2_t(&p);
         if(main_menu_bm & (u32)1 << EIID_TIG_SPOT) {
-            LINE_WIDTH = 200;
-        } else {
-            if(main_menu_bm & (u32)1 << EIID_PULSE_ON)
-                LINE_WIDTH = 150;
-            else
-                LINE_WIDTH = 171;
-        }
-        p = make_point(x, y);
-        p = add_t_preflow(p);
-        p = dummy_line_up(p);
-        p = add_t_start_i(p);
-        p = add_t_up(p);
-        p = add_base_i1_i2_t(p);
-        if(main_menu_bm & (u32)1 << EIID_TIG_SPOT) {
-            LEVEL_HEIGHT *= 2;
-            p = add_t_down(p);
-            LEVEL_HEIGHT /= 2;
-            p = add_t_postflow(p);
+            LEVEL_HEIGHT <<= 1; // * 2
+            add_t_down(&p);
+            LEVEL_HEIGHT >>= 1; // div 2
+            add_t_postflow(&p);
         } else {
             if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
-                p = dummy_line_down(p);
-                p = add_i_t_impulse(p);
-                p = dummy_line_up(p);
+                dummy_line_down(&p);
+                add_i_t_impulse(&p);
+                dummy_line_up(&p);
             } 
-            p = add_t_down(p);
-            p = add_end_i_t(p);
-            p = dummy_line_down(p);
-            p = add_t_postflow(p);
+            add_t_down(&p);
+            add_end_i_t(&p);
+            dummy_line_down(&p);
+            add_t_postflow(&p);
         }
-        draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта
-    } else if(main_menu_bm & (u32)1 << EIID_MMA) {//mma
-        point_t p;
-        if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
-            LINE_WIDTH = 300;
-            FONT_SIZE = 38;//48
-        } else {
-            LINE_WIDTH = 400;
-            FONT_SIZE = 38;//64
+        } else if(main_menu_bm & (u32)1 << EIID_MMA) {//mma
+            if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
+                LINE_WIDTH = 300;
+                FONT_SIZE = 38;//48
+            } else {
+                LINE_WIDTH = 400;
+                FONT_SIZE = 38;//64
+            }
+            start_p = p = make_point(40, 500);
+            dummy_line_up(&p);
+            add_t_start_i(&p);
+            dummy_line_down(&p);
+            add_base_i1_i2_t(&p);
+            if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
+                dummy_line_up(&p);
+                add_i_t_impulse(&p);
+            }
+            add_i_kz(&p);
+            dummy_line_down(&p);
         }
-        p = make_point(40, 500);
-        p = dummy_line_up(p);
-        p = add_t_start_i(p);
-        p = dummy_line_down(p);
-        p = add_base_i1_i2_t(p);
-        if(main_menu_bm & (u32)1 << EIID_PULSE_ON) {
-            p = dummy_line_up(p);
-            p = add_i_t_impulse(p);
-        }
-        p = add_i_kz(p);
-        p = dummy_line_down(p);
-        draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта в конце
+        Draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта в конце
+
+        Draw_line(40, 650 - 80, 1240, 650 - 80, 5, 0xDEDB);//2 горизонтальные линии
+        Draw_line(40, 650, 1240, 650, 5, 0xDEDB);
     }
 
-
-    draw_line(40, 650 - 80, 1240, 650 - 80, 5, 0xDEDB);
-    draw_line(40, 650, 1240, 650, 5, 0xDEDB);
-  
     if(Welding_state == 0) { //режим настройкаи параметров
         Par_big_text_sp = Draw_text(
         0, 
@@ -878,12 +720,7 @@ void make_scene(void)
         175,255, 
         TEXT_INTERVAL_1 | TEXT_ALIGNMENT_CENTER | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_ASCII, //for big unicode font use ascii encode and icl is font id
         PINK); 
-        {
-            u16 dummy = 0;
-            write_dgus_vp(Volt_text_sp + (sizeof(dgus_text_display_t) / 2), (u8*) &dummy, 1);
-        }
-        
-    } else {
+    } else if (Welding_state == 8) {
         Amp_text_sp = Draw_text(
         0, 
         0,
@@ -897,42 +734,30 @@ void make_scene(void)
         Volt_text_sp = Draw_text(
         930, 
         74,
-        SCREEN_WIDTH,
+        SCREEN_WIDTH - 1,
         128 + 74, 
         0,0, 
         64,128, 
         TEXT_INTERVAL_1 | TEXT_ALIGNMENT_LEFT | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_GBK, //for big unicode font use ascii encode and icl is font id
         DARK_GREEN);
     }
-    
 
-    par_select(EIID_BASE_I2);
-    
+    cur_par_id = EIID_BASE_I2;
+    {//перерисовать прямоугольник под параметрами
+        rect_t r;
+        Draw_text_get_pos(text_sp[EIID_BASE_I2], &r);
+        Draw_filled_rect_redraw(Filled_rect_under_par_sp, r.x0, 220, r.x1, SCREEN_HEIGHT - ICON_RECT_SZ, 0x528A);
+    }
+    Draw_text_set_color(text_sp[EIID_BASE_I2], PINK);//заменить на цвет "выбранного элемента"
+    display_par(EIID_BASE_I2);
 
-   //Draw_Number(0,0, 999, 0, "A", 64, PINK);
-    
-    
-    // {
-    //     u8 i;
-    //     u16 new_id = 0;
+    //par_select(EIID_BASE_I2); //по умолчанию выбран ток базы для отображения и настройки после отрисовки циклограммы
 
-    //     while (1)
-    //     {
-    //         for (i = 0; i < 8; i++) {
-    //             image_change_id(icon_sp_bottom_menu[i], new_id);
-    //         }
-    //         new_id++;
-    //         if(new_id == 10) new_id = 0;
-    //         delay_ms(300);
-    //     }
-    // }
-
-     
-    //draw_bottom_menu();
-}
+    Draw_end(); //зачистка не используемых элементов
+} 
 
 
 
-//To do
-// -Убрать подменю выбора режима сварки режим tig spot
-//  sprt добавить в выбор режима кнопки на горелке
+
+
+
