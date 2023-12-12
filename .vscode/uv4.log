@@ -1,10 +1,5 @@
 Build target 'Target 1'
-compiling drawing.c...
-.\driver\sys.h(115): warning C317: attempt to redefine macro 'NULL'
-source\drawing.c(123): warning C280: 'y0': unreferenced local variable
-source\drawing.c(123): warning C280: 'x1': unreferenced local variable
-source\drawing.c(123): warning C280: 'y1': unreferenced local variable
-source\drawing.c(123): warning C280: 'color': unreferenced local variable
+compiling temp.c...
 linking...
 *** WARNING L13: RECURSIVE CALL TO SEGMENT
     SEGMENT: ?PR?MAKE_SCENE?TEMP
@@ -116,16 +111,16 @@ linking...
     CALLER1: ?PR?EXT_INT1?MAIN
     CALLER2: ?C_C51STARTUP
 
-Program Size: data=71.2 xdata=17585 code=30481
+Program Size: data=71.2 xdata=17587 code=30378
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
 
-c:\Users\OGK5-7\Desktop\dwin new\dwin>cd objects 
+c:\Users\OGK5-7\Desktop\dwin new new\dwin>cd objects 
 
-c:\Users\OGK5-7\Desktop\dwin new\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
+c:\Users\OGK5-7\Desktop\dwin new new\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 59: warning: data records not in strictly ascending order
-    (expected >= 0x7684, got 0x6D02)
+    (expected >= 0x761D, got 0x6C9B)
 
-c:\Users\OGK5-7\Desktop\dwin new\dwin\Objects>echo.
+c:\Users\OGK5-7\Desktop\dwin new new\dwin\Objects>echo.
 
-".\Objects\T5L51" - 0 Error(s), 40 Warning(s).
+".\Objects\T5L51" - 0 Error(s), 35 Warning(s).

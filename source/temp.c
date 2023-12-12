@@ -58,7 +58,7 @@ u16 text_sp[EIID_SIZE]; //массив sp идентификаторов лин�
 s16 par[EIID_SIZE];
 xdata s16 par_tek[36];//параметры для силовой части
 u16 cur_par_id; //номер текущего параметра к отображению
-
+u16 prev_par_id;
 typedef struct {
     s16 min;
     s16 max;
@@ -203,7 +203,7 @@ void add_t_postflow(point_t *p)
 void add_i_kz(point_t *p)
 {
     Draw_line(p->x, p->y, p->x + LINE_WIDTH, p->y - LEVEL_HEIGHT, LINE_HIGHT, GREEN);
-    draw_number_wtih_touch_centered(p->x, TIME_Y_LEVEL, FONT_SIZE, EIDD_KZ_I5);//время конечной продувки
+    draw_number_wtih_touch_centered(p->x, p->y - LEVEL_HEIGHT, FONT_SIZE, EIDD_KZ_I5);//время конечной продувки
     Draw_line(p->x, 650 - 80, p->x, 650, 5, 0xDEDB); //вертикальная черта
     p->x += LINE_WIDTH;
     p->y -= LEVEL_HEIGHT;
@@ -212,6 +212,7 @@ void add_i_kz(point_t *p)
 
 void display_par(u16 par_id) 
 {
+    u16 par_color;
     u8 code *format[] = {
         "", 
         "%.1fs", "%0.0fs", "%0.0fms", "%0.0fA", "%.0f",        
@@ -222,6 +223,7 @@ void display_par(u16 par_id)
     };
     u8 format_id = 0;
     float par_value = par[par_id];
+
     switch (par_id)
     {
         case EIID_PRE_FLOW_T1:
@@ -236,16 +238,19 @@ void display_par(u16 par_id)
             } else {
                 par_value = 10;
                 format_id = 2;             
-            } 
+            }
+            par_color = CYAN; 
         } break;       
 
         case EIID_BASE_T4:      
         case EIID_IMPULSE_T5: {
             format_id = 3;
+            par_color = CYAN; 
         } break;
 
         case EIID_POST_FLOW_T8: {
             format_id = 2;
+            par_color = CYAN; 
         } break;
            
         case EIID_START_I1:     
@@ -255,6 +260,7 @@ void display_par(u16 par_id)
         case EIID_END_I4:       
         case EIDD_KZ_I5: {
             format_id = 4;
+            par_color = YELLOW; 
         } break;       
 
         case EIID_FREQ_F1:      
@@ -267,6 +273,10 @@ void display_par(u16 par_id)
 
     if(format_id) {
         Draw_text_set_text(format[format_id], text_sp[par_id], par_value);
+        if(par_id == cur_par_id)
+            par_color = PINK;        
+        
+        Draw_text_set_color(text_sp[par_id], par_color);//заменить вернуть основоной цвет
         //если сварка не отображать параметр большими цифрами
         if(Welding_state == 0) { //Idle state
             Draw_text_set_text(format_big[format_id], Par_big_text_sp, par_value);
@@ -398,36 +408,20 @@ void Encoder_process_code(u8 state)
 
 void par_select(u8 par_id) 
 {
-    u16 main_color;
-    if(cur_par_id == par_id) return;
-    
-    switch (par_id) { //вернуть цвет в невыбранном состоянии
-        case EIID_PRE_FLOW_T1: case EIID_START_T2: case EIID_UP_T3:  case EIID_BASE_T4:
-        case EIID_IMPULSE_T5:  case EIID_DOWN_T6:  case EIID_END_T7: case EIID_POST_FLOW_T8: {
-            main_color = CYAN;
-        } break;
-
-        case EIID_START_I1: case EIID_BASE_I2: case EIID_BASE2_I2X: case EIID_IMPULSE_I3:
-        case EIID_END_I4:   case EIDD_KZ_I5: {
-            main_color = YELLOW;
-        } break;
-
-        case EIID_FREQ_F1: case EIID_BALANCE_D1  : {
-            main_color = RED;
-        } break;
-        default: return;
-    }
-
+    u8 old_par_id;
     {//перерисовать прямоугольник под параметрами
         rect_t r;
         Draw_text_get_pos(text_sp[par_id], &r);
         Draw_filled_rect_redraw(Filled_rect_under_par_sp, r.x0, 220, r.x1, SCREEN_HEIGHT - ICON_RECT_SZ, 0x528A);
     }
-    Draw_text_set_color(text_sp[cur_par_id], main_color);//заменить вернуть основоной цвет
+    display_par(par_id); 
     Draw_text_set_color(text_sp[par_id], PINK);//заменить на цвет "выбранного элемента"
+    if(cur_par_id == par_id) return;
+    display_par(cur_par_id);
+    old_par_id = cur_par_id;
     cur_par_id = par_id;
-
-    display_par(par_id);  
+    display_par(old_par_id);
+    display_par(cur_par_id);
 }
 
 
@@ -595,7 +589,6 @@ void make_scene(void)
     
     Draw_filled_rect(0, 210, 1279, 210 + 10, BLACK);//полоска под напряжением и током
 
-    
     {
         u16 start_x;
         u16 start_y;
@@ -645,8 +638,6 @@ void make_scene(void)
         }
         cur_menu_fanc = bottom_level_controls;//функция которая вызывается при касании по области touch
     }
-
-
 
     //отрисовка циклограммы
     {
@@ -705,7 +696,6 @@ void make_scene(void)
             dummy_line_down(&p);
         }
         Draw_line(p.x, 650 - 80, p.x, 650, 5, 0xDEDB); //вертикальная черта в конце
-
         Draw_line(40, 650 - 80, 1240, 650 - 80, 5, 0xDEDB);//2 горизонтальные линии
         Draw_line(40, 650, 1240, 650, 5, 0xDEDB);
     }
@@ -719,7 +709,13 @@ void make_scene(void)
         0,38, 
         175,255, 
         TEXT_INTERVAL_1 | TEXT_ALIGNMENT_CENTER | TEXT_ALIGNMENT_VERTICAL_UP | TEXT_ENC_ASCII, //for big unicode font use ascii encode and icl is font id
-        PINK); 
+        PINK);
+
+        prev_par_id = 0;
+        cur_par_id  = EIID_BASE_I2;
+        par_select(EIID_BASE_I2);
+        prev_par_id = EIID_BASE_I2;
+        
     } else if (Welding_state == 8) {
         Amp_text_sp = Draw_text(
         0, 
@@ -742,15 +738,7 @@ void make_scene(void)
         DARK_GREEN);
     }
 
-    cur_par_id = EIID_BASE_I2;
-    {//перерисовать прямоугольник под параметрами
-        rect_t r;
-        Draw_text_get_pos(text_sp[EIID_BASE_I2], &r);
-        Draw_filled_rect_redraw(Filled_rect_under_par_sp, r.x0, 220, r.x1, SCREEN_HEIGHT - ICON_RECT_SZ, 0x528A);
-    }
-    Draw_text_set_color(text_sp[EIID_BASE_I2], PINK);//заменить на цвет "выбранного элемента"
-    display_par(EIID_BASE_I2);
-
+  
     //par_select(EIID_BASE_I2); //по умолчанию выбран ток базы для отображения и настройки после отрисовки циклограммы
 
     Draw_end(); //зачистка не используемых элементов
