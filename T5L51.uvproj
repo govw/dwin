@@ -432,6 +432,11 @@
               <FileType>1</FileType>
               <FilePath>.\source\drawing.c</FilePath>
             </File>
+            <File>
+              <FileName>nor_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\source\nor_flash.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

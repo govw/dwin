@@ -9,7 +9,8 @@
 ".\Objects\dwin8283.obj",
 ".\Objects\ssd2828.obj",
 ".\Objects\temp.obj",
-".\Objects\drawing.obj" 
+".\Objects\drawing.obj",
+".\Objects\nor_flash.obj" 
 TO ".\Objects\T5L51" 
 PRINT(".\Listings\T5L51.m51") RAMSIZE(256) 
 CODE( 0X0100-0XFEFF )

@@ -1,6 +1,37 @@
-Build target 'Target 1'
+Rebuild target 'Target 1'
+assembling STARTUP_M5.A51...
+compiling sys.c...
+compiling timer.c...
+compiling uart.c...
+compiling canbus.c...
+compiling main.c...
+source\ssd2828.h(76): warning C235: parameter 1: different types
+compiling const.c...
+compiling ui.c...
+compiling dwin8283.c...
+compiling ssd2828.c...
+source\ssd2828.h(76): warning C235: parameter 1: different types
 compiling temp.c...
+compiling drawing.c...
+.\driver\sys.h(115): warning C317: attempt to redefine macro 'NULL'
+source\drawing.c(62): warning C280: 'x0': unreferenced local variable
+source\drawing.c(62): warning C280: 'y0': unreferenced local variable
+source\drawing.c(62): warning C280: 'x1': unreferenced local variable
+source\drawing.c(62): warning C280: 'y1': unreferenced local variable
+source\drawing.c(80): warning C280: 'y0': unreferenced local variable
+source\drawing.c(80): warning C280: 'x1': unreferenced local variable
+source\drawing.c(80): warning C280: 'y1': unreferenced local variable
+source\drawing.c(80): warning C280: 'color': unreferenced local variable
+source\drawing.c(93): warning C280: 'y0': unreferenced local variable
+source\drawing.c(93): warning C280: 'x1': unreferenced local variable
+source\drawing.c(93): warning C280: 'y1': unreferenced local variable
+source\drawing.c(93): warning C280: 'color': unreferenced local variable
+compiling nor_flash.c...
 linking...
+*** WARNING L13: RECURSIVE CALL TO SEGMENT
+    SEGMENT: ?PR?_CUR_PAR_VALUE_CHANGE?TEMP
+    CALLER:  ?PR?_BOTTOM_LEVEL_CONTROLS?TEMP
+
 *** WARNING L13: RECURSIVE CALL TO SEGMENT
     SEGMENT: ?PR?MAKE_SCENE?TEMP
     CALLER:  ?PR?_BOTTOM_LEVEL_CONTROLS?TEMP
@@ -33,13 +64,7 @@ linking...
     SEGMENT: ?PR?_GETTOUCHANCTION?SYS
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_STARTTIMER?TIMER
-
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_KILLTIMER?TIMER
-
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_GETTIMEOUTFLAG?TIMER
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?INIT_RTC?TIMER
@@ -67,6 +92,9 @@ linking...
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?_SSD2828_READREG?SSD2828
+
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?OPEN_ADDITIONAL_SETTINGS?TEMP
 
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?DRAW_CLEAR_SCREEN?DRAWING
@@ -111,7 +139,7 @@ linking...
     CALLER1: ?PR?EXT_INT1?MAIN
     CALLER2: ?C_C51STARTUP
 
-Program Size: data=71.2 xdata=17587 code=30378
+Program Size: data=73.2 xdata=17626 code=32204
 creating hex file from ".\Objects\T5L51"...
 User command #1: 1.bat
 
@@ -119,8 +147,8 @@ c:\Users\OGK5-7\Desktop\dwin new new\dwin>cd objects
 
 c:\Users\OGK5-7\Desktop\dwin new new\dwin\Objects>srec_cat.exe T5L51.hex -Intel -o T5L51.bin -Binary  
 srec_cat: T5L51.hex: 59: warning: data records not in strictly ascending order
-    (expected >= 0x761D, got 0x6C9B)
+    (expected >= 0x7D3F, got 0x731C)
 
 c:\Users\OGK5-7\Desktop\dwin new new\dwin\Objects>echo.
 
-".\Objects\T5L51" - 0 Error(s), 35 Warning(s).
+".\Objects\T5L51" - 0 Error(s), 50 Warning(s).

@@ -23,6 +23,7 @@
         "dwin8283.h": "c",
         "uart.h": "c",
         "encoder.h": "c",
-        "timer.h": "c"
+        "timer.h": "c",
+        "nor_flash.h": "c"
     }
 }

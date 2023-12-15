@@ -4,6 +4,7 @@
 #include "stdio.h"
 #include "drawing.h"
 #include "encoder.h"
+#include "nor_flash.h"
 
 code const u8  LINE_HIGHT   = 13;//px
 idata      u16 LINE_WIDTH   = 150;//px
@@ -58,6 +59,7 @@ u16 text_sp[EIID_SIZE]; //массив sp идентификаторов лин�
 s16 par[EIID_SIZE];
 xdata s16 par_tek[36];//параметры для силовой части
 u16 cur_par_id; //номер текущего параметра к отображению
+u16  cur_prog_id;
 u16 prev_par_id;
 typedef struct {
     s16 min;
@@ -69,6 +71,7 @@ s16   par_step[EIID_SIZE];
 u16 Amp_text_sp; //поле для вывода тока во время сварки
 u16 Volt_text_sp;//поле для вывода напраяжения во время сварки
 u16 Par_big_text_sp;//поле для вывода значения текущего настраиваемого параметра
+u16 N_prog_text_sp;//поле для вывода номера текущей программы
 data u8 Welding_state;//текущее состояние силовой части
 u16 Filled_rect_under_par_sp; //прямоугольник под параметрами
 
@@ -88,13 +91,16 @@ void make_lim(lim_t *lim, s16 min, s16 max) {
 
 void add_touch_place(u16 x0, u16 y0, u16 x1, u16 y1, u8 touch_id)
 {
+    icon_t *p_menu; 
     if(touch_rect_cnt > ARR_SIZE(cur_menu)) return;
+    
+    p_menu = &cur_menu[touch_rect_cnt];
 
-    cur_menu[touch_rect_cnt].id = touch_id;
-    cur_menu[touch_rect_cnt].r.x0 = x0;
-    cur_menu[touch_rect_cnt].r.y0 = y0;
-    cur_menu[touch_rect_cnt].r.x1 = x1;
-    cur_menu[touch_rect_cnt].r.y1 = y1; // размер кнопки
+    p_menu->id = touch_id;
+    p_menu->r.x0 = x0;
+    p_menu->r.y0 = y0;
+    p_menu->r.x1 = x1;
+    p_menu->r.y1 = y1; // размер кнопки
     touch_rect_cnt++;        
 }
 
@@ -210,16 +216,22 @@ void add_i_kz(point_t *p)
 
 }
 
+void add_freq_bal(point_t *p)
+{
+    draw_number_wtih_touch_centered(p->x, p->y + LEVEL_HEIGHT, FONT_SIZE, EIID_FREQ_F1);//время конечной продувки
+    draw_number_wtih_touch_centered(p->x + LINE_WIDTH, p->y + LEVEL_HEIGHT, FONT_SIZE, EIID_BALANCE_D1);//время конечной продувки       
+}
+
 void display_par(u16 par_id) 
 {
     u16 par_color;
     u8 code *format[] = {
         "", 
-        "%.1fs", "%0.0fs", "%0.0fms", "%0.0fA", "%.0f",        
+        "%.1fs", "%0.0fs", "%0.0fms", "%0.0fA", "%.0f", "%.0fHz", "%.1fD",       
     };
     u8 code *format_big[] = {
         "", 
-        "%.1fs\r\n", "%.0fs\r\n", "%.0fms\r\n", "%.0fA\r\n", "%.0f\r\n",    
+        "%.1fs\r\n", "%.0fs\r\n", "%.0fms\r\n", "%.0fA\r\n", "%.0f\r\n", "%.0fHz\r\n", "%.1fD\r\n",   
     };
     u8 format_id = 0;
     float par_value = par[par_id];
@@ -263,9 +275,14 @@ void display_par(u16 par_id)
             par_color = YELLOW; 
         } break;       
 
-        case EIID_FREQ_F1:      
+        case EIID_FREQ_F1: {
+            format_id = 6;
+            par_color = 0xFC00;
+        } break;  
         case EIID_BALANCE_D1: {
-            format_id = 5;
+            format_id = 7;
+            par_color = 0xFC00; 
+            par_value /= 10; 
         } break; 
 
         default: return;  
@@ -287,15 +304,57 @@ void display_par(u16 par_id)
 void cur_par_value_change(u16 par_id, s8 shift)
 {
     if(shift != 0) {
-        par[par_id] += ((s16)par_step[par_id] * shift); 
-        if(par[par_id] > par_lim[par_id].max)       
-            par[par_id] = par_lim[par_id].max;
-        else if(par[par_id] < par_lim[par_id].min) 
-            par[par_id] = par_lim[par_id].min;
+        s16 *val = &par[par_id];
+        s16 val_max = par_lim[par_id].max;
+        s16 val_min = par_lim[par_id].min;
+        
+        *val += ((s16)par_step[par_id] * shift);
+        if(*val >= val_max)       
+            *val = val_max;
+        else if(*val <= val_min) 
+            *val = val_min;
+         
     } 
    
     switch (par_id)
     {
+        case EIID_PROG_ID: {
+            cur_prog_id += shift;
+            if((s16)cur_prog_id <= 0) cur_prog_id = 0;
+
+            Norflash_read(0 + sizeof(par) * cur_prog_id, (u8*) par, sizeof(par) / 2);
+            if(par[0] == (s16)0xA5A5) {//признак того что ячека инициализированна
+                main_menu_bm = *((u32*)&par[1]);
+            } else {
+                    main_menu_bm = (((u32)1 << EIID_TIG)              |
+                         ((u32)1 << EIID_4T)        |
+                         ((u32)1 << EIID_AC)        |
+                         ((u32)1 << EIID_HF)        |
+                         ((u32)1 << EIID_PULSE_OFF) |
+                         ((u32)1 << EIID_SIN)       |
+                         ((u32)1 << EIID_D_32)      |
+                         ((u32)1 << EIID_H2O_ON)      
+                    );
+            }
+        
+            {
+                u8 i;
+                for(i = EIID_PRE_FLOW_T1; i <= EIID_BASE2_I2X; i++) {
+                    s16 *val = &par[i];
+                    if(*val >= par_lim[i].max) {
+                        *val = par_lim[i].max;
+                    } else if(*val <= par_lim[i].min) {
+                        *val = par_lim[i].min;     
+                    } 
+                }
+            }
+                  
+
+            make_scene();
+            Draw_text_set_color(N_prog_text_sp, PINK);
+            cur_par_id = EIID_PROG_ID;
+        }break;
+
         case EIID_PRE_FLOW_T1  :
         case EIID_START_T2     :
         case EIID_UP_T3        :
@@ -409,6 +468,9 @@ void Encoder_process_code(u8 state)
 void par_select(u8 par_id) 
 {
     u8 old_par_id;
+
+  
+
     {//перерисовать прямоугольник под параметрами
         rect_t r;
         Draw_text_get_pos(text_sp[par_id], &r);
@@ -467,7 +529,6 @@ void init_par_udgu(void)
     par_step[EIID_BASE2_I2X]    =  1  ; //A 
 
 
-
     {
         u8 i;
         s16 *p_tmp;
@@ -481,16 +542,35 @@ void init_par_udgu(void)
             *p_tmp++ = 0;        
     }
  
-   
-  main_menu_bm = (((u32)1 << EIID_TIG)              |
-                         ((u32)1 << EIID_4T)        |
-                         ((u32)1 << EIID_AC)        |
-                         ((u32)1 << EIID_HF)        |
-                         ((u32)1 << EIID_PULSE_OFF) |
-                         ((u32)1 << EIID_SIN)       |
-                         ((u32)1 << EIID_D_32)      |
-                         ((u32)1 << EIID_H2O_ON)      
-                    );
+    
+    // main_menu_bm = (((u32)1 << EIID_TIG)              |
+    //                      ((u32)1 << EIID_4T)        |
+    //                      ((u32)1 << EIID_AC)        |
+    //                      ((u32)1 << EIID_HF)        |
+    //                      ((u32)1 << EIID_PULSE_OFF) |
+    //                      ((u32)1 << EIID_SIN)       |
+    //                      ((u32)1 << EIID_D_32)      |
+    //                      ((u32)1 << EIID_H2O_ON)      
+    //                 );
+
+
+    Norflash_read(0, (u8*) par, sizeof(par) / 2);
+    cur_par_id = 0;    
+    if(par[0] == (s16)0xA5A5) {//признак того что ячека инициализированна
+        main_menu_bm = *((u32*)&par[1]);
+    } else {
+        main_menu_bm = (((u32)1 << EIID_TIG)              |
+                ((u32)1 << EIID_4T)        |
+                ((u32)1 << EIID_AC)        |
+                ((u32)1 << EIID_HF)        |
+                ((u32)1 << EIID_PULSE_OFF) |
+                ((u32)1 << EIID_SIN)       |
+                ((u32)1 << EIID_D_32)      |
+                ((u32)1 << EIID_H2O_ON)      
+        );
+    }
+
+
     cur_par_value_change(EIID_TIG,        0);
     cur_par_value_change(EIID_4T,         0);
     cur_par_value_change(EIID_AC,         0);
@@ -500,7 +580,7 @@ void init_par_udgu(void)
     cur_par_value_change(EIID_SIN,        0);
     cur_par_value_change(EIID_H2O_ON,     0);
 
-        
+    
     par[EIID_PRE_FLOW_T1]        = par_tek[EPID_PRE_FLOW_T1]    = 1;   // t gaz
     par[EIID_START_I1]           = par_tek[EPID_START_I1]       = 50;   // I begin
     par[EIID_START_T2]           = par_tek[EPID_START_T2]       = 1;   // t begin
@@ -517,8 +597,6 @@ void init_par_udgu(void)
     par[EIID_POST_FLOW_T8]       = par_tek[EPID_POST_FLOW_T8]   = 1;    // t gaz
     par[EIDD_KZ_I5]              = par_tek[EPID_KZ_I5]          = 55;   // I kz
                                    par_tek[EPID_BSN]            = 1;    // BSN 1-off 2-on
-  
-
     par_tek[EPID_MODES_SUBMODES] = 0x0110;
 }
 
@@ -571,23 +649,84 @@ void bottom_level_controls(u8 item_pos)
             par_select(cur_menu[item_pos].id);
         } break;
 
+        case EIID_PROG_ID: {
+            if(cur_par_id == EIID_PROG_ID){//если настойка номера программы то сохранить текущую прграмму
+                par[0] = 0xA5A5;//признак того что ячека инициализированна
+                *((u32 *)&par[1]) = main_menu_bm;
+                Norflash_write(0 + sizeof(par) * cur_prog_id, (u8*) par, sizeof(par) / 2);
+                make_scene();
+            } else {
+                Draw_text_set_color(N_prog_text_sp, PINK);
+                cur_par_id = EIID_PROG_ID;
+            }
+        } break; //выбор программы 
+
         default: return;
     }    
 }
 
 
 
+void open_additional_settings(void) 
+{
+    touch_rect_cnt = 0; //убрать все области касания
+    Draw_start();
+    Draw_filled_rect(0,   0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, GRAY);//прямоугольник под задний фон
+    //Draw_filled_rect(0,   0, 1279, 128, GRAY);//прямоугольник под задний фон
+    //Draw_filled_rect(0, 128, 1279, 256, BLACK);//прямоугольник под задний фон
+    //Draw_filled_rect(0, 256, 1279, 384, GRAY);//прямоугольник под задний фон
+    {
+    u8 i;
+    for(i = 0; i < 6; i++) {
+        Draw_text_set_text("sdfdsf",Draw_text(
+        0, 
+        128 * i,
+        1279, (128 * i) + 128,
+        0,0, 
+        27,54, 
+        TEXT_INTERVAL_1 | TEXT_ALIGNMENT_CENTER | TEXT_ALIGNMENT_VERTICAL_CENTER | TEXT_ENC_GBK, //for big unicode font use ascii encode and icl is font id
+        WHITE
+    ));
+    }
+    }
+    Draw_end();
+    
+}
 
 void make_scene(void)
 {
-    Draw_start();
+    // open_additional_settings();    
+    // return;
     touch_rect_cnt = 0; //убрать все области касания
+    Draw_start();
 
     Draw_filled_rect(0, 0, 1279, 799, GRAY);//прямоугольник под задний фон 
+    Draw_filled_rect(0, SCREEN_HEIGHT - ICON_RECT_SZ, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 0x4010); //черный прямоугольник под иконками 
+    
+    Draw_image(SCREEN_WIDTH - 1 - 128, SCREEN_HEIGHT - 1 - 128, 40, 0); //36 icon icl;
 
     Filled_rect_under_par_sp = Draw_filled_rect(0, 0, 0, 0, 0x528A); // рамка под параметрами создание области под нее заготовка   
     
     Draw_filled_rect(0, 210, 1279, 210 + 10, BLACK);//полоска под напряжением и током
+    
+    Draw_filled_rect(1279 - 128, 0, 1279, 128 , DARK_GREEN);//кнопка для сохранения текущей программы в текущий номер ячеки памяти
+    add_touch_place(1279 - 128, 0, 1279, 128, EIID_PROG_ID);
+
+
+    add_touch_place(1279, 671, 1023 + ICON_RECT_SZ, 671 + ICON_RECT_SZ, EIID_PROG_ID);
+
+    Draw_text_set_text("%dp",N_prog_text_sp = Draw_text(
+        1023, 
+        671,
+        1023 + ICON_RECT_SZ, 
+        671 + ICON_RECT_SZ,
+        0,0, 
+        32,64, 
+        TEXT_INTERVAL_1 | TEXT_ALIGNMENT_CENTER | TEXT_ALIGNMENT_VERTICAL_CENTER | TEXT_ENC_GBK, //for big unicode font use ascii encode and icl is font id
+        WHITE
+    ), cur_prog_id);//текущий номер программы
+
+    add_touch_place(1023, 671, 1023 + ICON_RECT_SZ, 671 + ICON_RECT_SZ, EIID_PROG_ID);
 
     {
         u16 start_x;
@@ -596,7 +735,12 @@ void make_scene(void)
         u8 i;
         u8 id; 
 
-        bm = main_menu_bm & active_items[cur_active_items_id];
+        if(main_menu_bm & (u32)1 << EIID_TIG) {
+            bm = main_menu_bm & active_items[TIG];
+        } else {
+            bm = main_menu_bm & active_items[MMA];
+        } 
+        
 
         if(main_menu_bm & ((u32)1 << EIID_DC_MINUS) || main_menu_bm & ((u32)1 << EIID_DC_PLUS)) { //если dc+ или dc- убрать выбор формы волны
             bm &= ~(menu_item_bm[MEN_PLS_WAVE_SHAPE_MOD]);
@@ -620,7 +764,7 @@ void make_scene(void)
                     while (vertical_menu_bm != 0) {//создание , отрисовка вертикального меню
                         if((u32)vertical_menu_bm & (u32)1) {
                             add_touch_place(v_start_x, v_start_y, v_start_x + ICON_RECT_SZ, v_start_y + ICON_RECT_SZ, v_id);
-                            Draw_image(v_start_x, v_start_y, v_id);
+                            Draw_image(v_start_x, v_start_y, 36, v_id); //36 icon icl;
                             v_start_y -= ICON_RECT_SZ; 
                         }
                         vertical_menu_bm >>= 1; //после отрисовки вертикальное меню будет пустым и его не надо принудительно обнулять
@@ -629,7 +773,7 @@ void make_scene(void)
                 }
                 
                 add_touch_place(start_x, start_y, start_x + ICON_RECT_SZ, start_y + ICON_RECT_SZ, id);
-                Draw_image(start_x, start_y, id);
+                Draw_image(start_x, start_y, 36, id); //36 icon icl
                 start_x += ICON_RECT_SZ;
                 i++;
             }
@@ -657,6 +801,7 @@ void make_scene(void)
             add_t_preflow(&p);
             dummy_line_up(&p);
             add_t_start_i(&p);
+            add_freq_bal(&p);
             add_t_up(&p);
             add_base_i1_i2_t(&p);
         if(main_menu_bm & (u32)1 << EIID_TIG_SPOT) {
@@ -684,6 +829,7 @@ void make_scene(void)
                 FONT_SIZE = 38;//64
             }
             start_p = p = make_point(40, 500);
+            add_freq_bal(&p);
             dummy_line_up(&p);
             add_t_start_i(&p);
             dummy_line_down(&p);

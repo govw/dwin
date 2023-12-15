@@ -1,4 +1,4 @@
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 1   
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 1   
 
 
 C51 COMPILER V9.53.0.0, COMPILATION OF MODULE MAIN
@@ -8,8 +8,8 @@ COMPILER INVOKED BY: D:\DWIN\Keil_v5\C51\BIN\C51.EXE source\main.c LARGE OPTIMIZ
 
 line level    source
 
-   1          #include "timer.h"
-   2          #include "ui.h"
+   1          #include "ui.h"
+   2          #include "timer.h"
    3          #include "uart.h"
    4          #include "dwin8283.h"
    5          #include "canbus.h"
@@ -62,7 +62,7 @@ line level    source
   51          
   52           
   53          
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 2   
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 2   
 
   54          
   55          
@@ -126,7 +126,7 @@ line level    source
  113   2              encoder_ticks = 100;
  114   2          }
  115   1          delay_ms(1);
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 3   
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 3   
 
  116   1         
  117   1          
@@ -161,38 +161,38 @@ line level    source
  146          static data u16 last_touch_item;
  147          static data u16 good_packages_cnt;
  148          static data u16 bad_packages_cnt;
- 149          void print_debug_info(void)
- 150          {
- 151   1          static u8 buf[100];
- 152   1          code u8 *welding_states_tig[] = {
- 153   1              /*00*/"IDLE",
- 154   1              /*01*/"requesting/receiving parameters", 
- 155   1              /*02*/"gas flow before welding",
- 156   1              /*03*/"ignition",
- 157   1              /*04*/"no current (not ignited)", 
- 158   1              /*05*/"no current after ignition (when checking)", 
- 159   1              /*06*/"ignition pulse", 
- 160   1              /*07*/"pulse time is incorrect", 
- 161   1              /*08*/"initial current", 
- 162   1              /*09*/"increase",
- 163   1              /*10*/"welding", 
- 164   1              /*11*/"decrease",
- 165   1              /*12*/"end I",
- 166   1              /*13*/"cleaning the electrode",
- 167   1              /*14*/"gas flow at the end",
- 168   1              /*15*/"waiting for the release of the button on the torch",
- 169   1          };
- 170   1      
- 171   1          memset(buf, 0, ARR_SIZE(buf));
- 172   1          sprintf(buf, "%s\n\r%d %d %d %d\n\r%dA\n\r%.1fV\n\r%.1fs\n\rgood: %d\n\rbad:  %d",welding_states_tig[W
-             -elding_state], touch_coord_x, touch_coord_y, touch_state, last_touch_item, amp, (float)volt / 10.0, (float)time / 10.0, 
-             -good_packages_cnt, bad_packages_cnt);
- 173   1          write_dgus_vp(0x2500, (u8*) &buf, sizeof(buf) / 2);
- 174   1      }
- 175          //debug
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 4   
+ 149          static data u16 main_cycle_cnt;
+ 150          void print_debug_info(void)
+ 151          {
+ 152   1          static u8 buf[100];
+ 153   1          code u8 *welding_states_tig[] = {
+ 154   1              /*00*/"IDLE",
+ 155   1              /*01*/"requesting/receiving parameters", 
+ 156   1              /*02*/"gas flow before welding",
+ 157   1              /*03*/"ignition",
+ 158   1              /*04*/"no current (not ignited)", 
+ 159   1              /*05*/"no current after ignition (when checking)", 
+ 160   1              /*06*/"ignition pulse", 
+ 161   1              /*07*/"pulse time is incorrect", 
+ 162   1              /*08*/"initial current", 
+ 163   1              /*09*/"increase",
+ 164   1              /*10*/"welding", 
+ 165   1              /*11*/"decrease",
+ 166   1              /*12*/"end I",
+ 167   1              /*13*/"cleaning the electrode",
+ 168   1              /*14*/"gas flow at the end",
+ 169   1              /*15*/"waiting for the release of the button on the torch",
+ 170   1          };
+ 171   1      
+ 172   1          memset(buf, 0, ARR_SIZE(buf));
+ 173   1          sprintf(buf, "%d\r\n%s\n\r%d %d %d %d\n\r%dA\n\r%.1fV\n\r%.1fs\n\rgood: %d\n\rbad:  %d",main_cycle_cnt
+             -,welding_states_tig[Welding_state], touch_coord_x, touch_coord_y, touch_state, last_touch_item, amp, (float)volt / 10.0,
+             - (float)time / 10.0, good_packages_cnt, bad_packages_cnt);
+ 174   1          write_dgus_vp(0x2500, (u8*) &buf, sizeof(buf) / 2);
+ 175   1      }
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 4   
 
- 176          
+ 176          //debug
  177          
  178          
  179          
@@ -202,286 +202,286 @@ line level    source
  183          
  184          
  185          
- 186          void process_touch(void)
- 187          {
- 188   1          enum ETP_STATE {
- 189   1              ETPS_WAIT, ETPS_RELEASE, ETPS_FIRST_PRESS, ETPS_LIFT, ETPS_PRESSING,
- 190   1          };
- 191   1          struct {
- 192   1             u8 status;
- 193   1             u8 action_type;
- 194   1             u16 x;
- 195   1             u16 y;
- 196   1          } data touch_data;
- 197   1          
- 198   1          read_dgus_vp(0x16,(u8*)&touch_data, sizeof(touch_data) / 2); //info about touch status and coords
- 199   1          if(touch_data.status == 0x5A) {//if status byte 0x05 some action done
- 200   2              touch_data.status = 0x00;
- 201   2              write_dgus_vp(0x16, (u8*) &touch_data.x, 1); //clear status byte to 00;
- 202   2              
- 203   2              //debug
- 204   2              touch_coord_x = touch_data.x;
- 205   2              touch_coord_y = touch_data.y;
- 206   2              touch_state   = touch_data.action_type;
- 207   2              //debug
- 208   2          
- 209   2              switch(touch_data.action_type) {
- 210   3                  case ETPS_RELEASE: {
- 211   4                      u8 i;
- 212   4                      for(i = 0; i < touch_rect_cnt; i++) { //if touch coords in recatnle area                  
+ 186          
+ 187          void process_touch(void)
+ 188          {
+ 189   1          enum ETP_STATE {
+ 190   1              ETPS_WAIT, ETPS_RELEASE, ETPS_FIRST_PRESS, ETPS_LIFT, ETPS_PRESSING,
+ 191   1          };
+ 192   1          struct {
+ 193   1             u8 status;
+ 194   1             u8 action_type;
+ 195   1             u16 x;
+ 196   1             u16 y;
+ 197   1          } data touch_data;
+ 198   1          
+ 199   1          read_dgus_vp(0x16,(u8*)&touch_data, sizeof(touch_data) / 2); //info about touch status and coords
+ 200   1          if(touch_data.status == 0x5A) {//if status byte 0x05 some action done
+ 201   2              touch_data.status = 0x00;
+ 202   2              write_dgus_vp(0x16, (u8*) &touch_data.x, 1); //clear status byte to 00;
+ 203   2              
+ 204   2              //debug
+ 205   2              touch_coord_x = touch_data.x;
+ 206   2              touch_coord_y = touch_data.y;
+ 207   2              touch_state   = touch_data.action_type;
+ 208   2              //debug
+ 209   2          
+ 210   2              switch(touch_data.action_type) {
+ 211   3                  case ETPS_RELEASE: {
+ 212   4                      u8 i;
+ 213   4                      for(i = 0; i < touch_rect_cnt; i++) { //if touch coords in recatnle area                  
              -      
- 213   5                          if( touch_data.x >= cur_menu[i].r.x0 && touch_data.x <= cur_menu[i].r.x1 &&  
- 214   5                              touch_data.y >= cur_menu[i].r.y0 && touch_data.y <= cur_menu[i].r.y1 ) {
- 215   6                                  break;  
- 216   6                          }
- 217   5                      }
- 218   4                      cur_menu_fanc(i);
- 219   4                      last_touch_item = i; //debug
- 220   4                  } break;
- 221   3                  
- 222   3                  case ETPS_FIRST_PRESS: break;
- 223   3                  case ETPS_LIFT:        break;
- 224   3                  case ETPS_PRESSING:    break;
- 225   3                  default: break;
- 226   3              }
- 227   2          }
- 228   1      }
- 229          
+ 214   5                          if( touch_data.x >= cur_menu[i].r.x0 && touch_data.x <= cur_menu[i].r.x1 &&  
+ 215   5                              touch_data.y >= cur_menu[i].r.y0 && touch_data.y <= cur_menu[i].r.y1 ) {
+ 216   6                                  break;  
+ 217   6                          }
+ 218   5                      }
+ 219   4                      cur_menu_fanc(i);
+ 220   4                      last_touch_item = i; //debug
+ 221   4                  } break;
+ 222   3                  
+ 223   3                  case ETPS_FIRST_PRESS: break;
+ 224   3                  case ETPS_LIFT:        break;
+ 225   3                  case ETPS_PRESSING:    break;
+ 226   3                  default: break;
+ 227   3              }
+ 228   2          }
+ 229   1      }
  230          
  231          
  232          
  233          
- 234          void process_uart(void) 
- 235          {
- 236   1          //обработчик uart
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 5   
+ 234          
+ 235          void process_uart(void) 
+ 236          {
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 5   
 
- 237   1              if(Uart_Struct[UART5].tx_flag == 0) //если передача завершена
- 238   1                      {
- 239   2                  while(Uart_Struct[UART5].rx_tail != Uart_Struct[UART5].rx_head)
- 240   2                              { 
- 241   3                      register u8 byte = Uart_Struct[UART5].rx_buf[Uart_Struct[UART5].rx_tail];
- 242   3                      
- 243   3                                      Uart_Struct[UART5].rx_tail++;
- 244   3                                      Uart_Struct[UART5].rx_tail &= SERIAL_COUNT;
- 245   3                                      
- 246   3      
- 247   3                      switch (uart_state)
- 248   3                                      {
- 249   4                          case 0: {
- 250   5                              if(byte == 0xA5) 
- 251   5                                  uart_state=1;
- 252   5                          }break;
- 253   4                              
- 254   4                          case 1: {
- 255   5                              if(byte == 0xA5) 
- 256   5                                  uart_state=4;
- 257   5                              else 
- 258   5                                  UART_INIT
- 259   5                          }break;
- 260   4                              
- 261   4                          case 4:
- 262   4                              if(byte == 0xA5) 
- 263   4                                  begfl = 1;
- 264   4                              else if(byte == 0x5A)
- 265   4                                  endfl = 1;
- 266   4                              uart_len = byte; 
- 267   4                              uart_state = 6; 
- 268   4                              break;  
- 269   4      
- 270   4                          case 6:
- 271   4                              if(byte == 0xA5)
- 272   4                              {
- 273   5                                  if (begfl == 1) 
- 274   5                                      uart_state = 4;
- 275   5                                  else           
- 276   5                                      begfl = 1; 
- 277   5                              }
- 278   4                              else 
- 279   4                                  begfl=0;
- 280   4      
- 281   4                              if(byte == 0x5A)
- 282   4                              {
- 283   5                                  if(endfl == 1) 
- 284   5                                  {
- 285   6                                      UART_INIT 
- 286   6                                      break;
- 287   6                                  } else
- 288   5                                      endfl = 1; 
- 289   5                              } else 
- 290   4                                  endfl = 0;
- 291   4      
- 292   4                              bufin[inbufind] = byte; 
- 293   4                              inbufind++;
- 294   4      
- 295   4                              if(inbufind == uart_len + 2)
- 296   4                              { 
- 297   5                                  uart_state = 10;
- 298   5                              } 
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 6   
+ 237   1          //обработчик uart
+ 238   1              if(Uart_Struct[UART5].tx_flag == 0) //если передача завершена
+ 239   1                      {
+ 240   2                  while(Uart_Struct[UART5].rx_tail != Uart_Struct[UART5].rx_head)
+ 241   2                              { 
+ 242   3                      register u8 byte = Uart_Struct[UART5].rx_buf[Uart_Struct[UART5].rx_tail];
+ 243   3                      
+ 244   3                                      Uart_Struct[UART5].rx_tail++;
+ 245   3                                      Uart_Struct[UART5].rx_tail &= SERIAL_COUNT;
+ 246   3                                      
+ 247   3      
+ 248   3                      switch (uart_state)
+ 249   3                                      {
+ 250   4                          case 0: {
+ 251   5                              if(byte == 0xA5) 
+ 252   5                                  uart_state=1;
+ 253   5                          }break;
+ 254   4                              
+ 255   4                          case 1: {
+ 256   5                              if(byte == 0xA5) 
+ 257   5                                  uart_state=4;
+ 258   5                              else 
+ 259   5                                  UART_INIT
+ 260   5                          }break;
+ 261   4                              
+ 262   4                          case 4:
+ 263   4                              if(byte == 0xA5) 
+ 264   4                                  begfl = 1;
+ 265   4                              else if(byte == 0x5A)
+ 266   4                                  endfl = 1;
+ 267   4                              uart_len = byte; 
+ 268   4                              uart_state = 6; 
+ 269   4                              break;  
+ 270   4      
+ 271   4                          case 6:
+ 272   4                              if(byte == 0xA5)
+ 273   4                              {
+ 274   5                                  if (begfl == 1) 
+ 275   5                                      uart_state = 4;
+ 276   5                                  else           
+ 277   5                                      begfl = 1; 
+ 278   5                              }
+ 279   4                              else 
+ 280   4                                  begfl=0;
+ 281   4      
+ 282   4                              if(byte == 0x5A)
+ 283   4                              {
+ 284   5                                  if(endfl == 1) 
+ 285   5                                  {
+ 286   6                                      UART_INIT 
+ 287   6                                      break;
+ 288   6                                  } else
+ 289   5                                      endfl = 1; 
+ 290   5                              } else 
+ 291   4                                  endfl = 0;
+ 292   4      
+ 293   4                              bufin[inbufind] = byte; 
+ 294   4                              inbufind++;
+ 295   4      
+ 296   4                              if(inbufind == uart_len + 2)
+ 297   4                              { 
+ 298   5                                  uart_state = 10;
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 6   
 
- 299   4                                  
- 300   4                              break;
- 301   4      
- 302   4                          case 10:
- 303   4                              if(byte == 0x5A) {
- 304   5                                  uart_state = 11; 
- 305   5                                  break;
- 306   5                              }    
- 307   4                              if(byte == 0xA5) {      
- 308   5                                  UART_INIT_1 
- 309   5                                  break;
- 310   5                              }
- 311   4                              UART_INIT 
- 312   4                              break;
- 313   4      
- 314   4                          case 11:
- 315   4                          {
- 316   5                              u8 i;
- 317   5                              u8 crc = 0;
- 318   5                              if(byte != 0x5A) {
- 319   6                                  if(byte == 0xA5) 
- 320   6                                      UART_INIT_1 
- 321   6                                  else             
- 322   6                                      UART_INIT
- 323   6                                  break; 
- 324   6                              }
- 325   5                      
- 326   5      
- 327   5                              for(i = 1; i <= uart_len; i++) {
- 328   6                                  crc += bufin[i];
- 329   6                              }
- 330   5                              if(crc != bufin[uart_len+1]) { 
- 331   6                                  UART_INIT
- 332   6                                  bad_packages_cnt++;//dbg
- 333   6                                  break; 
- 334   6                              }
- 335   5      
- 336   5                              good_packages_cnt++; //dbg
- 337   5                          
- 338   5                              { 
- 339   6                              switch (bufin[1]) //обработчик номера команды
- 340   6                              {
- 341   7                                  case 0x25: {
- 342   8                                      u8 ch = bufin[2];
- 343   8                                  
- 344   8                                      if(ch > 36) break;
- 345   8                                      bufout[0] = 0xA5;      // BEGIN
- 346   8                                      bufout[1] = 0xA5;                           
- 347   8                                      bufout[2] = 0x04;      // Len
- 348   8                                      bufout[3] = 0x80+0x25; // INF1
- 349   8                                      bufout[4] = 0x25;      // Answer code
- 350   8                                      bufout[5] = ch;        // Parameter Number
- 351   8                                      bufout[6] = (unsigned char)(par_tek[ch] & 0x00FF);     // Parameter
- 352   8                                      bufout[7] = (unsigned char)(par_tek[ch] >> 8);
- 353   8                                      bufout[8] = bufout[4]+bufout[5]+bufout[6]+bufout[7];  // CRC        
- 354   8                                      bufout[9] = bufout[10]=0x5A;
- 355   8                                      Uatr_Send_Data(UART5, 11, bufout);                            // END
- 356   8                                  } break;
- 357   7                                  
- 358   7                                  case 0x26: {//запрос параметров в с 0 по по bufin[2]
- 359   8                                      u8 ch;
- 360   8                                      u8 ch1;
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 7   
+ 299   5                              } 
+ 300   4                                  
+ 301   4                              break;
+ 302   4      
+ 303   4                          case 10:
+ 304   4                              if(byte == 0x5A) {
+ 305   5                                  uart_state = 11; 
+ 306   5                                  break;
+ 307   5                              }    
+ 308   4                              if(byte == 0xA5) {      
+ 309   5                                  UART_INIT_1 
+ 310   5                                  break;
+ 311   5                              }
+ 312   4                              UART_INIT 
+ 313   4                              break;
+ 314   4      
+ 315   4                          case 11:
+ 316   4                          {
+ 317   5                              u8 i;
+ 318   5                              u8 crc = 0;
+ 319   5                              if(byte != 0x5A) {
+ 320   6                                  if(byte == 0xA5) 
+ 321   6                                      UART_INIT_1 
+ 322   6                                  else             
+ 323   6                                      UART_INIT
+ 324   6                                  break; 
+ 325   6                              }
+ 326   5                      
+ 327   5      
+ 328   5                              for(i = 1; i <= uart_len; i++) {
+ 329   6                                  crc += bufin[i];
+ 330   6                              }
+ 331   5                              if(crc != bufin[uart_len+1]) { 
+ 332   6                                  UART_INIT
+ 333   6                                  bad_packages_cnt++;//dbg
+ 334   6                                  break; 
+ 335   6                              }
+ 336   5      
+ 337   5                              good_packages_cnt++; //dbg
+ 338   5                          
+ 339   5                              { 
+ 340   6                              switch (bufin[1]) //обработчик номера команды
+ 341   6                              {
+ 342   7                                  case 0x25: {
+ 343   8                                      u8 ch = bufin[2];
+ 344   8                                  
+ 345   8                                      if(ch > 36) break;
+ 346   8                                      bufout[0] = 0xA5;      // BEGIN
+ 347   8                                      bufout[1] = 0xA5;                           
+ 348   8                                      bufout[2] = 0x04;      // Len
+ 349   8                                      bufout[3] = 0x80+0x25; // INF1
+ 350   8                                      bufout[4] = 0x25;      // Answer code
+ 351   8                                      bufout[5] = ch;        // Parameter Number
+ 352   8                                      bufout[6] = (unsigned char)(par_tek[ch] & 0x00FF);     // Parameter
+ 353   8                                      bufout[7] = (unsigned char)(par_tek[ch] >> 8);
+ 354   8                                      bufout[8] = bufout[4]+bufout[5]+bufout[6]+bufout[7];  // CRC        
+ 355   8                                      bufout[9] = bufout[10]=0x5A;
+ 356   8                                      Uatr_Send_Data(UART5, 11, bufout);                            // END
+ 357   8                                  } break;
+ 358   7                                  
+ 359   7                                  case 0x26: {//запрос параметров в с 0 по по bufin[2]
+ 360   8                                      u8 ch;
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 7   
 
- 361   8                                      u8 ch2;
- 362   8                                      ch=bufin[2];
- 363   8                                      if(ch > 36) break;
- 364   8      
- 365   8                                      bufout[0]=bufout[1]=0xA5;                           // BEGIN
- 366   8                                      bufout[2]=(ch<<1)+4;                                // Len 
- 367   8                                      bufout[3]=0x80+0x26;                                // INF1
- 368   8                                      bufout[4]=0x26;                                     // Answer code
- 369   8                                      bufout[5]=ch;                                       // Parameters Number
- 370   8                                      ch2=bufout[4]+bufout[5];                            // CRC  
- 371   8                                          for(ch1=0; ch1<ch; ch1++)
- 372   8                                          {
- 373   9                                              SETPAR23(ch1);
- 374   9                                              bufout[(unsigned char)((ch1<<1)+6)]=(unsigned char)(par_tek[ch1] &
+ 361   8                                      u8 ch1;
+ 362   8                                      u8 ch2;
+ 363   8                                      ch=bufin[2];
+ 364   8                                      if(ch > 36) break;
+ 365   8      
+ 366   8                                      bufout[0]=bufout[1]=0xA5;                           // BEGIN
+ 367   8                                      bufout[2]=(ch<<1)+4;                                // Len 
+ 368   8                                      bufout[3]=0x80+0x26;                                // INF1
+ 369   8                                      bufout[4]=0x26;                                     // Answer code
+ 370   8                                      bufout[5]=ch;                                       // Parameters Number
+ 371   8                                      ch2=bufout[4]+bufout[5];                            // CRC  
+ 372   8                                          for(ch1=0; ch1<ch; ch1++)
+ 373   8                                          {
+ 374   9                                              SETPAR23(ch1);
+ 375   9                                              bufout[(unsigned char)((ch1<<1)+6)]=(unsigned char)(par_tek[ch1] &
              - 0x00FF);     // Parameter
- 375   9                                              bufout[(unsigned char)((ch1<<1)+7)]=(unsigned char)(par_tek[ch1] >
+ 376   9                                              bufout[(unsigned char)((ch1<<1)+7)]=(unsigned char)(par_tek[ch1] >
              -> 8); 
- 376   9                                              ch2=ch2+bufout[(unsigned char)((ch1<<1)+6)]+bufout[(unsigned char)
+ 377   9                                              ch2=ch2+bufout[(unsigned char)((ch1<<1)+6)]+bufout[(unsigned char)
              -((ch1<<1)+7)];
- 377   9                                          }
- 378   8                                      bufout[(unsigned char)((ch1<<1)+8)]=ch2;                             // CR
+ 378   9                                          }
+ 379   8                                      bufout[(unsigned char)((ch1<<1)+8)]=ch2;                             // CR
              -C
- 379   8                                      bufout[(unsigned char)((ch1<<1)+9)]=bufout[(unsigned char)((ch1<<1)+10)]=0
+ 380   8                                      bufout[(unsigned char)((ch1<<1)+9)]=bufout[(unsigned char)((ch1<<1)+10)]=0
              -x5A;         // END
- 380   8                                      Uatr_Send_Data(UART5, (unsigned char)((ch1<<1)+11), bufout);              
+ 381   8                                      Uatr_Send_Data(UART5, (unsigned char)((ch1<<1)+11), bufout);              
              -              // END
- 381   8                                  } break;       
- 382   7      
- 383   7                                  case 0x33: {
- 384   8                                      u8 tmp = bufin[2];
- 385   8                                      if((tmp != 88) && (tmp != 78))//если не комнады во врем
+ 382   8                                  } break;       
+ 383   7      
+ 384   7                                  case 0x33: {
+ 385   8                                      u8 tmp = bufin[2];
+ 386   8                                      if((tmp != 88) && (tmp != 78))//если не комнады во врем
              -я простоя
- 386   8                                      {   
- 387   9                                          Welding_state = tmp;//dbg
- 388   9                                          if(Welding_state == 8) {/*08*///"initial current",
- 389  10                                              make_scene();
- 390  10                                              Draw_text_set_text("%dA\r\n", Amp_text_sp,  amp);
- 391  10                                              Draw_text_set_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
- 392  10                                          }
- 393   9                                      }
- 394   8                                      else {
- 395   9                                          Welding_state = 0;
- 396   9                                          make_scene();
- 397   9                                      }
- 398   8                                  } break;
- 399   7      
- 400   7                                  case 0x3D: { //запрос на отображение параметра
- 401   8                                      u16 value = ((unsigned int)(bufin[4]) << 8) + bufin[3];
- 402   8                                      if(bufin[2] == 0x40) { //amp
- 403   9                                          amp = value; //dbg
- 404   9                                      } else if (bufin[2] == 0x41) {//vlots
- 405   9                                          volt = value; //dbg
- 406   9                                      } else if(bufin[2] == 0x42) { //time
- 407   9                                          time = value; //dbg
- 408   9                                      }
- 409   8      
- 410   8                                      if(Welding_state != 0) {
- 411   9                                          Draw_text_set_text("%dA\r\n", Amp_text_sp,  amp); //отображен
+ 387   8                                      {   
+ 388   9                                          Welding_state = tmp;//dbg
+ 389   9                                          if(Welding_state == 8) {/*08*///"initial current",
+ 390  10                                              make_scene();
+ 391  10                                              Draw_text_set_text("%dA\r\n", Amp_text_sp,  amp);
+ 392  10                                              Draw_text_set_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
+ 393  10                                          }
+ 394   9                                      }
+ 395   8                                      else {
+ 396   9                                          Welding_state = 0;
+ 397   9                                          make_scene();
+ 398   9                                      }
+ 399   8                                  } break;
+ 400   7      
+ 401   7                                  case 0x3D: { //запрос на отображение параметра
+ 402   8                                      u16 value = ((unsigned int)(bufin[4]) << 8) + bufin[3];
+ 403   8                                      if(bufin[2] == 0x40) { //amp
+ 404   9                                          amp = value; //dbg
+ 405   9                                      } else if (bufin[2] == 0x41) {//vlots
+ 406   9                                          volt = value; //dbg
+ 407   9                                      } else if(bufin[2] == 0x42) { //time
+ 408   9                                          time = value; //dbg
+ 409   9                                      }
+ 410   8      
+ 411   8                                      if(Welding_state != 0) {
+ 412   9                                          Draw_text_set_text("%dA\r\n", Amp_text_sp,  amp); //отображен
              -ие занчений во время сварки
- 412   9                                          Draw_text_set_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
- 413   9                                      }
- 414   8                                  } break;
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 8   
+ 413   9                                          Draw_text_set_text("%.1fv", Volt_text_sp, (float)volt / 10.0);
+ 414   9                                      }
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 8   
 
- 415   7      
- 416   7                                  default:
- 417   7                                      break;
- 418   7                              }
- 419   6                              }
- 420   5                              //////////////////////////////////////////////////////////////////////////////////
+ 415   8                                  } break;
+ 416   7      
+ 417   7                                  default:
+ 418   7                                      break;
+ 419   7                              }
+ 420   6                              }
+ 421   5                              //////////////////////////////////////////////////////////////////////////////////
              -////////////////
- 421   5                              
- 422   5                              // for(i = 0; i < buf_idx; i++)
- 423   5                              // {  
- 424   5                              //     sprintf((u8*) &temp_buf[i], "%02X", (u8)local_buf[i]);                     
+ 422   5                              
+ 423   5                              // for(i = 0; i < buf_idx; i++)
+ 424   5                              // {  
+ 425   5                              //     sprintf((u8*) &temp_buf[i], "%02X", (u8)local_buf[i]);                     
              -   
- 425   5                              // }
- 426   5                              // temp_buf[i] = 0x0000;
- 427   5                              // write_dgus_vp(0x2500, (u8*) &temp_buf, 10);
- 428   5                              // buf_idx = 0; 
- 429   5                              
- 430   5                              //write_dgus_vp(0x2500, (u8*) "OK\0\0", 2);
- 431   5                              //////////////////////////////////////////////////////////////////////////////////
+ 426   5                              // }
+ 427   5                              // temp_buf[i] = 0x0000;
+ 428   5                              // write_dgus_vp(0x2500, (u8*) &temp_buf, 10);
+ 429   5                              // buf_idx = 0; 
+ 430   5                              
+ 431   5                              //write_dgus_vp(0x2500, (u8*) "OK\0\0", 2);
+ 432   5                              //////////////////////////////////////////////////////////////////////////////////
              -////////////////
- 432   5                          
- 433   5                              UART_INIT
- 434   5                              break;
- 435   5                          }
- 436   4                          
- 437   4                          default: 
- 438   4                              break;
- 439   4                              }
- 440   3                  }
- 441   2                 
- 442   2                  
- 443   2              }       
- 444   1      }
- 445          
+ 433   5                          
+ 434   5                              UART_INIT
+ 435   5                              break;
+ 436   5                          }
+ 437   4                          
+ 438   4                          default: 
+ 439   4                              break;
+ 440   4                              }
+ 441   3                  }
+ 442   2                 
+ 443   2                  
+ 444   2              }       
+ 445   1      }
  446          
  447          
  448          
@@ -489,65 +489,73 @@ line level    source
  450          
  451          
  452          
- 453          void main()
- 454          {
- 455   1          INIT_CPU();            //CPU ��ʼ����ע���ʼ�������л������
+ 453          
+ 454          void main()
+ 455          {
+ 456   1          INIT_CPU();            //CPU ��ʼ����ע���ʼ�������л������
              -�xdata������ʼ����0����������ı����г�ʼֵ����Ҫ�ڸú���
              -���������¸�ֵ
- 456   1          T0_Init();                                           //��ʱ��0��ʼ��
- 457   1              EA = 0; //interrupt off
- 458   1        
- 459   1           //int0
- 460   1          IP0 &= 0xFE;//Clear bit0
- 461   1              IP1 &= 0xFE;//Clear bit0
- 462   1          
- 463   1              IE0 = 0;//Clear the interrupt flag bit of external interrupt 0
- 464   1              
- 465   1              IT0 = 1;//1 is set as falling edge trigger, 0 is set as low level trigger
- 466   1              EX0 = 1;//Enable external interrupt 0, the corresponding pin is P3.0
- 467   1          
- 468   1          //int1
- 469   1          IE1 = 0;
- 470   1          
- 471   1          IT1 = 1;
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 9   
+ 457   1          T0_Init();                                           //��ʱ��0��ʼ��
+ 458   1              EA = 0; //interrupt off
+ 459   1        
+ 460   1           //int0
+ 461   1          IP0 &= 0xFE;//Clear bit0
+ 462   1              IP1 &= 0xFE;//Clear bit0
+ 463   1          
+ 464   1              IE0 = 0;//Clear the interrupt flag bit of external interrupt 0
+ 465   1              
+ 466   1              IT0 = 1;//1 is set as falling edge trigger, 0 is set as low level trigger
+ 467   1              EX0 = 1;//Enable external interrupt 0, the corresponding pin is P3.0
+ 468   1          
+ 469   1          //int1
+ 470   1          IE1 = 0;
+ 471   1          
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 9   
 
- 472   1          EX1 = 1;
- 473   1      
- 474   1          EA = 1; //interrupt on   
- 475   1      
- 476   1          //StartTimer(0,100);
- 477   1              //StartTimer(1,50);
- 478   1              //-------------------
- 479   1              io_init();
- 480   1      //      delay_ms(20);
- 481   1              ssd2828_init();
- 482   1      //__________________________________________________________________________________    
- 483   1              UartInit(UART5, 115200);
- 484   1              UART_INIT //MARCROS
- 485   1      //__________________________________________________________________________________              
- 486   1      
+ 472   1          IT1 = 1;
+ 473   1          EX1 = 1;
+ 474   1      
+ 475   1          EA = 1; //interrupt on   
+ 476   1      
+ 477   1          //StartTimer(0,100);
+ 478   1              //StartTimer(1,50);
+ 479   1              //-------------------
+ 480   1              io_init();
+ 481   1      //      delay_ms(20);
+ 482   1              ssd2828_init();
+ 483   1      //__________________________________________________________________________________    
+ 484   1              UartInit(UART5, 115200);
+ 485   1              UART_INIT //MARCROS
+ 486   1      //__________________________________________________________________________________              
  487   1      
  488   1      
- 489   1          init_par_udgu();
- 490   1          make_scene();
- 491   1          
- 492   1          while(1)    
- 493   1          {
- 494   2              EA = 0;
- 495   2              if(encoder_state_adsfl != ENC_STOP) {
- 496   3                  Encoder_process_code(encoder_state_adsfl);
- 497   3                  encoder_state_adsfl = ENC_STOP;
- 498   3              }
- 499   2              EA = 1;
- 500   2      
- 501   2              process_uart();
- 502   2              process_touch();
- 503   2          
- 504   2              print_debug_info();
- 505   2          }
- 506   1      }
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 10  
+ 489   1      
+ 490   1          init_par_udgu();
+ 491   1          make_scene();
+ 492   1          StartTimer(0, 700);
+ 493   1          while(1)    
+ 494   1          {
+ 495   2              main_cycle_cnt++;
+ 496   2              if(GetTimeOutFlag(0) & (1<<0)){
+ 497   3                  StartTimer(0, 700);
+ 498   3                  print_debug_info();
+ 499   3                  main_cycle_cnt = 0;
+ 500   3              }
+ 501   2      
+ 502   2              EA = 0;
+ 503   2              if(encoder_state_adsfl != ENC_STOP) {
+ 504   3                  Encoder_process_code(encoder_state_adsfl);
+ 505   3                  encoder_state_adsfl = ENC_STOP;
+ 506   3              }
+ 507   2              EA = 1;
+ 508   2      
+ 509   2              process_uart();
+ 510   2              process_touch();
+ 511   2          
+ 512   2              
+ 513   2          }
+ 514   1      }
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 10  
 
 ASSEMBLY LISTING OF GENERATED OBJECT CODE
 
@@ -611,7 +619,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0040         ?C0005:
                                            ; SOURCE LINE # 85
 0040 7F01              MOV     R7,#01H
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 11  
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 11  
 
 0042 7E00              MOV     R6,#00H
 0044 120000      E     LCALL   _delay_ms
@@ -675,7 +683,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 003A         ?C0013:
                                            ; SOURCE LINE # 111
 003A 750002      R     MOV     encoder_state_adsfl,#02H
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 12  
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 12  
 
 003D         ?C0014:
                                            ; SOURCE LINE # 113
@@ -708,9 +716,9 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
              ; FUNCTION ext_int1 (END)
 
              ; FUNCTION print_debug_info (BEGIN)
-                                           ; SOURCE LINE # 149
                                            ; SOURCE LINE # 150
-                                           ; SOURCE LINE # 171
+                                           ; SOURCE LINE # 151
+                                           ; SOURCE LINE # 172
 0000 7E00              MOV     R6,#00H
 0002 7F64              MOV     R7,#064H
 0004 7D00              MOV     R5,#00H
@@ -718,7 +726,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0008 7A00        R     MOV     R2,#HIGH buf
 000A 7900        R     MOV     R1,#LOW buf
 000C 120000      E     LCALL   ?C?MEMSET
-                                           ; SOURCE LINE # 172
+                                           ; SOURCE LINE # 173
 000F 900000      E     MOV     DPTR,#?_sprintf?BYTE+03H
 0012 74FF              MOV     A,#0FFH
 0014 F0                MOVX    @DPTR,A
@@ -728,124 +736,130 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0019 A3                INC     DPTR
 001A 7400        R     MOV     A,#LOW ?SC_318
 001C F0                MOVX    @DPTR,A
-001D E500        E     MOV     A,Welding_state
-001F 75F003            MOV     B,#03H
-0022 A4                MUL     AB
-0023 2400        R     ADD     A,#LOW welding_states_tig
-0025 F582              MOV     DPL,A
-0027 E4                CLR     A
-0028 3400        R     ADDC    A,#HIGH welding_states_tig
-002A F583              MOV     DPH,A
-002C E4                CLR     A
-002D 93                MOVC    A,@A+DPTR
-002E F9                MOV     R1,A
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 13  
+001D A3                INC     DPTR
+001E E500        R     MOV     A,main_cycle_cnt
+0020 F0                MOVX    @DPTR,A
+0021 A3                INC     DPTR
+0022 E500        R     MOV     A,main_cycle_cnt+01H
+0024 F0                MOVX    @DPTR,A
+0025 E500        E     MOV     A,Welding_state
+0027 75F003            MOV     B,#03H
+002A A4                MUL     AB
+002B 2400        R     ADD     A,#LOW welding_states_tig
+002D F582              MOV     DPL,A
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 13  
 
-002F 7401              MOV     A,#01H
-0031 93                MOVC    A,@A+DPTR
-0032 FA                MOV     R2,A
-0033 7402              MOV     A,#02H
+002F E4                CLR     A
+0030 3400        R     ADDC    A,#HIGH welding_states_tig
+0032 F583              MOV     DPH,A
+0034 E4                CLR     A
 0035 93                MOVC    A,@A+DPTR
-0036 900000      E     MOV     DPTR,#?_sprintf?BYTE+06H
-0039 C9                XCH     A,R1
-003A F0                MOVX    @DPTR,A
-003B A3                INC     DPTR
-003C EA                MOV     A,R2
-003D F0                MOVX    @DPTR,A
-003E A3                INC     DPTR
-003F E9                MOV     A,R1
-0040 F0                MOVX    @DPTR,A
-0041 A3                INC     DPTR
-0042 E500        R     MOV     A,touch_coord_x
-0044 F0                MOVX    @DPTR,A
-0045 A3                INC     DPTR
-0046 E500        R     MOV     A,touch_coord_x+01H
+0036 F9                MOV     R1,A
+0037 7401              MOV     A,#01H
+0039 93                MOVC    A,@A+DPTR
+003A FA                MOV     R2,A
+003B 7402              MOV     A,#02H
+003D 93                MOVC    A,@A+DPTR
+003E 900000      E     MOV     DPTR,#?_sprintf?BYTE+08H
+0041 C9                XCH     A,R1
+0042 F0                MOVX    @DPTR,A
+0043 A3                INC     DPTR
+0044 EA                MOV     A,R2
+0045 F0                MOVX    @DPTR,A
+0046 A3                INC     DPTR
+0047 E9                MOV     A,R1
 0048 F0                MOVX    @DPTR,A
 0049 A3                INC     DPTR
-004A E500        R     MOV     A,touch_coord_y
+004A E500        R     MOV     A,touch_coord_x
 004C F0                MOVX    @DPTR,A
 004D A3                INC     DPTR
-004E E500        R     MOV     A,touch_coord_y+01H
+004E E500        R     MOV     A,touch_coord_x+01H
 0050 F0                MOVX    @DPTR,A
 0051 A3                INC     DPTR
-0052 E500        R     MOV     A,touch_state
+0052 E500        R     MOV     A,touch_coord_y
 0054 F0                MOVX    @DPTR,A
 0055 A3                INC     DPTR
-0056 E500        R     MOV     A,touch_state+01H
+0056 E500        R     MOV     A,touch_coord_y+01H
 0058 F0                MOVX    @DPTR,A
 0059 A3                INC     DPTR
-005A E500        R     MOV     A,last_touch_item
+005A E500        R     MOV     A,touch_state
 005C F0                MOVX    @DPTR,A
 005D A3                INC     DPTR
-005E E500        R     MOV     A,last_touch_item+01H
+005E E500        R     MOV     A,touch_state+01H
 0060 F0                MOVX    @DPTR,A
 0061 A3                INC     DPTR
-0062 E500        R     MOV     A,amp
+0062 E500        R     MOV     A,last_touch_item
 0064 F0                MOVX    @DPTR,A
 0065 A3                INC     DPTR
-0066 E500        R     MOV     A,amp+01H
+0066 E500        R     MOV     A,last_touch_item+01H
 0068 F0                MOVX    @DPTR,A
-0069 AC00        R     MOV     R4,volt
-006B AD00        R     MOV     R5,volt+01H
-006D E4                CLR     A
-006E 120000      E     LCALL   ?C?FCASTI
-0071 E4                CLR     A
-0072 FB                MOV     R3,A
-0073 FA                MOV     R2,A
-0074 7920              MOV     R1,#020H
-0076 7841              MOV     R0,#041H
-0078 120000      E     LCALL   ?C?FPDIV
-007B 900000      E     MOV     DPTR,#?_sprintf?BYTE+013H
-007E 120000      E     LCALL   ?C?LSTXDATA
-0081 AC00        R     MOV     R4,time
-0083 AD00        R     MOV     R5,time+01H
-0085 E4                CLR     A
-0086 120000      E     LCALL   ?C?FCASTI
-0089 E4                CLR     A
-008A FB                MOV     R3,A
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 14  
+0069 A3                INC     DPTR
+006A E500        R     MOV     A,amp
+006C F0                MOVX    @DPTR,A
+006D A3                INC     DPTR
+006E E500        R     MOV     A,amp+01H
+0070 F0                MOVX    @DPTR,A
+0071 AC00        R     MOV     R4,volt
+0073 AD00        R     MOV     R5,volt+01H
+0075 E4                CLR     A
+0076 120000      E     LCALL   ?C?FCASTI
+0079 E4                CLR     A
+007A FB                MOV     R3,A
+007B FA                MOV     R2,A
+007C 7920              MOV     R1,#020H
+007E 7841              MOV     R0,#041H
+0080 120000      E     LCALL   ?C?FPDIV
+0083 900000      E     MOV     DPTR,#?_sprintf?BYTE+015H
+0086 120000      E     LCALL   ?C?LSTXDATA
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 14  
 
-008B FA                MOV     R2,A
-008C 7920              MOV     R1,#020H
-008E 7841              MOV     R0,#041H
-0090 120000      E     LCALL   ?C?FPDIV
-0093 900000      E     MOV     DPTR,#?_sprintf?BYTE+017H
-0096 120000      E     LCALL   ?C?LSTXDATA
-0099 900000      E     MOV     DPTR,#?_sprintf?BYTE+01BH
-009C E500        R     MOV     A,good_packages_cnt
-009E F0                MOVX    @DPTR,A
-009F A3                INC     DPTR
-00A0 E500        R     MOV     A,good_packages_cnt+01H
-00A2 F0                MOVX    @DPTR,A
-00A3 A3                INC     DPTR
-00A4 E500        R     MOV     A,bad_packages_cnt
+0089 AC00        R     MOV     R4,time
+008B AD00        R     MOV     R5,time+01H
+008D E4                CLR     A
+008E 120000      E     LCALL   ?C?FCASTI
+0091 E4                CLR     A
+0092 FB                MOV     R3,A
+0093 FA                MOV     R2,A
+0094 7920              MOV     R1,#020H
+0096 7841              MOV     R0,#041H
+0098 120000      E     LCALL   ?C?FPDIV
+009B 900000      E     MOV     DPTR,#?_sprintf?BYTE+019H
+009E 120000      E     LCALL   ?C?LSTXDATA
+00A1 900000      E     MOV     DPTR,#?_sprintf?BYTE+01DH
+00A4 E500        R     MOV     A,good_packages_cnt
 00A6 F0                MOVX    @DPTR,A
 00A7 A3                INC     DPTR
-00A8 E500        R     MOV     A,bad_packages_cnt+01H
+00A8 E500        R     MOV     A,good_packages_cnt+01H
 00AA F0                MOVX    @DPTR,A
-00AB 7B01              MOV     R3,#01H
-00AD 7A00        R     MOV     R2,#HIGH buf
-00AF 7900        R     MOV     R1,#LOW buf
-00B1 120000      E     LCALL   _sprintf
-                                           ; SOURCE LINE # 173
-00B4 7B01              MOV     R3,#01H
-00B6 7A00        R     MOV     R2,#HIGH buf
-00B8 7900        R     MOV     R1,#LOW buf
-00BA 900000      E     MOV     DPTR,#?_write_dgus_vp?BYTE+05H
-00BD E4                CLR     A
-00BE F0                MOVX    @DPTR,A
-00BF A3                INC     DPTR
-00C0 7432              MOV     A,#032H
-00C2 F0                MOVX    @DPTR,A
-00C3 7F00              MOV     R7,#00H
-00C5 7E25              MOV     R6,#025H
-00C7 020000      E     LJMP    _write_dgus_vp
+00AB A3                INC     DPTR
+00AC E500        R     MOV     A,bad_packages_cnt
+00AE F0                MOVX    @DPTR,A
+00AF A3                INC     DPTR
+00B0 E500        R     MOV     A,bad_packages_cnt+01H
+00B2 F0                MOVX    @DPTR,A
+00B3 7B01              MOV     R3,#01H
+00B5 7A00        R     MOV     R2,#HIGH buf
+00B7 7900        R     MOV     R1,#LOW buf
+00B9 120000      E     LCALL   _sprintf
+                                           ; SOURCE LINE # 174
+00BC 7B01              MOV     R3,#01H
+00BE 7A00        R     MOV     R2,#HIGH buf
+00C0 7900        R     MOV     R1,#LOW buf
+00C2 900000      E     MOV     DPTR,#?_write_dgus_vp?BYTE+05H
+00C5 E4                CLR     A
+00C6 F0                MOVX    @DPTR,A
+00C7 A3                INC     DPTR
+00C8 7432              MOV     A,#032H
+00CA F0                MOVX    @DPTR,A
+00CB 7F00              MOV     R7,#00H
+00CD 7E25              MOV     R6,#025H
+00CF 020000      E     LJMP    _write_dgus_vp
              ; FUNCTION print_debug_info (END)
 
              ; FUNCTION process_touch (BEGIN)
-                                           ; SOURCE LINE # 186
                                            ; SOURCE LINE # 187
-                                           ; SOURCE LINE # 198
+                                           ; SOURCE LINE # 188
+                                           ; SOURCE LINE # 199
 0000 7B00              MOV     R3,#00H
 0002 7A00        R     MOV     R2,#HIGH touch_data
 0004 7900        R     MOV     R1,#LOW touch_data
@@ -858,17 +872,17 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 000F 7F16              MOV     R7,#016H
 0011 7E00              MOV     R6,#00H
 0013 120000      E     LCALL   _read_dgus_vp
-                                           ; SOURCE LINE # 199
+                                           ; SOURCE LINE # 200
 0016 E500        R     MOV     A,touch_data
 0018 645A              XRL     A,#05AH
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 15  
+
 001A 6003              JZ      $ + 5H
 001C 020000      R     LJMP    ?C0028
-                                           ; SOURCE LINE # 200
-001F F500        R     MOV     touch_data,A
                                            ; SOURCE LINE # 201
+001F F500        R     MOV     touch_data,A
+                                           ; SOURCE LINE # 202
 0021 FB                MOV     R3,A
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 15  
-
 0022 7A00        R     MOV     R2,#HIGH touch_data+02H
 0024 7900        R     MOV     R1,#LOW touch_data+02H
 0026 900000      E     MOV     DPTR,#?_write_dgus_vp?BYTE+05H
@@ -879,23 +893,23 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 002D 7F16              MOV     R7,#016H
 002F 7E00              MOV     R6,#00H
 0031 120000      E     LCALL   _write_dgus_vp
-                                           ; SOURCE LINE # 204
+                                           ; SOURCE LINE # 205
 0034 850000      R     MOV     touch_coord_x,touch_data+02H
 0037 850000      R     MOV     touch_coord_x+01H,touch_data+03H
-                                           ; SOURCE LINE # 205
+                                           ; SOURCE LINE # 206
 003A 850000      R     MOV     touch_coord_y,touch_data+04H
 003D 850000      R     MOV     touch_coord_y+01H,touch_data+05H
-                                           ; SOURCE LINE # 206
+                                           ; SOURCE LINE # 207
 0040 750000      R     MOV     touch_state,#00H
 0043 850000      R     MOV     touch_state+01H,touch_data+01H
-                                           ; SOURCE LINE # 209
+                                           ; SOURCE LINE # 210
 0046 E500        R     MOV     A,touch_data+01H
 0048 14                DEC     A
 0049 6003              JZ      $ + 5H
 004B 020000      R     LJMP    ?C0028
-                                           ; SOURCE LINE # 210
+                                           ; SOURCE LINE # 211
 004E         ?C0019:
-                                           ; SOURCE LINE # 212
+                                           ; SOURCE LINE # 213
 004E E4                CLR     A
 004F 900000      R     MOV     DPTR,#i
 0052 F0                MOVX    @DPTR,A
@@ -909,7 +923,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 005D C3                CLR     C
 005E 9F                SUBB    A,R7
 005F 507C              JNC     ?C0021
-                                           ; SOURCE LINE # 213
+                                           ; SOURCE LINE # 214
 0061 75F009            MOV     B,#09H
 0064 EE                MOV     A,R6
 0065 A4                MUL     AB
@@ -925,14 +939,14 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0074 D3                SETB    C
 0075 9500        R     SUBB    A,touch_data+03H
 0077 EE                MOV     A,R6
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 16  
+
 0078 9500        R     SUBB    A,touch_data+02H
 007A 5058              JNC     ?C0022
 007C 900000      R     MOV     DPTR,#i
 007F E0                MOVX    A,@DPTR
 0080 FF                MOV     R7,A
 0081 75F009            MOV     B,#09H
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 16  
-
 0084 A4                MUL     AB
 0085 2400        E     ADD     A,#LOW cur_menu+05H
 0087 F582              MOV     DPL,A
@@ -983,21 +997,21 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00CF EE                MOV     A,R6
 00D0 9500        R     SUBB    A,touch_data+04H
 00D2 5009              JNC     ?C0021
-                                           ; SOURCE LINE # 214
                                            ; SOURCE LINE # 215
                                            ; SOURCE LINE # 216
-00D4         ?C0023:
                                            ; SOURCE LINE # 217
+00D4         ?C0023:
+                                           ; SOURCE LINE # 218
 00D4         ?C0022:
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 17  
+
 00D4 900000      R     MOV     DPTR,#i
 00D7 E0                MOVX    A,@DPTR
 00D8 04                INC     A
 00D9 F0                MOVX    @DPTR,A
 00DA 020000      R     LJMP    ?C0020
 00DD         ?C0021:
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 17  
-
-                                           ; SOURCE LINE # 218
+                                           ; SOURCE LINE # 219
 00DD 900000      R     MOV     DPTR,#i
 00E0 E0                MOVX    A,@DPTR
 00E1 FF                MOV     R7,A
@@ -1010,34 +1024,34 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00EA F582              MOV     DPL,A
 00EC 8A83              MOV     DPH,R2
 00EE 120000      E     LCALL   ?C?ICALL2
-                                           ; SOURCE LINE # 219
+                                           ; SOURCE LINE # 220
 00F1 900000      R     MOV     DPTR,#i
 00F4 E0                MOVX    A,@DPTR
 00F5 750000      R     MOV     last_touch_item,#00H
 00F8 F500        R     MOV     last_touch_item+01H,A
-                                           ; SOURCE LINE # 220
-                                           ; SOURCE LINE # 222
+                                           ; SOURCE LINE # 221
                                            ; SOURCE LINE # 223
                                            ; SOURCE LINE # 224
                                            ; SOURCE LINE # 225
                                            ; SOURCE LINE # 226
                                            ; SOURCE LINE # 227
                                            ; SOURCE LINE # 228
+                                           ; SOURCE LINE # 229
 00FA         ?C0028:
 00FA 22                RET     
              ; FUNCTION process_touch (END)
 
              ; FUNCTION process_uart (BEGIN)
-                                           ; SOURCE LINE # 234
                                            ; SOURCE LINE # 235
-                                           ; SOURCE LINE # 237
+                                           ; SOURCE LINE # 236
+                                           ; SOURCE LINE # 238
 0000 900000      E     MOV     DPTR,#Uart_Struct+02023H
 0003 E0                MOVX    A,@DPTR
 0004 6003              JZ      $ + 5H
 0006 020000      R     LJMP    ?C0092
-                                           ; SOURCE LINE # 238
-0009         ?C0030:
                                            ; SOURCE LINE # 239
+0009         ?C0030:
+                                           ; SOURCE LINE # 240
 0009 900000      E     MOV     DPTR,#Uart_Struct+0201FH
 000C E0                MOVX    A,@DPTR
 000D FE                MOV     R6,A
@@ -1051,16 +1065,16 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0015 E0                MOVX    A,@DPTR
 0016 FD                MOV     R5,A
 0017 6F                XRL     A,R7
-0018 7002              JNZ     ?C0097
+0018 7002              JNZ     ?C0098
 001A EC                MOV     A,R4
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 18  
+
 001B 6E                XRL     A,R6
-001C         ?C0097:
+001C         ?C0098:
 001C 7003              JNZ     $ + 5H
 001E 020000      R     LJMP    ?C0092
-                                           ; SOURCE LINE # 240
                                            ; SOURCE LINE # 241
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 18  
-
+                                           ; SOURCE LINE # 242
 0021 7400        E     MOV     A,#LOW Uart_Struct+01C1BH
 0023 2D                ADD     A,R5
 0024 F582              MOV     DPL,A
@@ -1070,23 +1084,23 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 002B E0                MOVX    A,@DPTR
 002C 900000      R     MOV     DPTR,#byte
 002F F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 243
+                                           ; SOURCE LINE # 244
 0030 900000      E     MOV     DPTR,#Uart_Struct+02022H
 0033 E0                MOVX    A,@DPTR
 0034 04                INC     A
 0035 F0                MOVX    @DPTR,A
-0036 7006              JNZ     ?C0098
+0036 7006              JNZ     ?C0099
 0038 900000      E     MOV     DPTR,#Uart_Struct+02021H
 003B E0                MOVX    A,@DPTR
 003C 04                INC     A
 003D F0                MOVX    @DPTR,A
-003E         ?C0098:
-                                           ; SOURCE LINE # 244
+003E         ?C0099:
+                                           ; SOURCE LINE # 245
 003E 900000      E     MOV     DPTR,#Uart_Struct+02021H
 0041 E0                MOVX    A,@DPTR
 0042 5403              ANL     A,#03H
 0044 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 247
+                                           ; SOURCE LINE # 248
 0045 900000      R     MOV     DPTR,#uart_state
 0048 E0                MOVX    A,@DPTR
 0049 14                DEC     A
@@ -1103,126 +1117,126 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 005E 020000      R     LJMP    ?C0055
 0061 240B              ADD     A,#0BH
 0063 70A4              JNZ     ?C0030
-                                           ; SOURCE LINE # 248
                                            ; SOURCE LINE # 249
-0065         ?C0033:
                                            ; SOURCE LINE # 250
+0065         ?C0033:
+                                           ; SOURCE LINE # 251
 0065 900000      R     MOV     DPTR,#byte
 0068 E0                MOVX    A,@DPTR
 0069 B4A59D            CJNE    A,#0A5H,?C0030
-                                           ; SOURCE LINE # 251
+                                           ; SOURCE LINE # 252
 006C 900000      R     MOV     DPTR,#uart_state
 006F 7401              MOV     A,#01H
 0071 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 252
+                                           ; SOURCE LINE # 253
 0072 8095              SJMP    ?C0030
-                                           ; SOURCE LINE # 254
-0074         ?C0035:
                                            ; SOURCE LINE # 255
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 19  
+
+0074         ?C0035:
+                                           ; SOURCE LINE # 256
 0074 900000      R     MOV     DPTR,#byte
 0077 E0                MOVX    A,@DPTR
 0078 B4A508            CJNE    A,#0A5H,?C0036
-                                           ; SOURCE LINE # 256
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 19  
-
+                                           ; SOURCE LINE # 257
 007B 900000      R     MOV     DPTR,#uart_state
 007E 7404              MOV     A,#04H
 0080 F0                MOVX    @DPTR,A
 0081 8086              SJMP    ?C0030
 0083         ?C0036:
-                                           ; SOURCE LINE # 258
                                            ; SOURCE LINE # 259
-0083 020000      R     LJMP    ?C0113
-                                           ; SOURCE LINE # 261
-0086         ?C0038:
+                                           ; SOURCE LINE # 260
+0083 020000      R     LJMP    ?C0115
                                            ; SOURCE LINE # 262
+0086         ?C0038:
+                                           ; SOURCE LINE # 263
 0086 900000      R     MOV     DPTR,#byte
 0089 E0                MOVX    A,@DPTR
 008A FF                MOV     R7,A
 008B B4A505            CJNE    A,#0A5H,?C0039
-                                           ; SOURCE LINE # 263
-008E 900000      R     MOV     DPTR,#begfl
-0091 8007              SJMP    ?C0112
-0093         ?C0039:
                                            ; SOURCE LINE # 264
+008E 900000      R     MOV     DPTR,#begfl
+0091 8007              SJMP    ?C0114
+0093         ?C0039:
+                                           ; SOURCE LINE # 265
 0093 EF                MOV     A,R7
 0094 B45A06            CJNE    A,#05AH,?C0040
-                                           ; SOURCE LINE # 265
+                                           ; SOURCE LINE # 266
 0097 900000      R     MOV     DPTR,#endfl
-009A         ?C0112:
+009A         ?C0114:
 009A 7401              MOV     A,#01H
 009C F0                MOVX    @DPTR,A
 009D         ?C0040:
-                                           ; SOURCE LINE # 266
+                                           ; SOURCE LINE # 267
 009D 900000      R     MOV     DPTR,#uart_len
 00A0 EF                MOV     A,R7
 00A1 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 267
+                                           ; SOURCE LINE # 268
 00A2 900000      R     MOV     DPTR,#uart_state
 00A5 7406              MOV     A,#06H
 00A7 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 268
+                                           ; SOURCE LINE # 269
 00A8 020000      R     LJMP    ?C0030
-                                           ; SOURCE LINE # 270
-00AB         ?C0042:
                                            ; SOURCE LINE # 271
+00AB         ?C0042:
+                                           ; SOURCE LINE # 272
 00AB 900000      R     MOV     DPTR,#byte
 00AE E0                MOVX    A,@DPTR
 00AF FF                MOV     R7,A
 00B0 B4A517            CJNE    A,#0A5H,?C0043
-                                           ; SOURCE LINE # 272
                                            ; SOURCE LINE # 273
+                                           ; SOURCE LINE # 274
 00B3 900000      R     MOV     DPTR,#begfl
 00B6 E0                MOVX    A,@DPTR
 00B7 B40108            CJNE    A,#01H,?C0044
-                                           ; SOURCE LINE # 274
+                                           ; SOURCE LINE # 275
 00BA 900000      R     MOV     DPTR,#uart_state
 00BD 7404              MOV     A,#04H
 00BF F0                MOVX    @DPTR,A
 00C0 800D              SJMP    ?C0046
 00C2         ?C0044:
-                                           ; SOURCE LINE # 276
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 20  
+
+                                           ; SOURCE LINE # 277
 00C2 900000      R     MOV     DPTR,#begfl
 00C5 7401              MOV     A,#01H
 00C7 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 277
+                                           ; SOURCE LINE # 278
 00C8 8005              SJMP    ?C0046
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 20  
-
 00CA         ?C0043:
-                                           ; SOURCE LINE # 279
+                                           ; SOURCE LINE # 280
 00CA E4                CLR     A
 00CB 900000      R     MOV     DPTR,#begfl
 00CE F0                MOVX    @DPTR,A
 00CF         ?C0046:
-                                           ; SOURCE LINE # 281
+                                           ; SOURCE LINE # 282
 00CF EF                MOV     A,R7
 00D0 B45A12            CJNE    A,#05AH,?C0047
-                                           ; SOURCE LINE # 282
                                            ; SOURCE LINE # 283
+                                           ; SOURCE LINE # 284
 00D3 900000      R     MOV     DPTR,#endfl
 00D6 E0                MOVX    A,@DPTR
 00D7 B40103            CJNE    A,#01H,?C0048
-                                           ; SOURCE LINE # 284
                                            ; SOURCE LINE # 285
-00DA         ?C0111:
                                            ; SOURCE LINE # 286
-00DA 020000      R     LJMP    ?C0113
+00DA         ?C0113:
                                            ; SOURCE LINE # 287
-00DD         ?C0048:
+00DA 020000      R     LJMP    ?C0115
                                            ; SOURCE LINE # 288
+00DD         ?C0048:
+                                           ; SOURCE LINE # 289
 00DD 900000      R     MOV     DPTR,#endfl
 00E0 7401              MOV     A,#01H
 00E2 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 289
+                                           ; SOURCE LINE # 290
 00E3 8005              SJMP    ?C0050
 00E5         ?C0047:
-                                           ; SOURCE LINE # 290
+                                           ; SOURCE LINE # 291
 00E5 E4                CLR     A
 00E6 900000      R     MOV     DPTR,#endfl
 00E9 F0                MOVX    @DPTR,A
 00EA         ?C0050:
-                                           ; SOURCE LINE # 292
+                                           ; SOURCE LINE # 293
 00EA 900000      R     MOV     DPTR,#byte
 00ED E0                MOVX    A,@DPTR
 00EE FF                MOV     R7,A
@@ -1235,111 +1249,111 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 00FA F583              MOV     DPH,A
 00FC EF                MOV     A,R7
 00FD F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 293
+                                           ; SOURCE LINE # 294
 00FE 900000      R     MOV     DPTR,#inbufind
 0101 E0                MOVX    A,@DPTR
 0102 04                INC     A
 0103 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 295
+                                           ; SOURCE LINE # 296
 0104 A3                INC     DPTR
 0105 E0                MOVX    A,@DPTR
 0106 2402              ADD     A,#02H
 0108 FF                MOV     R7,A
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 21  
+
 0109 E4                CLR     A
 010A 33                RLC     A
 010B FE                MOV     R6,A
 010C 900000      R     MOV     DPTR,#inbufind
 010F E0                MOVX    A,@DPTR
 0110 6F                XRL     A,R7
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 21  
-
-0111 7001              JNZ     ?C0099
+0111 7001              JNZ     ?C0100
 0113 EE                MOV     A,R6
-0114         ?C0099:
+0114         ?C0100:
 0114 6003              JZ      $ + 5H
 0116 020000      R     LJMP    ?C0030
-                                           ; SOURCE LINE # 296
                                            ; SOURCE LINE # 297
+                                           ; SOURCE LINE # 298
 0119 900000      R     MOV     DPTR,#uart_state
 011C 740A              MOV     A,#0AH
 011E F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 298
-                                           ; SOURCE LINE # 300
+                                           ; SOURCE LINE # 299
+                                           ; SOURCE LINE # 301
 011F 020000      R     LJMP    ?C0030
-                                           ; SOURCE LINE # 302
-0122         ?C0052:
                                            ; SOURCE LINE # 303
+0122         ?C0052:
+                                           ; SOURCE LINE # 304
 0122 900000      R     MOV     DPTR,#byte
 0125 E0                MOVX    A,@DPTR
 0126 FF                MOV     R7,A
 0127 B45A09            CJNE    A,#05AH,?C0053
-                                           ; SOURCE LINE # 304
+                                           ; SOURCE LINE # 305
 012A 900000      R     MOV     DPTR,#uart_state
 012D 740B              MOV     A,#0BH
 012F F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 305
-0130 020000      R     LJMP    ?C0030
                                            ; SOURCE LINE # 306
-0133         ?C0053:
+0130 020000      R     LJMP    ?C0030
                                            ; SOURCE LINE # 307
+0133         ?C0053:
+                                           ; SOURCE LINE # 308
 0133 EF                MOV     A,R7
 0134 B4A50D            CJNE    A,#0A5H,?C0054
-                                           ; SOURCE LINE # 308
+                                           ; SOURCE LINE # 309
 0137 900000      R     MOV     DPTR,#uart_state
 013A 7401              MOV     A,#01H
 013C F0                MOVX    @DPTR,A
 013D E4                CLR     A
 013E 900000      R     MOV     DPTR,#inbufind
-                                           ; SOURCE LINE # 309
-0141 020000      R     LJMP    ?C0115
                                            ; SOURCE LINE # 310
-0144         ?C0054:
+0141 020000      R     LJMP    ?C0117
                                            ; SOURCE LINE # 311
+0144         ?C0054:
+                                           ; SOURCE LINE # 312
 0144 E4                CLR     A
 0145 900000      R     MOV     DPTR,#inbufind
 0148 F0                MOVX    @DPTR,A
 0149 900000      R     MOV     DPTR,#uart_state
-014C         ?C0109:
-                                           ; SOURCE LINE # 312
-014C 020000      R     LJMP    ?C0115
-                                           ; SOURCE LINE # 314
-014F         ?C0055:
+014C         ?C0111:
+                                           ; SOURCE LINE # 313
+014C 020000      R     LJMP    ?C0117
                                            ; SOURCE LINE # 315
-                                           ; SOURCE LINE # 317
+014F         ?C0055:
+                                           ; SOURCE LINE # 316
+                                           ; SOURCE LINE # 318
 014F E4                CLR     A
 0150 900000      R     MOV     DPTR,#crc
 0153 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 318
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 22  
+
+                                           ; SOURCE LINE # 319
 0154 900000      R     MOV     DPTR,#byte
 0157 E0                MOVX    A,@DPTR
 0158 FF                MOV     R7,A
 0159 645A              XRL     A,#05AH
 015B 601B              JZ      ?C0056
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 22  
-
-                                           ; SOURCE LINE # 319
+                                           ; SOURCE LINE # 320
 015D EF                MOV     A,R7
 015E B4A50C            CJNE    A,#0A5H,?C0057
-                                           ; SOURCE LINE # 320
+                                           ; SOURCE LINE # 321
 0161 900000      R     MOV     DPTR,#uart_state
 0164 7401              MOV     A,#01H
 0166 F0                MOVX    @DPTR,A
 0167 E4                CLR     A
 0168 900000      R     MOV     DPTR,#inbufind
-016B 8008              SJMP    ?C0110
+016B 8008              SJMP    ?C0112
 016D         ?C0057:
-                                           ; SOURCE LINE # 322
+                                           ; SOURCE LINE # 323
 016D E4                CLR     A
 016E 900000      R     MOV     DPTR,#inbufind
 0171 F0                MOVX    @DPTR,A
 0172 900000      R     MOV     DPTR,#uart_state
-0175         ?C0110:
-0175         ?C0114:
-                                           ; SOURCE LINE # 323
-0175 020000      R     LJMP    ?C0115
+0175         ?C0112:
+0175         ?C0116:
                                            ; SOURCE LINE # 324
+0175 020000      R     LJMP    ?C0117
+                                           ; SOURCE LINE # 325
 0178         ?C0056:
-                                           ; SOURCE LINE # 327
+                                           ; SOURCE LINE # 328
 0178 900000      R     MOV     DPTR,#i
 017B 7401              MOV     A,#01H
 017D F0                MOVX    @DPTR,A
@@ -1353,7 +1367,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0188 D3                SETB    C
 0189 9F                SUBB    A,R7
 018A 501A              JNC     ?C0060
-                                           ; SOURCE LINE # 328
+                                           ; SOURCE LINE # 329
 018C 7400        R     MOV     A,#LOW bufin
 018E 2E                ADD     A,R6
 018F F582              MOV     DPL,A
@@ -1366,21 +1380,21 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 019B E0                MOVX    A,@DPTR
 019C 2E                ADD     A,R6
 019D F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 329
+                                           ; SOURCE LINE # 330
 019E 900000      R     MOV     DPTR,#i
 01A1 E0                MOVX    A,@DPTR
 01A2 04                INC     A
 01A3 F0                MOVX    @DPTR,A
 01A4 80D8              SJMP    ?C0059
 01A6         ?C0060:
-                                           ; SOURCE LINE # 330
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 23  
+
+                                           ; SOURCE LINE # 331
 01A6 7400        R     MOV     A,#LOW bufin+01H
 01A8 2F                ADD     A,R7
 01A9 F582              MOV     DPL,A
 01AB E4                CLR     A
 01AC 3400        R     ADDC    A,#HIGH bufin+01H
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 23  
-
 01AE F583              MOV     DPH,A
 01B0 E0                MOVX    A,@DPTR
 01B1 FF                MOV     R7,A
@@ -1388,7 +1402,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 01B5 E0                MOVX    A,@DPTR
 01B6 6F                XRL     A,R7
 01B7 601C              JZ      ?C0062
-                                           ; SOURCE LINE # 331
+                                           ; SOURCE LINE # 332
 01B9 E4                CLR     A
 01BA 900000      R     MOV     DPTR,#inbufind
 01BD F0                MOVX    @DPTR,A
@@ -1398,24 +1412,24 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 01C5 F0                MOVX    @DPTR,A
 01C6 900000      R     MOV     DPTR,#begfl
 01C9 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 332
+                                           ; SOURCE LINE # 333
 01CA 0500        R     INC     bad_packages_cnt+01H
 01CC E500        R     MOV     A,bad_packages_cnt+01H
-01CE 7002              JNZ     ?C0100
+01CE 7002              JNZ     ?C0101
 01D0 0500        R     INC     bad_packages_cnt
-01D2         ?C0100:
-                                           ; SOURCE LINE # 333
-01D2 020000      R     LJMP    ?C0030
+01D2         ?C0101:
                                            ; SOURCE LINE # 334
+01D2 020000      R     LJMP    ?C0030
+                                           ; SOURCE LINE # 335
 01D5         ?C0062:
-                                           ; SOURCE LINE # 336
+                                           ; SOURCE LINE # 337
 01D5 0500        R     INC     good_packages_cnt+01H
 01D7 E500        R     MOV     A,good_packages_cnt+01H
-01D9 7002              JNZ     ?C0101
+01D9 7002              JNZ     ?C0102
 01DB 0500        R     INC     good_packages_cnt
-01DD         ?C0101:
-                                           ; SOURCE LINE # 338
+01DD         ?C0102:
                                            ; SOURCE LINE # 339
+                                           ; SOURCE LINE # 340
 01DD 900000      R     MOV     DPTR,#bufin+01H
 01E0 E0                MOVX    A,@DPTR
 01E1 24DA              ADD     A,#0DAH
@@ -1430,47 +1444,47 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 01F6 2418              ADD     A,#018H
 01F8 6003              JZ      $ + 5H
 01FA 020000      R     LJMP    ?C0063
-                                           ; SOURCE LINE # 340
                                            ; SOURCE LINE # 341
-01FD         ?C0064:
                                            ; SOURCE LINE # 342
+01FD         ?C0064:
+                                           ; SOURCE LINE # 343
 01FD 900000      R     MOV     DPTR,#bufin+02H
 0200 E0                MOVX    A,@DPTR
 0201 900000      R     MOV     DPTR,#ch
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 24  
+
 0204 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 344
+                                           ; SOURCE LINE # 345
 0205 D3                SETB    C
 0206 9424              SUBB    A,#024H
 0208 4003              JC      $ + 5H
 020A 020000      R     LJMP    ?C0063
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 24  
-
 020D         ?C0065:
-                                           ; SOURCE LINE # 345
+                                           ; SOURCE LINE # 346
 020D 900000      R     MOV     DPTR,#bufout
 0210 74A5              MOV     A,#0A5H
 0212 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 346
+                                           ; SOURCE LINE # 347
 0213 A3                INC     DPTR
 0214 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 347
+                                           ; SOURCE LINE # 348
 0215 A3                INC     DPTR
 0216 7404              MOV     A,#04H
 0218 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 348
+                                           ; SOURCE LINE # 349
 0219 A3                INC     DPTR
 021A 74A5              MOV     A,#0A5H
 021C F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 349
+                                           ; SOURCE LINE # 350
 021D A3                INC     DPTR
 021E 7425              MOV     A,#025H
 0220 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 350
+                                           ; SOURCE LINE # 351
 0221 900000      R     MOV     DPTR,#ch
 0224 E0                MOVX    A,@DPTR
 0225 900000      R     MOV     DPTR,#bufout+05H
 0228 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 351
+                                           ; SOURCE LINE # 352
 0229 75F002            MOV     B,#02H
 022C A4                MUL     AB
 022D 2400        E     ADD     A,#LOW par_tek
@@ -1484,13 +1498,13 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 023A E0                MOVX    A,@DPTR
 023B 900000      R     MOV     DPTR,#bufout+06H
 023E F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 352
+                                           ; SOURCE LINE # 353
 023F EC                MOV     A,R4
 0240 FF                MOV     R7,A
 0241 A3                INC     DPTR
 0242 EF                MOV     A,R7
 0243 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 353
+                                           ; SOURCE LINE # 354
 0244 900000      R     MOV     DPTR,#bufout+05H
 0247 E0                MOVX    A,@DPTR
 0248 FE                MOV     R6,A
@@ -1501,45 +1515,45 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 024F 900000      R     MOV     DPTR,#bufout+06H
 0252 E0                MOVX    A,@DPTR
 0253 2E                ADD     A,R6
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 25  
+
 0254 2F                ADD     A,R7
 0255 900000      R     MOV     DPTR,#bufout+08H
 0258 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 354
+                                           ; SOURCE LINE # 355
 0259 900000      R     MOV     DPTR,#bufout+0AH
 025C 745A              MOV     A,#05AH
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 25  
-
 025E F0                MOVX    @DPTR,A
 025F 900000      R     MOV     DPTR,#bufout+09H
 0262 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 355
+                                           ; SOURCE LINE # 356
 0263 7B01              MOV     R3,#01H
 0265 7A00        R     MOV     R2,#HIGH bufout
 0267 7900        R     MOV     R1,#LOW bufout
 0269 7D0B              MOV     R5,#0BH
 026B 7C00              MOV     R4,#00H
-                                           ; SOURCE LINE # 356
-026D 020000      R     LJMP    ?C0116
-                                           ; SOURCE LINE # 358
+                                           ; SOURCE LINE # 357
+026D 020000      R     LJMP    ?C0118
+                                           ; SOURCE LINE # 359
 0270         ?C0066:
-                                           ; SOURCE LINE # 362
+                                           ; SOURCE LINE # 363
 0270 900000      R     MOV     DPTR,#bufin+02H
 0273 E0                MOVX    A,@DPTR
 0274 900000      R     MOV     DPTR,#ch
 0277 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 363
+                                           ; SOURCE LINE # 364
 0278 D3                SETB    C
 0279 9424              SUBB    A,#024H
 027B 4003              JC      $ + 5H
 027D 020000      R     LJMP    ?C0063
 0280         ?C0067:
-                                           ; SOURCE LINE # 365
+                                           ; SOURCE LINE # 366
 0280 900000      R     MOV     DPTR,#bufout+01H
 0283 74A5              MOV     A,#0A5H
 0285 F0                MOVX    @DPTR,A
 0286 900000      R     MOV     DPTR,#bufout
 0289 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 366
+                                           ; SOURCE LINE # 367
 028A 900000      R     MOV     DPTR,#ch
 028D E0                MOVX    A,@DPTR
 028E FD                MOV     R5,A
@@ -1547,32 +1561,32 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0291 2404              ADD     A,#04H
 0293 900000      R     MOV     DPTR,#bufout+02H
 0296 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 367
+                                           ; SOURCE LINE # 368
 0297 A3                INC     DPTR
 0298 74A6              MOV     A,#0A6H
 029A F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 368
+                                           ; SOURCE LINE # 369
 029B A3                INC     DPTR
 029C 7426              MOV     A,#026H
 029E F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 369
+                                           ; SOURCE LINE # 370
 029F A3                INC     DPTR
 02A0 ED                MOV     A,R5
 02A1 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 370
+                                           ; SOURCE LINE # 371
 02A2 900000      R     MOV     DPTR,#bufout+04H
 02A5 E0                MOVX    A,@DPTR
 02A6 2D                ADD     A,R5
 02A7 900000      R     MOV     DPTR,#ch2
 02AA F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 371
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 26  
+
+                                           ; SOURCE LINE # 372
 02AB E4                CLR     A
 02AC 900000      R     MOV     DPTR,#ch1
 02AF F0                MOVX    @DPTR,A
 02B0         ?C0068:
 02B0 900000      R     MOV     DPTR,#ch
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 26  
-
 02B3 E0                MOVX    A,@DPTR
 02B4 FF                MOV     R7,A
 02B5 A3                INC     DPTR
@@ -1582,8 +1596,8 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 02B9 9F                SUBB    A,R7
 02BA 4003              JC      $ + 5H
 02BC 020000      R     LJMP    ?C0069
-                                           ; SOURCE LINE # 372
                                            ; SOURCE LINE # 373
+                                           ; SOURCE LINE # 374
 02BF EE                MOV     A,R6
 02C0 6417              XRL     A,#017H
 02C2 6003              JZ      $ + 5H
@@ -1594,11 +1608,11 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 02CC F0                MOVX    @DPTR,A
 02CD 900000      E     MOV     DPTR,#par_tek+024H
 02D0 E0                MOVX    A,@DPTR
-02D1 7004              JNZ     ?C0102
+02D1 7004              JNZ     ?C0103
 02D3 A3                INC     DPTR
 02D4 E0                MOVX    A,@DPTR
 02D5 6402              XRL     A,#02H
-02D7         ?C0102:
+02D7         ?C0103:
 02D7 7007              JNZ     ?C0072
 02D9 900000      E     MOV     DPTR,#par_tek+02FH
 02DC E0                MOVX    A,@DPTR
@@ -1607,11 +1621,11 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 02E0         ?C0072:
 02E0 900000      E     MOV     DPTR,#par_tek+028H
 02E3 E0                MOVX    A,@DPTR
-02E4 7004              JNZ     ?C0103
+02E4 7004              JNZ     ?C0104
 02E6 A3                INC     DPTR
 02E7 E0                MOVX    A,@DPTR
 02E8 6402              XRL     A,#02H
-02EA         ?C0103:
+02EA         ?C0104:
 02EA 7007              JNZ     ?C0073
 02EC 900000      E     MOV     DPTR,#par_tek+02FH
 02EF E0                MOVX    A,@DPTR
@@ -1620,26 +1634,26 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 02F3         ?C0073:
 02F3 900000      E     MOV     DPTR,#par_tek+022H
 02F6 E0                MOVX    A,@DPTR
-02F7 7004              JNZ     ?C0104
+02F7 7004              JNZ     ?C0105
 02F9 A3                INC     DPTR
 02FA E0                MOVX    A,@DPTR
 02FB 6402              XRL     A,#02H
-02FD         ?C0104:
+02FD         ?C0105:
 02FD 7007              JNZ     ?C0074
 02FF 900000      E     MOV     DPTR,#par_tek+02FH
 0302 E0                MOVX    A,@DPTR
 0303 4404              ORL     A,#04H
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 27  
+
 0305 F0                MOVX    @DPTR,A
 0306         ?C0074:
 0306 900000      E     MOV     DPTR,#par_tek+046H
 0309 E0                MOVX    A,@DPTR
-030A 7004              JNZ     ?C0105
+030A 7004              JNZ     ?C0106
 030C A3                INC     DPTR
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 27  
-
 030D E0                MOVX    A,@DPTR
 030E 6402              XRL     A,#02H
-0310         ?C0105:
+0310         ?C0106:
 0310 7007              JNZ     ?C0075
 0312 900000      E     MOV     DPTR,#par_tek+02FH
 0315 E0                MOVX    A,@DPTR
@@ -1648,11 +1662,11 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0319         ?C0075:
 0319 900000      E     MOV     DPTR,#par_tek+026H
 031C E0                MOVX    A,@DPTR
-031D 7004              JNZ     ?C0106
+031D 7004              JNZ     ?C0107
 031F A3                INC     DPTR
 0320 E0                MOVX    A,@DPTR
 0321 6402              XRL     A,#02H
-0323         ?C0106:
+0323         ?C0107:
 0323 7007              JNZ     ?C0076
 0325 900000      E     MOV     DPTR,#par_tek+02FH
 0328 E0                MOVX    A,@DPTR
@@ -1661,11 +1675,11 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 032C         ?C0076:
 032C 900000      E     MOV     DPTR,#par_tek+020H
 032F E0                MOVX    A,@DPTR
-0330 7004              JNZ     ?C0107
+0330 7004              JNZ     ?C0108
 0332 A3                INC     DPTR
 0333 E0                MOVX    A,@DPTR
 0334 6402              XRL     A,#02H
-0336         ?C0107:
+0336         ?C0108:
 0336 7007              JNZ     ?C0077
 0338 900000      E     MOV     DPTR,#par_tek+02FH
 033B E0                MOVX    A,@DPTR
@@ -1674,18 +1688,18 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 033F         ?C0077:
 033F 900000      E     MOV     DPTR,#par_tek+038H
 0342 E0                MOVX    A,@DPTR
-0343 7004              JNZ     ?C0108
+0343 7004              JNZ     ?C0109
 0345 A3                INC     DPTR
 0346 E0                MOVX    A,@DPTR
 0347 6402              XRL     A,#02H
-0349         ?C0108:
+0349         ?C0109:
 0349 7007              JNZ     ?C0071
 034B 900000      E     MOV     DPTR,#par_tek+02FH
 034E E0                MOVX    A,@DPTR
 034F 4480              ORL     A,#080H
 0351 F0                MOVX    @DPTR,A
 0352         ?C0071:
-                                           ; SOURCE LINE # 374
+                                           ; SOURCE LINE # 375
 0352 900000      R     MOV     DPTR,#ch1
 0355 E0                MOVX    A,@DPTR
 0356 FF                MOV     R7,A
@@ -1693,14 +1707,14 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 035A A4                MUL     AB
 035B 2400        E     ADD     A,#LOW par_tek
 035D F582              MOV     DPL,A
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 28  
+
 035F E5F0              MOV     A,B
 0361 3400        E     ADDC    A,#HIGH par_tek
 0363 F583              MOV     DPH,A
 0365 A3                INC     DPTR
 0366 E0                MOVX    A,@DPTR
 0367 FE                MOV     R6,A
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 28  
-
 0368 EF                MOV     A,R7
 0369 25E0              ADD     A,ACC
 036B FD                MOV     R5,A
@@ -1713,7 +1727,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0376 F583              MOV     DPH,A
 0378 EE                MOV     A,R6
 0379 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 375
+                                           ; SOURCE LINE # 376
 037A 900000      R     MOV     DPTR,#ch1
 037D E0                MOVX    A,@DPTR
 037E 75F002            MOV     B,#02H
@@ -1735,7 +1749,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0399 F583              MOV     DPH,A
 039B EF                MOV     A,R7
 039C F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 376
+                                           ; SOURCE LINE # 377
 039D 7400        R     MOV     A,#LOW bufout
 039F 2C                ADD     A,R4
 03A0 F582              MOV     DPL,A
@@ -1757,17 +1771,17 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 03B9 E0                MOVX    A,@DPTR
 03BA 2F                ADD     A,R7
 03BB 900000      R     MOV     DPTR,#ch2
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 29  
+
 03BE F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 377
+                                           ; SOURCE LINE # 378
 03BF 900000      R     MOV     DPTR,#ch1
 03C2 E0                MOVX    A,@DPTR
 03C3 04                INC     A
 03C4 F0                MOVX    @DPTR,A
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 29  
-
 03C5 020000      R     LJMP    ?C0068
 03C8         ?C0069:
-                                           ; SOURCE LINE # 378
+                                           ; SOURCE LINE # 379
 03C8 900000      R     MOV     DPTR,#ch2
 03CB E0                MOVX    A,@DPTR
 03CC FF                MOV     R7,A
@@ -1784,7 +1798,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 03DE F583              MOV     DPH,A
 03E0 EF                MOV     A,R7
 03E1 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 379
+                                           ; SOURCE LINE # 380
 03E2 ED                MOV     A,R5
 03E3 240A              ADD     A,#0AH
 03E5 2400        R     ADD     A,#LOW bufout
@@ -1805,7 +1819,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 03FE F583              MOV     DPH,A
 0400 745A              MOV     A,#05AH
 0402 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 380
+                                           ; SOURCE LINE # 381
 0403 EF                MOV     A,R7
 0404 240B              ADD     A,#0BH
 0406 FD                MOV     R5,A
@@ -1813,55 +1827,55 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0409 7B01              MOV     R3,#01H
 040B 7A00        R     MOV     R2,#HIGH bufout
 040D 7900        R     MOV     R1,#LOW bufout
-040F         ?C0116:
+040F         ?C0118:
 040F 7F03              MOV     R7,#03H
 0411 120000      E     LCALL   _Uatr_Send_Data
-                                           ; SOURCE LINE # 381
+                                           ; SOURCE LINE # 382
 0414 020000      R     LJMP    ?C0063
-                                           ; SOURCE LINE # 383
-0417         ?C0079:
                                            ; SOURCE LINE # 384
+0417         ?C0079:
+                                           ; SOURCE LINE # 385
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 30  
+
 0417 900000      R     MOV     DPTR,#bufin+02H
 041A E0                MOVX    A,@DPTR
 041B 900000      R     MOV     DPTR,#tmp
 041E F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 385
+                                           ; SOURCE LINE # 386
 041F 6458              XRL     A,#058H
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 30  
-
 0421 6016              JZ      ?C0080
 0423 E0                MOVX    A,@DPTR
 0424 FF                MOV     R7,A
 0425 644E              XRL     A,#04EH
 0427 6010              JZ      ?C0080
-                                           ; SOURCE LINE # 386
                                            ; SOURCE LINE # 387
-0429 8F00        E     MOV     Welding_state,R7
                                            ; SOURCE LINE # 388
+0429 8F00        E     MOV     Welding_state,R7
+                                           ; SOURCE LINE # 389
 042B E500        E     MOV     A,Welding_state
 042D 6408              XRL     A,#08H
 042F 6003              JZ      $ + 5H
 0431 020000      R     LJMP    ?C0063
-                                           ; SOURCE LINE # 389
-0434 120000      E     LCALL   make_scene
                                            ; SOURCE LINE # 390
+0434 120000      E     LCALL   make_scene
                                            ; SOURCE LINE # 391
                                            ; SOURCE LINE # 392
                                            ; SOURCE LINE # 393
-0437 8056              SJMP    ?C0117
-0439         ?C0080:
                                            ; SOURCE LINE # 394
+0437 8056              SJMP    ?C0119
+0439         ?C0080:
                                            ; SOURCE LINE # 395
+                                           ; SOURCE LINE # 396
 0439 E4                CLR     A
 043A F500        E     MOV     Welding_state,A
-                                           ; SOURCE LINE # 396
-043C 120000      E     LCALL   make_scene
                                            ; SOURCE LINE # 397
+043C 120000      E     LCALL   make_scene
                                            ; SOURCE LINE # 398
+                                           ; SOURCE LINE # 399
 043F 020000      R     LJMP    ?C0063
-                                           ; SOURCE LINE # 400
-0442         ?C0083:
                                            ; SOURCE LINE # 401
+0442         ?C0083:
+                                           ; SOURCE LINE # 402
 0442 900000      R     MOV     DPTR,#bufin+04H
 0445 E0                MOVX    A,@DPTR
 0446 FE                MOV     R6,A
@@ -1877,54 +1891,54 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 0456 A3                INC     DPTR
 0457 EF                MOV     A,R7
 0458 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 402
+                                           ; SOURCE LINE # 403
 0459 900000      R     MOV     DPTR,#bufin+02H
 045C E0                MOVX    A,@DPTR
 045D FF                MOV     R7,A
 045E B4400C            CJNE    A,#040H,?C0084
-                                           ; SOURCE LINE # 403
+                                           ; SOURCE LINE # 404
 0461 900000      R     MOV     DPTR,#value
 0464 E0                MOVX    A,@DPTR
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 31  
+
 0465 F500        R     MOV     amp,A
 0467 A3                INC     DPTR
 0468 E0                MOVX    A,@DPTR
 0469 F500        R     MOV     amp+01H,A
-                                           ; SOURCE LINE # 404
+                                           ; SOURCE LINE # 405
 046B 801E              SJMP    ?C0085
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 31  
-
 046D         ?C0084:
 046D EF                MOV     A,R7
 046E B4410C            CJNE    A,#041H,?C0086
-                                           ; SOURCE LINE # 405
+                                           ; SOURCE LINE # 406
 0471 900000      R     MOV     DPTR,#value
 0474 E0                MOVX    A,@DPTR
 0475 F500        R     MOV     volt,A
 0477 A3                INC     DPTR
 0478 E0                MOVX    A,@DPTR
 0479 F500        R     MOV     volt+01H,A
-                                           ; SOURCE LINE # 406
+                                           ; SOURCE LINE # 407
 047B 800E              SJMP    ?C0085
 047D         ?C0086:
 047D EF                MOV     A,R7
 047E B4420A            CJNE    A,#042H,?C0085
-                                           ; SOURCE LINE # 407
+                                           ; SOURCE LINE # 408
 0481 900000      R     MOV     DPTR,#value
 0484 E0                MOVX    A,@DPTR
 0485 F500        R     MOV     time,A
 0487 A3                INC     DPTR
 0488 E0                MOVX    A,@DPTR
 0489 F500        R     MOV     time+01H,A
-                                           ; SOURCE LINE # 408
+                                           ; SOURCE LINE # 409
 048B         ?C0085:
-                                           ; SOURCE LINE # 410
+                                           ; SOURCE LINE # 411
 048B E500        E     MOV     A,Welding_state
 048D 6044              JZ      ?C0063
-                                           ; SOURCE LINE # 411
-048F         ?C0117:
+                                           ; SOURCE LINE # 412
+048F         ?C0119:
 048F 7BFF              MOV     R3,#0FFH
-0491 7A00        R     MOV     R2,#HIGH ?SC_373
-0493 7900        R     MOV     R1,#LOW ?SC_373
+0491 7A00        R     MOV     R2,#HIGH ?SC_377
+0493 7900        R     MOV     R1,#LOW ?SC_377
 0495 900000      E     MOV     DPTR,#Amp_text_sp
 0498 E0                MOVX    A,@DPTR
 0499 FC                MOV     R4,A
@@ -1938,7 +1952,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 04A4 E500        R     MOV     A,amp+01H
 04A6 F0                MOVX    @DPTR,A
 04A7 120000      E     LCALL   _Draw_text_set_text
-                                           ; SOURCE LINE # 412
+                                           ; SOURCE LINE # 413
 04AA AC00        R     MOV     R4,volt
 04AC AD00        R     MOV     R5,volt+01H
 04AE E4                CLR     A
@@ -1949,86 +1963,86 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 04B5 7920              MOV     R1,#020H
 04B7 7841              MOV     R0,#041H
 04B9 120000      E     LCALL   ?C?FPDIV
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 32  
+
 04BC 900000      E     MOV     DPTR,#?_Draw_text_set_text?BYTE+05H
 04BF 120000      E     LCALL   ?C?LSTXDATA
 04C2 900000      E     MOV     DPTR,#Volt_text_sp
 04C5 E0                MOVX    A,@DPTR
 04C6 FC                MOV     R4,A
 04C7 A3                INC     DPTR
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 32  
-
 04C8 E0                MOVX    A,@DPTR
 04C9 FD                MOV     R5,A
 04CA 7BFF              MOV     R3,#0FFH
-04CC 7A00        R     MOV     R2,#HIGH ?SC_379
-04CE 7900        R     MOV     R1,#LOW ?SC_379
+04CC 7A00        R     MOV     R2,#HIGH ?SC_383
+04CE 7900        R     MOV     R1,#LOW ?SC_383
 04D0 120000      E     LCALL   _Draw_text_set_text
-                                           ; SOURCE LINE # 413
                                            ; SOURCE LINE # 414
-                                           ; SOURCE LINE # 416
+                                           ; SOURCE LINE # 415
                                            ; SOURCE LINE # 417
                                            ; SOURCE LINE # 418
-04D3         ?C0063:
                                            ; SOURCE LINE # 419
-                                           ; SOURCE LINE # 433
-04D3         ?C0113:
+04D3         ?C0063:
+                                           ; SOURCE LINE # 420
+                                           ; SOURCE LINE # 434
+04D3         ?C0115:
 04D3 E4                CLR     A
 04D4 900000      R     MOV     DPTR,#inbufind
 04D7 F0                MOVX    @DPTR,A
 04D8 900000      R     MOV     DPTR,#uart_state
-04DB         ?C0115:
+04DB         ?C0117:
 04DB F0                MOVX    @DPTR,A
 04DC 900000      R     MOV     DPTR,#endfl
 04DF F0                MOVX    @DPTR,A
 04E0 900000      R     MOV     DPTR,#begfl
 04E3 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 434
-04E4 020000      R     LJMP    ?C0030
                                            ; SOURCE LINE # 435
-                                           ; SOURCE LINE # 437
+04E4 020000      R     LJMP    ?C0030
+                                           ; SOURCE LINE # 436
                                            ; SOURCE LINE # 438
                                            ; SOURCE LINE # 439
                                            ; SOURCE LINE # 440
-                                           ; SOURCE LINE # 443
+                                           ; SOURCE LINE # 441
                                            ; SOURCE LINE # 444
+                                           ; SOURCE LINE # 445
 04E7         ?C0092:
 04E7 22                RET     
              ; FUNCTION process_uart (END)
 
              ; FUNCTION main (BEGIN)
-                                           ; SOURCE LINE # 453
                                            ; SOURCE LINE # 454
                                            ; SOURCE LINE # 455
-0000 120000      E     LCALL   INIT_CPU
                                            ; SOURCE LINE # 456
-0003 120000      E     LCALL   T0_Init
+0000 120000      E     LCALL   INIT_CPU
                                            ; SOURCE LINE # 457
+0003 120000      E     LCALL   T0_Init
+                                           ; SOURCE LINE # 458
 0006 C2AF              CLR     EA
-                                           ; SOURCE LINE # 460
-0008 53A9FE            ANL     IP0,#0FEH
                                            ; SOURCE LINE # 461
+0008 53A9FE            ANL     IP0,#0FEH
+                                           ; SOURCE LINE # 462
 000B 53B9FE            ANL     IP1,#0FEH
-                                           ; SOURCE LINE # 463
+                                           ; SOURCE LINE # 464
 000E C289              CLR     IE0
-                                           ; SOURCE LINE # 465
-0010 D288              SETB    IT0
                                            ; SOURCE LINE # 466
-0012 D2A8              SETB    EX0
-                                           ; SOURCE LINE # 469
-0014 C28B              CLR     IE1
-                                           ; SOURCE LINE # 471
-0016 D28A              SETB    IT1
-                                           ; SOURCE LINE # 472
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 33  
+0010 D288              SETB    IT0
+                                           ; SOURCE LINE # 467
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 33  
 
+0012 D2A8              SETB    EX0
+                                           ; SOURCE LINE # 470
+0014 C28B              CLR     IE1
+                                           ; SOURCE LINE # 472
+0016 D28A              SETB    IT1
+                                           ; SOURCE LINE # 473
 0018 D2AA              SETB    EX1
-                                           ; SOURCE LINE # 474
+                                           ; SOURCE LINE # 475
 001A D2AF              SETB    EA
-                                           ; SOURCE LINE # 479
+                                           ; SOURCE LINE # 480
 001C 120000      R     LCALL   io_init
-                                           ; SOURCE LINE # 481
+                                           ; SOURCE LINE # 482
 001F 120000      E     LCALL   ssd2828_init
-                                           ; SOURCE LINE # 483
+                                           ; SOURCE LINE # 484
 0022 900000      E     MOV     DPTR,#?_UartInit?BYTE+01H
 0025 120000      E     LCALL   ?C?LSTKXDATA
 0028 00                DB      00H
@@ -2037,7 +2051,7 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 002B 00                DB      00H
 002C 7F03              MOV     R7,#03H
 002E 120000      E     LCALL   _UartInit
-                                           ; SOURCE LINE # 484
+                                           ; SOURCE LINE # 485
 0031 E4                CLR     A
 0032 900000      R     MOV     DPTR,#inbufind
 0035 F0                MOVX    @DPTR,A
@@ -2047,39 +2061,71 @@ ASSEMBLY LISTING OF GENERATED OBJECT CODE
 003D F0                MOVX    @DPTR,A
 003E 900000      R     MOV     DPTR,#begfl
 0041 F0                MOVX    @DPTR,A
-                                           ; SOURCE LINE # 489
-0042 120000      E     LCALL   init_par_udgu
                                            ; SOURCE LINE # 490
+0042 120000      E     LCALL   init_par_udgu
+                                           ; SOURCE LINE # 491
 0045 120000      E     LCALL   make_scene
-0048         ?C0093:
                                            ; SOURCE LINE # 492
+0048 7DBC              MOV     R5,#0BCH
+004A 7C02              MOV     R4,#02H
+004C E4                CLR     A
+004D FF                MOV     R7,A
+004E 120000      E     LCALL   _StartTimer
+0051         ?C0093:
                                            ; SOURCE LINE # 493
                                            ; SOURCE LINE # 494
-0048 C2AF              CLR     EA
                                            ; SOURCE LINE # 495
-004A E500        R     MOV     A,encoder_state_adsfl
-004C 6404              XRL     A,#04H
-004E 6008              JZ      ?C0095
+0051 0500        R     INC     main_cycle_cnt+01H
+0053 E500        R     MOV     A,main_cycle_cnt+01H
+0055 7002              JNZ     ?C0110
+0057 0500        R     INC     main_cycle_cnt
+0059         ?C0110:
                                            ; SOURCE LINE # 496
-0050 AF00        R     MOV     R7,encoder_state_adsfl
-0052 120000      E     LCALL   _Encoder_process_code
+0059 E4                CLR     A
+005A FF                MOV     R7,A
+005B 120000      E     LCALL   _GetTimeOutFlag
+005E EF                MOV     A,R7
+005F 30E011            JNB     ACC.0,?C0095
                                            ; SOURCE LINE # 497
-0055 750004      R     MOV     encoder_state_adsfl,#04H
+0062 7DBC              MOV     R5,#0BCH
+0064 7C02              MOV     R4,#02H
+0066 E4                CLR     A
+0067 FF                MOV     R7,A
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 34  
+
+0068 120000      E     LCALL   _StartTimer
                                            ; SOURCE LINE # 498
-0058         ?C0095:
+006B 120000      R     LCALL   print_debug_info
                                            ; SOURCE LINE # 499
-0058 D2AF              SETB    EA
-                                           ; SOURCE LINE # 501
-005A 120000      R     LCALL   process_uart
+006E E4                CLR     A
+006F F500        R     MOV     main_cycle_cnt,A
+0071 F500        R     MOV     main_cycle_cnt+01H,A
+                                           ; SOURCE LINE # 500
+0073         ?C0095:
                                            ; SOURCE LINE # 502
-005D 120000      R     LCALL   process_touch
+0073 C2AF              CLR     EA
+                                           ; SOURCE LINE # 503
+0075 E500        R     MOV     A,encoder_state_adsfl
+0077 6404              XRL     A,#04H
+0079 6008              JZ      ?C0096
                                            ; SOURCE LINE # 504
-0060 120000      R     LCALL   print_debug_info
+007B AF00        R     MOV     R7,encoder_state_adsfl
+007D 120000      E     LCALL   _Encoder_process_code
                                            ; SOURCE LINE # 505
-0063 80E3              SJMP    ?C0093
+0080 750004      R     MOV     encoder_state_adsfl,#04H
+                                           ; SOURCE LINE # 506
+0083         ?C0096:
+                                           ; SOURCE LINE # 507
+0083 D2AF              SETB    EA
+                                           ; SOURCE LINE # 509
+0085 120000      R     LCALL   process_uart
+                                           ; SOURCE LINE # 510
+0088 120000      R     LCALL   process_touch
+                                           ; SOURCE LINE # 513
+008B 80C4              SJMP    ?C0093
              ; FUNCTION main (END)
 
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 34  
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 35  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -2142,7 +2188,7 @@ process_touch. . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
   i. . . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0000H  1
   ETPS_WAIT. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
   ETPS_RELEASE . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 35  
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 36  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
@@ -2203,14 +2249,15 @@ CANUNIT. . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  13
   status . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
   ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
   candata. . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0005H  8
+_StartTimer. . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
 bufin. . . . . . . . . . . . . . . . .  PUBLIC   XDATA  ARRAY    0066H  100
-bufout . . . . . . . . . . . . . . . .  PUBLIC   XDATA  ARRAY    00CAH  100
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 36  
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 37  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
 
 
+bufout . . . . . . . . . . . . . . . .  PUBLIC   XDATA  ARRAY    00CAH  100
 EPID_T_CLEAN . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_DOWN_T6 . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 process_uart . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
@@ -2224,13 +2271,14 @@ process_uart . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
   crc. . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0002H  1
   byte . . . . . . . . . . . . . . . .  AUTO     XDATA  U_CHAR   0000H  1
 EPID_OSCIL_TYPE. . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-SCREEN_WIDTH . . . . . . . . . . . . .  STATIC   CODE   U_INT    0181H  2
+EIID_PROG_ID . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+SCREEN_WIDTH . . . . . . . . . . . . .  STATIC   CODE   U_INT    0185H  2
 main . . . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
 _Encoder_process_code. . . . . . . . .  EXTERN   CODE   PROC     -----  -----
 EPID_DOWN_T6 . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 print_debug_info . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
   buf. . . . . . . . . . . . . . . . .  STATIC   XDATA  ARRAY    0000H  100
-  welding_states_tig . . . . . . . . .  STATIC   CODE   ARRAY    0185H  48
+  welding_states_tig . . . . . . . . .  STATIC   CODE   ARRAY    0189H  48
 EIID_DC_PLUS . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 touch_state. . . . . . . . . . . . . .  STATIC   DATA   U_INT    0000H  2
 EIID_4T_PLUS . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
@@ -2266,14 +2314,14 @@ _mNORFLASH . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  12
   VPAddr . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0005H  2
   Len. . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0007H  2
   Buf. . . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0009H  3
-EPID_IS_PLUS_4T. . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-ext_int0 . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 37  
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 38  
 
 NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
 ====                                    =====   ======  ====    ======  ====
 
 
+EPID_IS_PLUS_4T. . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+ext_int0 . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
 MEN_WELD_MOD . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 time . . . . . . . . . . . . . . . . .  STATIC   DATA   U_INT    0002H  2
 ext_int1 . . . . . . . . . . . . . . .  PUBLIC   CODE   PROC     0000H  -----
@@ -2316,9 +2364,25 @@ EIID_BALANCE_D1. . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 MEN_FLOW_MOD . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 IE0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0089H  1
 amp. . . . . . . . . . . . . . . . . .  STATIC   DATA   U_INT    0004H  2
+dgus_basic_raphics_t . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  28
+  vp . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0000H  2
+  x0 . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0002H  2
+  y0 . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0004H  2
+  x1 . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0006H  2
+  y1 . . . . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0008H  2
+  dashed_line_en . . . . . . . . . . .  MEMBER   -----  U_CHAR   000AH  1
+  dash_set . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    000BH  4
+  pixel_scale. . . . . . . . . . . . .  MEMBER   -----  U_CHAR   000FH  1
+  d0 . . . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0010H  12
 IE1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      008BH  1
 EIID_END_T7. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 DATABUFF . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  2057
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 39  
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
   tx_buf . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  1024
   rx_buf . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0400H  1024
   tx_head. . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0800H  2
@@ -2326,17 +2390,12 @@ DATABUFF . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  2057
   rx_head. . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0804H  2
   rx_tail. . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0806H  2
   tx_flag. . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0808H  1
+main_cycle_cnt . . . . . . . . . . . .  STATIC   DATA   U_INT    0006H  2
 EPID_BALANCE_D1. . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 databuff . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  2057
   tx_buf . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  1024
   rx_buf . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0400H  1024
   tx_head. . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0800H  2
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 38  
-
-NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
-====                                    =====   ======  ====    ======  ====
-
-
   tx_tail. . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0802H  2
   rx_head. . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0804H  2
   rx_tail. . . . . . . . . . . . . . .  MEMBER   -----  U_INT    0806H  2
@@ -2348,7 +2407,7 @@ EPID_MODES_SUBMODES. . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_H2O_ON. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_PULSE_OFF . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 MEN_D_MOD. . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-volt . . . . . . . . . . . . . . . . .  STATIC   DATA   U_INT    0006H  2
+volt . . . . . . . . . . . . . . . . .  STATIC   DATA   U_INT    0008H  2
 EPID_END_T7. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 IP0. . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00A9H  1
 IP1. . . . . . . . . . . . . . . . . .  SFR      DATA   U_CHAR   00B9H  1
@@ -2358,7 +2417,7 @@ IT0. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      0088H  1
 EPID_WAVE_FORM . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EX1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      00AAH  1
 IT1. . . . . . . . . . . . . . . . . .  ABSBIT   -----  BIT      008AH  1
-last_touch_item. . . . . . . . . . . .  STATIC   DATA   U_INT    0008H  2
+last_touch_item. . . . . . . . . . . .  STATIC   DATA   U_INT    000AH  2
 EIID_AC_MIX. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 MMUSIC . . . . . . . . . . . . . . . .  TYPEDEF  -----  STRUCT   -----  35
   IdNmu. . . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0000H  32
@@ -2375,12 +2434,18 @@ EPID_POST_FLOW_T8. . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 Welding_state. . . . . . . . . . . . .  EXTERN   DATA   U_CHAR   -----  1
 _delay_ms. . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
 inbufind . . . . . . . . . . . . . . .  PUBLIC   XDATA  U_CHAR   0130H  1
-encoder_state_adsfl. . . . . . . . . .  STATIC   DATA   U_CHAR   000AH  1
+encoder_state_adsfl. . . . . . . . . .  STATIC   DATA   U_CHAR   000CH  1
 _quene8283 . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  11
   pQuene . . . . . . . . . . . . . . .  MEMBER   -----  PTR      0000H  3
   QueneHead. . . . . . . . . . . . . .  MEMBER   -----  PTR      0003H  3
   QueneTail. . . . . . . . . . . . . .  MEMBER   -----  PTR      0006H  3
   QueneSize. . . . . . . . . . . . . .  MEMBER   -----  U_INT    0009H  2
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 40  
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
 EIID_MMA . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 s32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  LONG     -----  4
 u32. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_LONG   -----  4
@@ -2392,14 +2457,8 @@ EPID_SERVICE_PAR . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 u16. . . . . . . . . . . . . . . . . .  TYPEDEF  -----  U_INT    -----  2
 _cur_menu_fanc . . . . . . . . . . . .  EXTERN   XDATA  PTR      -----  3
 touch_rect_cnt . . . . . . . . . . . .  EXTERN   XDATA  U_CHAR   -----  1
-SCREEN_HEIGHT. . . . . . . . . . . . .  STATIC   CODE   U_INT    0183H  2
+SCREEN_HEIGHT. . . . . . . . . . . . .  STATIC   CODE   U_INT    0187H  2
 uart_len . . . . . . . . . . . . . . .  PUBLIC   XDATA  U_CHAR   0131H  1
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 39  
-
-NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
-====                                    =====   ======  ====    ======  ====
-
-
 MEN_IGN_MOD. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_TIG . . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 cur_menu . . . . . . . . . . . . . . .  EXTERN   XDATA  ARRAY    -----  -----
@@ -2417,6 +2476,7 @@ _can8283 . . . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  260
   Can8283RxHead. . . . . . . . . . . .  MEMBER   -----  U_INT    0100H  2
   Can8283RxTail. . . . . . . . . . . .  MEMBER   -----  U_INT    0102H  2
 par_tek. . . . . . . . . . . . . . . .  EXTERN   XDATA  ARRAY    -----  -----
+_GetTimeOutFlag. . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
 EPID_PRE_FLOW_T1 . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EPID_IMPULSE_CNT . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 MEN_POL_MOD. . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
@@ -2432,17 +2492,23 @@ _candataunit . . . . . . . . . . . . .  * TAG *  -----  STRUCT   -----  13
   status . . . . . . . . . . . . . . .  MEMBER   -----  U_CHAR   0000H  1
   ID . . . . . . . . . . . . . . . . .  MEMBER   -----  U_LONG   0001H  4
   candata. . . . . . . . . . . . . . .  MEMBER   -----  ARRAY    0005H  8
-bad_packages_cnt . . . . . . . . . . .  STATIC   DATA   U_INT    000BH  2
+bad_packages_cnt . . . . . . . . . . .  STATIC   DATA   U_INT    000DH  2
 EIID_BASE_I2 . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 va_list. . . . . . . . . . . . . . . .  TYPEDEF  -----  PTR      -----  3
-good_packages_cnt. . . . . . . . . . .  STATIC   DATA   U_INT    000DH  2
+good_packages_cnt. . . . . . . . . . .  STATIC   DATA   U_INT    000FH  2
 EPID_I_IGN_PULSE . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
-touch_coord_x. . . . . . . . . . . . .  STATIC   DATA   U_INT    000FH  2
-touch_coord_y. . . . . . . . . . . . .  STATIC   DATA   U_INT    0011H  2
+touch_coord_x. . . . . . . . . . . . .  STATIC   DATA   U_INT    0011H  2
+touch_coord_y. . . . . . . . . . . . .  STATIC   DATA   U_INT    0013H  2
 EPID_FLOW_SENSOR . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EPID_START_T2. . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 T0_Init. . . . . . . . . . . . . . . .  EXTERN   CODE   PROC     -----  -----
 EPID_POLARITY. . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
+C51 COMPILER V9.53.0.0   MAIN                                                              12/15/2023 14:28:40 PAGE 41  
+
+NAME                                    CLASS   MSPACE  TYPE    OFFSET  SIZE
+====                                    =====   ======  ====    ======  ====
+
+
 EPID_BASE_I2 . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIDD_KZ_I5 . . . . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 EIID_IMPULSE_I3. . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
@@ -2451,15 +2517,13 @@ EPID_MINUS_PULSE . . . . . . . . . . .  E_CONST  -----  U_CHAR   -----  1
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   2024    ----
-   CONSTANT SIZE    =    437    ----
+   CODE SIZE        =   2072    ----
+   CONSTANT SIZE    =    441    ----
    XDATA SIZE       =    306       7
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     19       6
+   DATA SIZE        =     21       6
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
-C51 COMPILER V9.53.0.0   MAIN                                                              12/12/2023 07:41:25 PAGE 40  
-
 END OF MODULE INFORMATION.
 
 

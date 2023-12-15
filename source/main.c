@@ -1,5 +1,5 @@
-#include "timer.h"
 #include "ui.h"
+#include "timer.h"
 #include "uart.h"
 #include "dwin8283.h"
 #include "canbus.h"
@@ -146,6 +146,7 @@ static data u16 touch_state;
 static data u16 last_touch_item;
 static data u16 good_packages_cnt;
 static data u16 bad_packages_cnt;
+static data u16 main_cycle_cnt;
 void print_debug_info(void)
 {
     static u8 buf[100];
@@ -169,7 +170,7 @@ void print_debug_info(void)
     };
 
     memset(buf, 0, ARR_SIZE(buf));
-    sprintf(buf, "%s\n\r%d %d %d %d\n\r%dA\n\r%.1fV\n\r%.1fs\n\rgood: %d\n\rbad:  %d",welding_states_tig[Welding_state], touch_coord_x, touch_coord_y, touch_state, last_touch_item, amp, (float)volt / 10.0, (float)time / 10.0, good_packages_cnt, bad_packages_cnt);
+    sprintf(buf, "%d\r\n%s\n\r%d %d %d %d\n\r%dA\n\r%.1fV\n\r%.1fs\n\rgood: %d\n\rbad:  %d",main_cycle_cnt,welding_states_tig[Welding_state], touch_coord_x, touch_coord_y, touch_state, last_touch_item, amp, (float)volt / 10.0, (float)time / 10.0, good_packages_cnt, bad_packages_cnt);
     write_dgus_vp(0x2500, (u8*) &buf, sizeof(buf) / 2);
 }
 //debug
@@ -488,9 +489,16 @@ void main()
 
     init_par_udgu();
     make_scene();
-    
+    StartTimer(0, 700);
     while(1)    
     {
+        main_cycle_cnt++;
+        if(GetTimeOutFlag(0) & (1<<0)){
+            StartTimer(0, 700);
+            print_debug_info();
+            main_cycle_cnt = 0;
+        }
+
         EA = 0;
         if(encoder_state_adsfl != ENC_STOP) {
             Encoder_process_code(encoder_state_adsfl);
@@ -501,6 +509,6 @@ void main()
         process_uart();
         process_touch();
     
-        print_debug_info();
+        
     }
 }

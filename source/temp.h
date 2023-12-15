@@ -31,6 +31,7 @@ typedef enum { //для id картинок
     EIID_POST_FLOW_T8, //Т8  время продувки в конце, с
     EIDD_KZ_I5,        //I5  ток короткого замыкания, %
     EIID_BASE2_I2X,    //I2х второй ток базы (только в 4Т+), А
+    EIID_PROG_ID,
     EIID_SIZE,
 };
 

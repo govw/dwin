@@ -47,6 +47,18 @@ typedef struct {
 } rect_t;
 
 typedef struct {
+    u16 vp;
+    u16 x0; //Area 0
+    u16 y0; //0
+    u16 x1; //1280
+    u16 y1; //800
+    u8 dashed_line_en;
+    u8 dash_set[4];
+    u8 pixel_scale;
+    u8 d0[12];//dummy byte; //30
+} dgus_basic_raphics_t;
+
+typedef struct {
         u16 vp;
         point_t upper_left_point;       
         u16 color;
@@ -97,13 +109,13 @@ extern void    Draw_start                  (void);
 extern void    Draw_end                    (void);
 extern void    Draw_clear_screen           (void);
 extern u8      check_screen_bounds         (u16 x, u16 y);
-extern u16     Draw_line_1px               (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
+extern u16     Draw_line_1px               (u16 color, u16 x0, u16 y0, u16 x1, u16 y1);
 extern void    clear_line_1px              (void);
 extern u16     Draw_filled_rect            (u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 extern void    Draw_filled_rect_redraw     (u16 vp, u16 x0, u16 y0, u16 x1, u16 y1, u16 color);
 extern u16     Draw_line                   (u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color);
 extern void    Draw_lines_clear            (void);
-extern u16     Draw_image                  (u16 x, u16 y, u16 image_id); 
+extern u16     Draw_image                  (u16 x, u16 y, u8 icon_lib, u16 image_id); 
 extern void    Draw_image_set_id           (u16 sp, u16 new_image_id);
 extern void    Draw_image_set_pos          (u16 sp, point_t p);  
 extern u16     Draw_number                 (u16 x, u16 y, u16 n, u8 decimal_places, u8 *units, u8 font_size, u16 color);

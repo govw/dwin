@@ -59,66 +59,36 @@ u8 check_screen_bounds(u16 x, u16 y)
 }
 
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-u16 Draw_line_1px(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
+u16 Draw_line_1px(u16 color, u16 x0, u16 y0, u16 x1, u16 y1)
 {
-    u16 cmd[8];
-    
-    if(!(check_screen_bounds(x0, y0) && check_screen_bounds(x1, y1)))  return 0;
-     
-    cmd[2] = color;
-    cmd[3] = x0;
-    cmd[4] = y0;
-    cmd[5] = x1;
-    cmd[6] = y1;
-    cmd[7] = 0xFF00;
-    cmd[0] = 0x000A; //draw line segment instruction
-    
-    write_dgus_vp(LINE_VP ,(u8*) &cmd[0], 2); // запись количества элементов и команды
-    {
-        u16 cur_object_vp = LINE_VP + 2 + (5 * (u16)all_line_1px_cnt);
-        all_line_1px_cnt++; 
-        cmd[1] = all_line_1px_cnt; //количество элементов для вывода   
-        write_dgus_vp (cur_object_vp ,(u8*) &cmd[2], 6); // сам элемент
-        return cur_object_vp;
-    }
+    //if(!(check_screen_bounds(x0, y0) && check_screen_bounds(x1, y1)))  return 0;
+    u16 cur_object_vp;
+    cur_object_vp = LINE_VP + 2 + (5 * (u16)all_line_1px_cnt);
+    write_dgus_vp (cur_object_vp ,(u8*) &color, 5); // сам элемент
+    all_line_1px_cnt++; 
+    return cur_object_vp;
 }
 
 void clear_line_1px(void)
 {
     u16 dummy = 0x0000;
     all_line_1px_cnt = 0;
-    write_dgus_vp(LINE_VP ,(u8*) &dummy, 1);
+    write_dgus_vp(LINE_VP + 1,(u8*) &dummy, 1);
 }
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 u16 Draw_filled_rect(u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
 {
-    u16 cmd[8];
-    //if(!(check_screen_bounds(x0, y0) && check_screen_bounds(x1, y1))) return 0;
-    
-    cmd[2] = x0;
-    cmd[3] = y0;
-    cmd[4] = x1;
-    cmd[5] = y1;
-    cmd[6] = color;
-    cmd[7] = 0xFF00;
-    cmd[0] = 0x0004;       //draw line filled rect
-    
-    {
-        u16 cur_object_vp = FILLED_RECT_VP + 2 + (5 * (u16)all_filled_rect_cnt);
-        all_filled_rect_cnt++;
-        cmd[1] = all_filled_rect_cnt; //количество элементов для вывода
-        write_dgus_vp(FILLED_RECT_VP ,(u8*) &cmd[0], 2); // запись количества элементов и команды
-        write_dgus_vp (cur_object_vp, (u8*) &cmd[2], 6); // сам элемент//5 - количество элементов в структуре
-        return cur_object_vp;
-    }
+    u16 cur_object_vp = FILLED_RECT_VP + 2 + (5 * (u16)all_filled_rect_cnt);
+    all_filled_rect_cnt++;
+    write_dgus_vp (cur_object_vp, (u8*) &x0, 5); 
+    return cur_object_vp;
 }
 void clear_filled_rects(void)
 {
     u16 dummy = 0x0000;
     all_filled_rect_cnt = 0;
-
-    write_dgus_vp(FILLED_RECT_VP, (u8*) &dummy, 1);
+    write_dgus_vp(FILLED_RECT_VP + 1, (u8*) &dummy, 1);
 }
 void Draw_filled_rect_redraw(u16 vp, u16 x0, u16 y0, u16 x1, u16 y1, u16 color)
 {
@@ -158,9 +128,9 @@ u16 Draw_line(u16 x0, u16 y0, u16 x1, u16 y1, u8 width, u16 color)
         y0 -= half_widht;
         x1 -= half_widht;
         y1 -= half_widht;
-
+        
         for(i = 0; i <= width; i++) {
-            Draw_line_1px(x0, y0, x1,y1, color);
+            Draw_line_1px(color, x0, y0, x1, y1);
             y0++;
             y1++;
         }
@@ -174,7 +144,7 @@ void Draw_lines_clear(void)
 {
     u16 dummy = 0x0000;
     all_filled_rect_cnt = 0;
-    write_dgus_vp(FILLED_RECT_VP ,(u8*) &dummy, 1); 
+    write_dgus_vp(FILLED_RECT_VP + 1,(u8*) &dummy, 1); 
 }
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 //__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
@@ -187,7 +157,7 @@ code u16 var_icon_sp[] = {
         0xF090, 0xF070, 0xF050, 0xF030
     };
 
-u16 Draw_image(u16 x, u16 y, u16 image_id) 
+u16 Draw_image(u16 x, u16 y, u8 icon_lib, u16 image_id) 
 {             
     dgus_variables_icon_t d;
 
@@ -199,9 +169,9 @@ u16 Draw_image(u16 x, u16 y, u16 image_id)
     d.v_max            = 41;     
     d.icon_min         = 0;  
     d.icon_max         = 41;  
-    d.icon_lib         = 36;   //36.icl  
-    d.mode             = 0x01;      
-    d.layer_mode       = 0x01;
+    d.icon_lib         = icon_lib;   //36.icl  
+    d.mode             = 0x00; //0x01 bacground disply 0x00 transparancy mode      
+    d.layer_mode       = 0x03;
     d.icon_gamma       = 0xff;
     d.pic_gamma        = 0x00; 
     d.filter_set       = 0x01;
@@ -452,19 +422,22 @@ void Draw_end(void)
 {
     u8 i;
     u16 dummy;
-    // struct {
-    //     u16 cmd;
-    //     u16 cnt;
-    // } filled_rect; //0x0004//draw filled rect cmd
-    // filled_rect.cmd = 0x0004;
-    // filled_rect.cnt = all_filled_rect_cnt;
-    // {
-    //     u16 tmp = 0x0004;
-    //     write_dgus_vp(FILLED_RECT_VP + 2 + (5 * (u16)all_filled_rect_cnt), (u8*) &tmp, 1);
-    // }
-    // write_dgus_vp(FILLED_RECT_VP ,(u8*) &filled_rect, sizeof(filled_rect) / 2); // запись количества элементов и команды
+    u16 cmd[2];
 
+    //прямоугольники
+    const u16 draw_end = 0xFF00;
+    cmd[0] = 0x0004;       //draw line filled rect
+    cmd[1] = all_filled_rect_cnt; //количество элементов для вывода
+    write_dgus_vp(FILLED_RECT_VP ,(u8*) &cmd, 2); // запись количества элементов и команды
+    write_dgus_vp(FILLED_RECT_VP + 2 + (5 * (u16)all_filled_rect_cnt), (u8*) &draw_end, 1);
     
+
+    cmd[0] = 0x000A; //draw line segment instruction
+    cmd[1] = all_line_1px_cnt; //количество элементов для вывода   
+    write_dgus_vp(LINE_VP ,(u8*) &cmd, 2); // запись количества элементов и команды
+    write_dgus_vp(LINE_VP + 2 + (5 * (u16)all_line_1px_cnt),(u8*) &draw_end, 1); 
+
+
     dummy = 0xFFFF;
     for(i = all_img_cnt; i < ARR_SIZE(var_icon_sp); i++) {
         write_dgus_vp(var_icon_sp[i] + (sizeof(dgus_variables_icon_t) / 2)  , (u8*) &dummy, 1);       
